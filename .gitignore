@@ -1,7 +1,24 @@
 node_modules/
 .next/
+.env
+.env.local
+tsconfig.tsbuildinfo
+
+# Generated scripts and their output.
+#
+# `npm run emit` and `npm run xlsx-smoke` write real artefacts into whatever
+# directory they are pointed at. A result file contains the actual security
+# configuration of the machine that produced it — which admin accounts exist,
+# what is unpatched, whether the disk is encrypted. That is precisely the
+# information this tool exists to protect, so it must never reach a repository.
+cyber-essentials-*.ps1
+cyber-essentials-*.sh
+cyber-essentials-*result*.json
+*-rollback-*.ps1
+submission-*.xlsx
+cyber-essentials-submission-*
+
+# Local databases, if a persistence layer is added later.
 data/*.db
 data/*.db-shm
 data/*.db-wal
-.env.local
-tsconfig.tsbuildinfo

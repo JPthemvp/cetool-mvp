@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+/*
+ * Palette taken from CSA's own brand values rather than approximated:
+ *   #004987  brand blue      (--color-brand-canvas-inverse on csa.gov.sg)
+ *   #1A5B93  interaction     (--color-brand-interaction-default)
+ *   #00335F  hover           (--color-brand-interaction-hover)
+ *   #002544  pressed         (--color-brand-interaction-pressed)
+ *   #E31736  CSA red         (dominant red in the CSA International logo)
+ *
+ * CSA's own site is light-on-white. This runs dark because the tool is read as
+ * an operations surface — long tables of findings and clause states — and the
+ * deep navy lets the red carry real signal weight instead of being decoration.
+ * The blues below extend CSA's ramp upward so text and borders stay legible on
+ * that dark ground; the anchor values are unchanged.
+ */
+
+@theme {
+  /* Surfaces — navy, derived from #002544 downward */
+  --color-ink-950: #00101f;
+  --color-ink-900: #001b33;
+  --color-ink-850: #002544;
+  --color-ink-800: #002e52;
+  --color-ink-700: #0a3d6b;
+  --color-ink-600: #14507f;
+
+  /* Brand blue — CSA anchors at 600–900, lightened above for dark-ground legibility */
+  --color-brand-50: #eef5fa;
+  --color-brand-100: #ccdbe7;
+  --color-brand-200: #a8c4dc;
+  --color-brand-300: #7fb0d4;
+  --color-brand-400: #4d96c9;
+  --color-brand-500: #2f7dbf;
+  --color-brand-600: #1a5b93;
+  --color-brand-700: #004987;
+  --color-brand-800: #00335f;
+  --color-brand-900: #002544;
+
+  /* CSA red */
+  --color-csa-300: #ff8095;
+  --color-csa-400: #ff4e69;
+  --color-csa-500: #e31736;
+  --color-csa-600: #c0122c;
+  --color-csa-700: #8e0b1e;
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 620px at 10% -10%, rgba(0, 73, 135, 0.55), transparent 62%),
+    radial-gradient(820px 460px at 88% -4%, rgba(227, 23, 54, 0.14), transparent 58%),
+    radial-gradient(900px 700px at 50% 108%, rgba(26, 91, 147, 0.18), transparent 60%),
+    var(--color-ink-950);
+  background-attachment: fixed;
+  color: #dbe7f2;
+  min-height: 100vh;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: rgba(227, 23, 54, 0.32);
+}
+
+/* Government-style identity strip across the top of the page. */
+.gov-strip {
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    var(--color-csa-500) 0%,
+    var(--color-csa-500) 22%,
+    var(--color-brand-700) 22%,
+    var(--color-brand-500) 100%
+  );
+}
+
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-ink-700);
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-600);
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(220%);
+  }
+}
+.animate-sweep {
+  animation: sweep 1.4s ease-in-out infinite;
+}
+
+/* Focus ring that stays visible on navy. */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-brand-300);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media print {
+  body {
+    background: #fff;
+    color: #000;
+  }
+}
