@@ -93,7 +93,7 @@ export function DetailToggle() {
           }
           className={`px-2.5 py-1 text-[11px] font-semibold transition ${
             detailLevel === value
-              ? "bg-brand-600 text-white"
+              ? "bg-brand-600 text-oncolor"
               : "text-brand-200/70 hover:text-brand-100"
           }`}
         >

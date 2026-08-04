@@ -223,7 +223,7 @@ export const PLAIN_CHECK: Record<string, { pass: PlainFinding; fail: PlainFindin
     fail: {
       title: "There are other websites registered under your business name",
       detail:
-        "Some may be old test sites nobody remembers. Those are the ones that never get updated, and they are a way in. Each one needs to be on your equipment list, or shut down.",
+        "Some may be legacy or test sites that are no longer actively maintained. These are frequently left unpatched and present a route in. Each should be added to your asset register or decommissioned.",
     },
   },
 };

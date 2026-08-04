@@ -40,7 +40,7 @@ export const PATHWAYS: Pathway[] = [
     tagline: "Nothing to install. You answer the questions.",
     mechanics: [
       "A configuration scan of your domain — DNS, email authentication, TLS and security headers, the same ground CSA's Internet Hygiene Portal covers.",
-      "Subdomain discovery from public certificate logs, to find the hosts nobody remembers setting up.",
+      "Subdomain discovery from public certificate transparency logs, which surfaces hosts that are no longer actively tracked.",
       "You answer the assessment questions, in plain English, with an explanation available on every one.",
     ],
     goodFor:

@@ -3,6 +3,7 @@ import "./globals.css";
 import { StoreProvider } from "@/components/store";
 import { Nav } from "@/components/nav";
 import { StepFooter, StepGate, StepHeader, TestModeBanner } from "@/components/journey-ui";
+import { themeScript } from "@/components/theme";
 
 export const metadata: Metadata = {
   title: "Cyber Essentials Tool",
@@ -12,7 +13,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-SG">
+    <html lang="en-SG" suppressHydrationWarning>
+      <head>
+        {/* Sets data-theme before first paint so there is no flash. */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <StoreProvider>
           <StepGate />

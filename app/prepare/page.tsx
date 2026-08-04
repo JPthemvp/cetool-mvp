@@ -22,13 +22,13 @@ import { answerabilityOf } from "@/lib/answerability";
 import { PLAIN_CATEGORY, plainMeasure } from "@/lib/plain";
 
 const OPTIONS: Array<{ value: AnswerValue; label: string; tone: string }> = [
-  { value: "yes", label: "Yes", tone: "data-[on=true]:bg-emerald-500 data-[on=true]:text-ink-950" },
-  { value: "partial", label: "Partly", tone: "data-[on=true]:bg-amber-500 data-[on=true]:text-ink-950" },
-  { value: "no", label: "No", tone: "data-[on=true]:bg-csa-500 data-[on=true]:text-white" },
+  { value: "yes", label: "Yes", tone: "data-[on=true]:bg-emerald-500 data-[on=true]:text-oncolor-dark" },
+  { value: "partial", label: "Partly", tone: "data-[on=true]:bg-amber-500 data-[on=true]:text-oncolor-dark" },
+  { value: "no", label: "No", tone: "data-[on=true]:bg-csa-500 data-[on=true]:text-oncolor" },
   // A real answer, not a cop-out. An unsure SME that is forced to pick Yes/No
   // guesses, and a guessed Yes travels all the way to the assessor unchallenged.
-  { value: "unsure", label: "Not sure", tone: "data-[on=true]:bg-brand-500 data-[on=true]:text-white" },
-  { value: "na", label: "N/A", tone: "data-[on=true]:bg-brand-700 data-[on=true]:text-white" },
+  { value: "unsure", label: "Not sure", tone: "data-[on=true]:bg-brand-500 data-[on=true]:text-oncolor" },
+  { value: "na", label: "N/A", tone: "data-[on=true]:bg-brand-700 data-[on=true]:text-oncolor" },
 ];
 
 function ClauseRow({ clause }: { clause: Clause }) {
@@ -94,8 +94,7 @@ function ClauseRow({ clause }: { clause: Clause }) {
                 {confirmed.total === 1 ? "device" : "devices"}
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-brand-50">
-                {confirmed.computers.join(", ")} passed this check. That is evidence in
-                your favour — confirm it holds for every device and you can answer yes.
+                {confirmed.computers.join(", ")} passed this check. This supports a positive response. Confirm it holds across all devices before answering yes.
               </p>
             </div>
           )}
@@ -104,7 +103,7 @@ function ClauseRow({ clause }: { clause: Clause }) {
           {answer.value === "unsure" && help?.notSure && (
             <div className="mt-3 rounded-lg border border-brand-500/35 bg-brand-700/20 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
-                What this means
+                Explanation
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-brand-50">{help.notSure}</p>
             </div>
@@ -114,7 +113,7 @@ function ClauseRow({ clause }: { clause: Clause }) {
           {help && (answer.value === "no" || answer.value === "partial" || answer.value === "unsure") && (
             <div className="mt-2.5 rounded-lg border border-csa-500/30 bg-csa-500/8 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-csa-300">
-                Do this
+                Recommended action
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-brand-50">{help.action}</p>
             </div>
@@ -169,7 +168,7 @@ function ClauseRow({ clause }: { clause: Clause }) {
 
         {/* The formal wording, on demand, without switching the whole page. */}
         <Simple>
-          <Drilldown label="See the exact requirement">
+          <Drilldown label="View the published requirement">
             <p className="font-mono text-[11px] text-brand-300">
               {clause.id} · {clause.obligation}
             </p>
@@ -313,7 +312,7 @@ export default function PreparePage() {
                 onClick={() => setFocus(key)}
                 className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
                   focus === key
-                    ? "bg-brand-600 text-white"
+                    ? "bg-brand-600 text-oncolor"
                     : "bg-ink-800 text-brand-200/70 hover:text-brand-100"
                 }`}
               >

@@ -56,7 +56,7 @@ export function TestModeBanner() {
   return (
     <div className="border-b border-amber-500/40 bg-amber-500/15">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-2 sm:px-6">
-        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ink-950">
+        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-oncolor-dark">
           Test mode
         </span>
         <span className="text-[12px] leading-relaxed text-amber-100">

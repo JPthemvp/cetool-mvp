@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { useStore } from "./store";
 import { STEPS } from "@/lib/journey";
 import { DetailToggle } from "./detail";
+import { ThemeToggle } from "./theme";
 
 export function Nav() {
   const pathname = usePathname();
@@ -23,7 +24,7 @@ export function Nav() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between gap-4">
           <Link href="/" className="group flex shrink-0 items-center gap-2.5">
-            <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-brand-700 text-[13px] font-bold text-white ring-1 ring-brand-400/40">
+            <span className="relative grid h-9 w-9 place-items-center overflow-hidden rounded-lg bg-brand-700 text-[13px] font-bold text-oncolor ring-1 ring-brand-400/40">
               <span className="absolute inset-y-0 left-0 w-1 bg-csa-500" />
               CE
             </span>
@@ -38,6 +39,7 @@ export function Nav() {
               <span className="hidden text-brand-200/70 lg:inline">{org.name}</span>
             )}
             {started && <DetailToggle />}
+            <ThemeToggle />
             {started && (
               <span className="rounded-full bg-brand-700/40 px-2.5 py-1 font-medium tabular-nums text-brand-100 ring-1 ring-inset ring-brand-500/30">
                 {journey.completed.size}/{STEPS.length} steps

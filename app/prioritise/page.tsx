@@ -71,7 +71,7 @@ function GapCard({ gap, rank }: { gap: Gap; rank: number }) {
           {help && (
             <div className="rounded-lg border border-csa-500/30 bg-csa-500/8 p-3">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-csa-300">
-                Do this
+                Recommended action
               </p>
               <p className="text-brand-50">{help.action}</p>
             </div>
@@ -80,7 +80,7 @@ function GapCard({ gap, rank }: { gap: Gap; rank: number }) {
           {gap.answer === "unsure" && help?.notSure && (
             <div className="rounded-lg border border-brand-500/35 bg-brand-700/20 p-3">
               <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-brand-300">
-                What this means
+                Explanation
               </p>
               <p className="text-brand-50">{help.notSure}</p>
             </div>
@@ -88,7 +88,7 @@ function GapCard({ gap, rank }: { gap: Gap; rank: number }) {
 
           <div>
             <p className="mb-1 text-[11px] uppercase tracking-wide text-brand-200/70">
-              Why it is ranked here
+              Basis for this ranking
             </p>
             <p className="text-brand-100/80">{gap.why}</p>
           </div>
@@ -149,7 +149,7 @@ function GapCard({ gap, rank }: { gap: Gap; rank: number }) {
 
           <div>
             <p className="mb-1 text-[11px] uppercase tracking-wide text-brand-200/70">
-              What you will need to show
+              Evidence required at assessment
             </p>
             <ul className="list-inside list-disc space-y-0.5 text-brand-100/80">
               {gap.clause.evidence.map((e) => (
@@ -159,7 +159,7 @@ function GapCard({ gap, rank }: { gap: Gap; rank: number }) {
           </div>
 
           <Simple>
-            <Drilldown label="See the exact requirement">
+            <Drilldown label="View the published requirement">
               <p className="font-mono text-[11px] text-brand-300">
                 {gap.clause.id} · {gap.clause.obligation}
               </p>
@@ -236,7 +236,7 @@ export default function PrioritisePage() {
       {wins.length > 0 && (
         <Card className="mt-6 border-emerald-500/25 bg-emerald-500/5 p-5">
           <h3 className="text-sm font-semibold text-emerald-300">
-            Start here — {wins.length} high-risk gaps you can close in under a day each
+            Recommended starting point: {wins.length} high-risk items that can each be addressed within a day
           </h3>
           <ul className="mt-3 space-y-1.5">
             {wins.map((g) => (
@@ -262,7 +262,7 @@ export default function PrioritisePage() {
             onClick={() => setFilter(key)}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
               filter === key
-                ? "bg-brand-500 text-ink-950"
+                ? "bg-brand-500 text-oncolor"
                 : "bg-ink-800 text-brand-100/80 hover:text-white/90"
             }`}
           >

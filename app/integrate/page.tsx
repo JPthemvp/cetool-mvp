@@ -230,23 +230,20 @@ export default function IntegratePage() {
       ) : (
         <Card className="p-6">
           <div className="flex flex-wrap items-center gap-3">
-            <Pill>Not yet</Pill>
+            <Pill>Not yet applicable</Pill>
             <span className="text-[14px] font-medium text-white">
               {readiness.blocking} mandatory clause{readiness.blocking === 1 ? "" : "s"} stand
               between you and booking an assessment
             </span>
           </div>
           <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-brand-100/80">
-            We are deliberately not showing the list yet. Engaging a certification body with
-            mandatory clauses still open means paying for an assessment you would fail, and
-            the finding list you get back is the one already on your Prioritise page — for
-            free. Close those first.
+            The list of certification bodies is withheld until the mandatory clauses are closed. Engaging an assessor with outstanding mandatory items means commissioning an assessment that is unlikely to pass, and the findings returned would largely duplicate the priority list already available to you here. We recommend addressing those first.
           </p>
           <a
             href="/prioritise"
             className="mt-4 inline-block text-[13px] text-brand-300 underline-offset-2 hover:underline"
           >
-            See what is outstanding, in priority order →
+            View outstanding items in priority order →
           </a>
         </Card>
       )}

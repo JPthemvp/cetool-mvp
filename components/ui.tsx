@@ -90,7 +90,7 @@ export function Button({
   const variants = {
     // CSA red carries the primary action; blue carries structure and navigation.
     primary:
-      "bg-csa-500 text-white hover:bg-csa-400 shadow-lg shadow-csa-700/35",
+      "bg-csa-500 text-oncolor hover:bg-csa-400 shadow-lg shadow-csa-700/35",
     ghost:
       "border border-brand-600/70 text-brand-100 hover:border-brand-400 hover:bg-brand-700/25 hover:text-white",
     subtle: "bg-ink-800 text-brand-100 hover:bg-ink-700",

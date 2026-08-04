@@ -67,7 +67,7 @@ export default function AssetsPage() {
       <SectionTitle
         eyebrow="Capability 02 · Assets"
         title="Your asset inventory, started for you"
-        lead="A.2.4(a) requires an up-to-date inventory of hardware and software, and CSA accepts a spreadsheet. Discovery fills in the internet-facing rows — the part most SMEs miss because nobody remembers the subdomain a vendor set up in 2019. The rest you walk the office for."
+        lead="A.2.4(a) requires an up-to-date inventory of hardware and software, and CSA accepts a spreadsheet. Discovery fills in the internet-facing rows — the part most organisations overlook, since subdomains provisioned by vendors are easily forgotten. The remainder is captured by a physical walkthrough."
       />
 
       {!scan && ready && (
@@ -129,8 +129,7 @@ export default function AssetsPage() {
               </h3>
               <p className="mt-1.5 text-[13px] leading-relaxed text-brand-100/60">
                 A.2.4(b) lists the asset classes in scope. External discovery reaches three
-                of them. The others need someone to walk the office — that is genuinely the
-                fastest way, and it is what the assessor expects.
+                of them. The remainder require a physical walkthrough, which is both the quickest approach and what an assessor will expect.
               </p>
               <ul className="mt-4 space-y-2">
                 {INVENTORY_CLASSES.map((c) => (

@@ -35,7 +35,7 @@ export const GUIDANCE: MeasureGuidance[] = [
     measureId: "A.2",
     steps: [
       "Start the inventory in a spreadsheet — CSA accepts this, you do not need a tool.",
-      "Walk the office and list every laptop, phone, server, router and IoT device with its owner.",
+      "Conduct a physical walkthrough and record every laptop, phone, server, router and connected device against its owner.",
       "Add every piece of software, its version, and its end-of-support date.",
       "Draw the network on one page, including the internet-facing assets this tool discovered.",
       "Flag anything past end-of-support and decide: replace, or isolate and document the risk.",

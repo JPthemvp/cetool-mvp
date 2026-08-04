@@ -275,7 +275,7 @@ export default function StartPage() {
           {/* Pathway — the decision that shapes everything after it. */}
           <div className="mt-6 border-t border-brand-700/30 pt-5">
             <div className="mb-1 flex items-start justify-between gap-2">
-              <p className="text-sm font-medium text-brand-50">How do you want to do this?</p>
+              <p className="text-sm font-medium text-brand-50">How would you like to proceed?</p>
               <RequiredMark />
             </div>
             <p className="mb-3 text-[12px] leading-relaxed text-brand-100/70">
@@ -333,7 +333,7 @@ export default function StartPage() {
                               ))}
                             </span>
                             <span className="mt-2 block text-[12px] leading-relaxed text-amber-300/90">
-                              Worth knowing: {p.limitation}
+                              Please note: {p.limitation}
                             </span>
                           </span>
                         )}
@@ -355,7 +355,7 @@ export default function StartPage() {
           <div className="mt-6 border-t border-brand-700/30 pt-5">
             <div className="mb-1 flex items-start justify-between gap-2">
               <p className="text-sm font-medium text-brand-50">
-                Which of these describes you?
+                Which of these describes your organisation?
               </p>
               <RequiredMark />
             </div>

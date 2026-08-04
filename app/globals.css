@@ -8,63 +8,172 @@
  *   #002544  pressed         (--color-brand-interaction-pressed)
  *   #E31736  CSA red         (dominant red in the CSA International logo)
  *
- * CSA's own site is light-on-white. This runs dark because the tool is read as
- * an operations surface — long tables of findings and clause states — and the
- * deep navy lets the red carry real signal weight instead of being decoration.
- * The blues below extend CSA's ramp upward so text and borders stay legible on
- * that dark ground; the anchor values are unchanged.
+ * THEMING
+ * Surfaces and foregrounds are semantic variables so the whole interface can
+ * flip between dark and light without touching a single component. The Tailwind
+ * tokens below resolve to those variables at runtime rather than to fixed hex,
+ * so `bg-ink-900` means "raised surface" and follows the active theme.
+ *
+ * Two colours deliberately do NOT follow the theme: text sitting on a saturated
+ * fill. White on the CSA red button must stay white in both modes, and dark text
+ * on an amber banner must stay dark. Those use --color-oncolor and
+ * --color-oncolor-dark, which are fixed.
  */
 
-@theme {
-  /* Surfaces — navy, derived from #002544 downward */
-  --color-ink-950: #00101f;
-  --color-ink-900: #001b33;
-  --color-ink-850: #002544;
-  --color-ink-800: #002e52;
-  --color-ink-700: #0a3d6b;
-  --color-ink-600: #14507f;
+:root {
+  color-scheme: dark;
 
-  /* Brand blue — CSA anchors at 600–900, lightened above for dark-ground legibility */
-  --color-brand-50: #eef5fa;
-  --color-brand-100: #ccdbe7;
-  --color-brand-200: #a8c4dc;
-  --color-brand-300: #7fb0d4;
-  --color-brand-400: #4d96c9;
+  /* Surfaces, darkest to lightest */
+  --surface-base: #00101f;
+  --surface-raised: #001b33;
+  --surface-sunken: #002544;
+  --surface-muted: #002e52;
+  --border-soft: #0a3d6b;
+  --border-strong: #14507f;
+
+  /* Foregrounds, strongest to faintest */
+  --fg-strong: #ffffff;
+  --fg-body: #ccdbe7;
+  --fg-muted: #a8c4dc;
+  --fg-subtle: #7fb0d4;
+  --fg-accent: #4d96c9;
+
+  /*
+   * Status foregrounds.
+   *
+   * Pale shades read well on navy and almost disappear on white, so they flip
+   * too. Only the text-weight shades are themed — the 500-level fills used for
+   * tinted backgrounds stay put, since those are always used at low opacity.
+   */
+  --status-good: #6ee7b7;
+  --status-good-2: #34d399;
+  --status-warn: #fcd34d;
+  --status-warn-soft: #fde68a;
+  --status-warn-softer: #fef3c7;
+  --status-high: #fdba74;
+  --status-bad: #ff8095;
+  --status-bad-2: #ff4e69;
+
+  /* Page backdrop */
+  --glow-blue: rgba(0, 73, 135, 0.55);
+  --glow-red: rgba(227, 23, 54, 0.14);
+  --glow-deep: rgba(26, 91, 147, 0.18);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --surface-base: #f2f6fa;
+  --surface-raised: #ffffff;
+  --surface-sunken: #eaf1f7;
+  --surface-muted: #dde8f1;
+  --border-soft: #c3d5e4;
+  --border-strong: #9fbbd2;
+
+  /*
+   * Deep navy rather than black, so the CSA blue still reads as the brand.
+   *
+   * These are darker than they look like they need to be, deliberately. The
+   * interface uses opacity modifiers heavily (text-brand-100/60 and similar),
+   * and an opacity modifier against a white page loses far more contrast than
+   * against a navy one. Picking a mid navy here produced 3.5:1 body text in
+   * light mode, which fails AA. These values keep the /60 variants above 4.5:1.
+   */
+  --fg-strong: #04121f;
+  --fg-body: #06192b;
+  --fg-muted: #123449;
+  --fg-subtle: #1a5b93;
+  --fg-accent: #00426f;
+
+  /* Darkened so they carry on a white page. */
+  --status-good: #046c4a;
+  --status-good-2: #047857;
+  --status-warn: #7c4008;
+  --status-warn-soft: #6b3708;
+  --status-warn-softer: #4a2505;
+  --status-high: #8a3310;
+  --status-bad: #a80f27;
+  --status-bad-2: #b0102a;
+
+  --glow-blue: rgba(0, 73, 135, 0.10);
+  --glow-red: rgba(227, 23, 54, 0.06);
+  --glow-deep: rgba(26, 91, 147, 0.07);
+}
+
+@theme {
+  /* Surfaces — resolve to the semantic layer above */
+  --color-ink-950: var(--surface-base);
+  --color-ink-900: var(--surface-raised);
+  --color-ink-850: var(--surface-sunken);
+  --color-ink-800: var(--surface-muted);
+  --color-ink-700: var(--border-soft);
+  --color-ink-600: var(--border-strong);
+
+  /*
+   * Foreground ramp. `white` is remapped because 89 components use text-white
+   * for primary text and nothing uses bg-white — so redefining it flips every
+   * heading at once instead of requiring a sweep.
+   */
+  --color-white: var(--fg-strong);
+  --color-brand-50: var(--fg-strong);
+  --color-brand-100: var(--fg-body);
+  --color-brand-200: var(--fg-muted);
+  --color-brand-300: var(--fg-subtle);
+  --color-brand-400: var(--fg-accent);
+
+  /* Structural blues — these are fills and borders, not text, so they hold. */
   --color-brand-500: #2f7dbf;
   --color-brand-600: #1a5b93;
   --color-brand-700: #004987;
   --color-brand-800: #00335f;
   --color-brand-900: #002544;
 
-  /* CSA red */
-  --color-csa-300: #ff8095;
-  --color-csa-400: #ff4e69;
+  /* CSA red. 300 and 400 are text weights and live in the status block below. */
   --color-csa-500: #e31736;
   --color-csa-600: #c0122c;
   --color-csa-700: #8e0b1e;
 
-  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+  /*
+   * Status text shades, themed. Only the pale text-weight shades are remapped;
+   * the 500-level fills used behind them stay fixed, so a tinted background
+   * keeps its hue while the text on it stays legible in both themes.
+   */
+  --color-emerald-300: var(--status-good);
+  --color-emerald-400: var(--status-good-2);
+  --color-amber-100: var(--status-warn-softer);
+  --color-amber-200: var(--status-warn-soft);
+  --color-amber-300: var(--status-warn);
+  --color-orange-300: var(--status-high);
+  --color-csa-300: var(--status-bad);
+  --color-csa-400: var(--status-bad-2);
 
-html {
-  color-scheme: dark;
+  /* Text on saturated fills. Fixed in both themes by design. */
+  --color-oncolor: #ffffff;
+  --color-oncolor-dark: #05192e;
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
   background:
-    radial-gradient(1200px 620px at 10% -10%, rgba(0, 73, 135, 0.55), transparent 62%),
-    radial-gradient(820px 460px at 88% -4%, rgba(227, 23, 54, 0.14), transparent 58%),
-    radial-gradient(900px 700px at 50% 108%, rgba(26, 91, 147, 0.18), transparent 60%),
-    var(--color-ink-950);
+    radial-gradient(1200px 620px at 10% -10%, var(--glow-blue), transparent 62%),
+    radial-gradient(820px 460px at 88% -4%, var(--glow-red), transparent 58%),
+    radial-gradient(900px 700px at 50% 108%, var(--glow-deep), transparent 60%),
+    var(--surface-base);
   background-attachment: fixed;
-  color: #dbe7f2;
+  color: var(--fg-body);
   min-height: 100vh;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 150ms ease;
 }
 
 ::selection {
   background: rgba(227, 23, 54, 0.32);
+}
+
+:root[data-theme="light"] ::selection {
+  background: rgba(227, 23, 54, 0.18);
 }
 
 /* Government-style identity strip across the top of the page. */
@@ -87,11 +196,11 @@ body {
   background: transparent;
 }
 .scroll-thin::-webkit-scrollbar-thumb {
-  background: var(--color-ink-700);
+  background: var(--border-soft);
   border-radius: 999px;
 }
 .scroll-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-600);
+  background: var(--border-strong);
 }
 
 @keyframes sweep {
@@ -106,9 +215,9 @@ body {
   animation: sweep 1.4s ease-in-out infinite;
 }
 
-/* Focus ring that stays visible on navy. */
+/* Focus ring that stays visible on both themes. */
 :where(a, button, input, select, textarea):focus-visible {
-  outline: 2px solid var(--color-brand-300);
+  outline: 2px solid var(--fg-accent);
   outline-offset: 2px;
   border-radius: 4px;
 }

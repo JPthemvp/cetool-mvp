@@ -166,7 +166,7 @@ export default function ResultsPage() {
           <div>
             <p className="text-[11px] uppercase tracking-wide text-brand-200/70">Organisation</p>
             <p className="mt-1 text-lg font-semibold text-white">
-              {org.name || "Not yet named"}
+              {org.name || "Not provided"}
             </p>
             <p className="mt-0.5 text-[13px] text-brand-100/60">
               {[org.uen, org.industry, org.size].filter(Boolean).join(" · ") || "Complete your profile on the Start page"}
@@ -474,7 +474,7 @@ export default function ResultsPage() {
               <li key={s.title} className="flex gap-4">
                 <span
                   className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums ${
-                    done ? "bg-emerald-500 text-ink-950" : "bg-ink-800 text-brand-100/80"
+                    done ? "bg-emerald-500 text-oncolor-dark" : "bg-ink-800 text-brand-100/80"
                   }`}
                 >
                   {done ? "✓" : i + 1}

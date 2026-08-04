@@ -61,7 +61,7 @@ export const CLAUSE_HELP: Record<string, ClauseHelp> = {
   },
   "A.2.4(b)": {
     action:
-      "Walk the office and check nothing is missing from the list — especially the router, the network printer, any CCTV or door-access box, and the NAS in the corner.",
+      "Conduct a physical walkthrough to confirm nothing is missing — in particular the router, network printers, CCTV or door-access controllers, and any network-attached storage.",
     notSure:
       "In-scope hardware means everything that connects to your network: laptops, desktops, phones and tablets, routers and firewalls, servers, and 'smart' devices like cameras and printers.",
   },
@@ -191,7 +191,10 @@ export const CLAUSE_HELP: Record<string, ClauseHelp> = {
     notSure:
       "Multi-factor authentication (MFA) asks for a second proof beyond the password — usually a code or a prompt on your phone. It is the single most effective control here, because a stolen password alone stops being enough.",
   },
-  "A.5.4(p)": { action: "Once admins are covered, roll MFA out to all staff. Expect a week of grumbling and then silence." },
+  "A.5.4(p)": {
+    action:
+      "Once administrators are covered, extend multi-factor authentication to all staff. Allow a short adjustment period after rollout.",
+  },
 
   // ── A.6 Secure configuration ──────────────────────────────────────────────
   "A.6.4(a)": {
@@ -244,7 +247,7 @@ export const CLAUSE_HELP: Record<string, ClauseHelp> = {
   "A.8.4(f)": { action: "Encrypt the backup and restrict who can reach it — ideally not the same account you use daily." },
   "A.8.4(g)": {
     action:
-      "Keep at least one copy offline or immutable. A cloud drive that syncs continuously is not isolated: ransomware encrypts your files and the sync obediently copies the damage.",
+      "Retain at least one copy offline or immutable. A continuously synchronised cloud drive is not isolated, as ransomware encryption will be replicated to it.",
     notSure:
       "Isolated means the backup cannot be reached and destroyed from your normal network. That is either a drive you physically unplug, or a cloud backup with immutability switched on so even an administrator cannot delete it.",
   },
@@ -337,11 +340,11 @@ export const SCOPING_QUESTIONS: ScopingQuestion[] = [
  * moment they most need to trust the output.
  */
 export const READINESS_PROMISE = {
-  minutes: "about an hour, and you can stop anywhere",
+  minutes: "approximately one hour, and progress is saved as you go",
   points: [
-    "This is not a pass or fail test. Nothing here is submitted to anyone.",
-    "If you do not know what a question means, say so — that is a real answer and it will explain rather than mark you down.",
-    "The scan answers roughly a third of it for you. The rest only you can answer, because it is about how your business actually works.",
-    "At the end you get a list of actions, in the order worth doing them.",
+    "This is a readiness review rather than a pass or fail test. Nothing is submitted on your behalf.",
+    "If a question is unclear, select \"Not sure\". It is recorded as a valid response and an explanation is provided.",
+    "Automated checks address approximately one third of the assessment. The remainder concerns how your organisation operates, which only your team can confirm.",
+    "You will receive a prioritised action plan on completion.",
   ],
 };

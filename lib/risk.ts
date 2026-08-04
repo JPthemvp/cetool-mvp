@@ -195,15 +195,15 @@ function explain(
   // nobody has looked at yet. Both are open, but only one is a finding.
   if (answer === "unanswered" && !signal?.failing.length) {
     parts.push(
-      "Nobody has answered this yet, so it is ranked on how often the underlying weakness is exploited rather than on anything observed here.",
+      "This clause is not yet answered, so it is ranked on how frequently the underlying weakness is exploited rather than on observed evidence.",
     );
   } else if (answer === "no") {
-    parts.push("You have confirmed this control is not in place.");
+    parts.push("This control has been confirmed as not in place.");
   } else if (answer === "partial") {
-    parts.push("You have marked this as only partially in place.");
+    parts.push("This control has been recorded as partially in place.");
   } else if (answer === "unsure") {
     parts.push(
-      "You said you are not sure. Find out before doing anything else here — an assessor will ask, and the answer decides whether this is a real gap or already done.",
+      "This has been marked as unconfirmed. Establishing the position should take priority, as an assessor will ask and the answer determines whether remediation is required at all.",
     );
   }
 

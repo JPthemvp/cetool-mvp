@@ -96,7 +96,7 @@ export default function ToolkitPage() {
 
       {/* The honest framing, up front */}
       <Card className="border-brand-500/35 bg-brand-700/15 p-5">
-        <h2 className="text-sm font-semibold text-brand-300">Why this is a script and not an agent</h2>
+        <h2 className="text-sm font-semibold text-brand-300">Why this is provided as a script</h2>
         <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-brand-50">
           An installed agent would be quicker, and it is what commercial tools do. It also
           means asking thousands of SMEs to run an opaque binary with administrator rights
@@ -245,13 +245,10 @@ export default function ToolkitPage() {
 
         <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4">
           <p className="text-[12px] font-semibold uppercase tracking-wide text-amber-300">
-            Check it before you run it
+            Verify before running
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-brand-50">
-            A security tool should not be teaching you to run downloaded scripts without
-            looking — that is the exact habit attackers rely on. Compare the hash below
-            against what PowerShell reports. If they differ, the file changed in transit:
-            do not run it.
+            We recommend verifying the file before running it, as a matter of good practice. Compare the checksum below with the value PowerShell reports. If they differ, the file has been altered in transit and should not be run.
           </p>
           <code className="mt-2.5 block overflow-x-auto rounded bg-ink-950/70 px-3 py-2 font-mono text-[11px] text-brand-100 scroll-thin">
             Get-FileHash .\cyber-essentials-tool-check.ps1 -Algorithm SHA256
@@ -324,7 +321,7 @@ export default function ToolkitPage() {
           does <span className="font-semibold text-white">not</span> satisfy A.8.4(g) — a
           destination your machine can always write to is a destination ransomware can
           always encrypt. The script says so every time it runs, because a backup you
-          wrongly believe in is worse than none.
+          unverified can create false assurance.
         </p>
 
         <div className="mt-4">
