@@ -193,7 +193,7 @@ export default function PreparePage() {
   const [openMeasure, setOpenMeasure] = useState<MeasureId | null>("A.1");
   const [hideAnswered, setHideAnswered] = useState(false);
   const [focus, setFocus] = useState<"all" | "human" | "machine">("all");
-  const [obligation, setObligation] = useState<"all" | "mandatory" | "recommended">("all");
+  const [obligation, setObligation] = useState<"all" | "shall" | "should">("all");
   const sectorName = SECTOR_BY_ID.get(org.sector)?.name ?? "";
   const cov = useMemo(() => coverageStats(), []);
   const activePathway = PATHWAY_BY_ID.get(pathway);
@@ -307,8 +307,8 @@ export default function PreparePage() {
             {(
               [
                 ["all", "All clauses"],
-                ["mandatory", "Requirements"],
-                ["recommended", "Recommendations"],
+                ["shall", "Requirements"],
+                ["should", "Recommendations"],
               ] as const
             ).map(([key, label]) => (
               <button
@@ -376,10 +376,10 @@ export default function PreparePage() {
                     (c) => (answers[c.id]?.value ?? "unanswered") === "unanswered",
                   );
                 }
-                if (obligation === "mandatory") {
-                  clauses = clauses.filter((c) => c.obligation === "mandatory");
-                } else if (obligation === "recommended") {
-                  clauses = clauses.filter((c) => c.obligation === "recommended");
+                if (obligation === "shall") {
+                  clauses = clauses.filter((c) => c.obligation === "shall");
+                } else if (obligation === "should") {
+                  clauses = clauses.filter((c) => c.obligation === "should");
                 }
                 if (focus === "human") {
                   clauses = clauses.filter((c) => answerabilityOf(c.id) === "human");
