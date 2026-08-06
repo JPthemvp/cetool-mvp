@@ -332,8 +332,13 @@ export default function ResultsPage() {
           <p className="mt-1 text-[13px] leading-relaxed text-brand-100/80">{readiness.verdict}</p>
         </div>
 
-        {/* Declaration */}
-        <div className="mt-6 border-t border-brand-700/30 pt-5">
+        {/* Declaration — only unlocked when assessment is certifiable */}
+        <div className={`mt-6 border-t border-brand-700/30 pt-5 ${!readiness.certifiable ? "pointer-events-none opacity-40" : ""}`}>
+          {!readiness.certifiable && (
+            <p className="mb-3 rounded-lg border border-amber-500/30 bg-amber-500/8 px-4 py-2.5 text-[12px] font-medium text-amber-300">
+              Complete all mandatory clauses to unlock the declaration and submission.
+            </p>
+          )}
           <p className="text-[13px] font-semibold uppercase tracking-wide text-white">
             Declaration
           </p>

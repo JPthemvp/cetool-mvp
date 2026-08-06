@@ -410,6 +410,7 @@ function AssetInventory({
               <Stat
                 label="Asset classes covered"
                 value={`${byKind.length} / ${INVENTORY_CLASSES.length}`}
+                hint="CSA A.2.4(b) requires inventorying 6 classes: servers, endpoints, network devices, cloud services, mobile devices, and software. This shows how many classes the scan found assets for."
               />
               <Stat label="Clause" value="A.2.4(a)" hint="Inventory of hardware and software" />
             </div>

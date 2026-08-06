@@ -392,7 +392,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
       for (const [clauseId, evidence] of aggregateByClause(endpoints)) {
         const existing = answers[clauseId];
-        if (!existing || existing.source === "user") continue;
+        // Never overwrite answers the user deliberately set with an evidence reference.
+        // Bulk-test answers (no evidenceRef) are treated as provisional and can be replaced.
+        if (existing?.source === "user" && existing.evidenceRef) continue;
         const verdict = clauseVerdict(evidence);
         if (verdict.answer === "no") {
           answers[clauseId] = {

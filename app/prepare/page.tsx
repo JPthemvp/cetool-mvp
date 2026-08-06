@@ -193,7 +193,7 @@ function EmployeeQuizPanel() {
 
 const AUDIENCE_COLOUR: Record<string, string> = {
   employees: "bg-emerald-500/20 text-emerald-300 ring-emerald-500/30",
-  "it-teams": "bg-cyan-500/20 text-cyan-300 ring-cyan-500/30",
+  "it-teams": "bg-sky-700/30 text-sky-200 ring-sky-500/40",
   "business-owners": "bg-amber-500/20 text-amber-300 ring-amber-500/30",
   general: "bg-brand-500/20 text-brand-200 ring-brand-500/30",
 };
@@ -292,8 +292,8 @@ function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string })
           )}
 
           {help && (answer.value === "no" || answer.value === "partial" || answer.value === "unsure") && (
-            <div className="mt-2.5 rounded-lg border border-csa-500/30 bg-csa-500/8 p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-csa-300">
+            <div className="mt-2.5 rounded-lg border border-blue-500/30 bg-blue-500/8 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-300">
                 Recommended action
               </p>
               <p className="mt-1 text-[13px] leading-relaxed text-brand-50">{help.action}</p>
@@ -459,21 +459,22 @@ export default function PreparePage() {
       <SectionTitle
         eyebrow="Capability 04 · Assess"
         title="The Cyber Essentials self-assessment"
-        lead="Answered against the published clauses, with anything the scan could verify already filled in. Only negatives are pre-filled — a control we cannot see from outside still needs your confirmation, which is what keeps the submission defensible."
+        lead="Answered against the published clauses, with anything the local device check or web scan could verify already filled in. Passing checks are auto-filled as met — please review and confirm each one holds across your full estate."
       />
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <Stat label="Completion" value={`${readiness.completion}%`} />
-        <Stat label="Weighted score" value={`${readiness.percent}%`} hint="Partial counts as half" />
+        <Stat label="Answered" value={`${readiness.completion}%`} hint="% of applicable clauses you or a scan have answered" />
+        <Stat label="Weighted score" value={`${readiness.percent}%`} hint="Yes = full credit, Partial = half credit" />
         <Stat
           label="Mandatory gaps"
           value={readiness.blocking}
           tone={readiness.blocking === 0 ? "good" : "bad"}
+          hint="Shall clauses not yet marked yes or n/a — these block certification"
         />
         <Stat
-          label="Pre-filled from scan"
+          label="Auto-filled clauses"
           value={prefilledCount}
-          hint="Answered without you typing"
+          hint="Filled by web scan or local device check — review each one"
         />
       </div>
 

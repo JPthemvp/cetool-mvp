@@ -181,7 +181,7 @@ export default function OnboardPage() {
                   key={p.id}
                   className={`block cursor-pointer rounded-lg border p-4 transition ${
                     on
-                      ? "border-csa-500/50 bg-csa-500/10"
+                      ? "border-emerald-500/50 bg-emerald-500/10"
                       : "border-ink-700/60 hover:border-ink-600"
                   }`}
                 >
@@ -191,7 +191,7 @@ export default function OnboardPage() {
                       name="pathway"
                       checked={on}
                       onChange={() => setPathway(p.id)}
-                      className="mt-1 h-4 w-4 shrink-0 accent-[#e31736]"
+                      className="mt-1 h-4 w-4 shrink-0 accent-[#10b981]"
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block text-[14px] font-semibold text-white">{p.name}</span>
@@ -248,7 +248,7 @@ export default function OnboardPage() {
                 key={s.id}
                 className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-[13px] transition ${
                   org.sector === s.id
-                    ? "border-csa-500/50 bg-csa-500/10"
+                    ? "border-emerald-500/50 bg-emerald-500/10"
                     : "border-ink-700/60 hover:border-ink-600"
                 }`}
               >
@@ -257,7 +257,7 @@ export default function OnboardPage() {
                   name="sector"
                   checked={org.sector === s.id}
                   onChange={() => setOrg({ sector: s.id })}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#e31736]"
+                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#10b981]"
                 />
                 <span className="leading-snug text-brand-50">{s.identifier}</span>
               </label>
