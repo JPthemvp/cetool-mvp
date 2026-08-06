@@ -28,7 +28,11 @@ create table if not exists public.scans (
 create index if not exists scans_scanned_at_idx on public.scans (scanned_at desc);
 create index if not exists scans_domain_idx     on public.scans (domain);
 
--- Row Level Security: nobody reads this without the service_role key
+-- Grant table-level access to service_role (bypasses RLS) and anon/authenticated
+grant all on public.scans to service_role;
+grant usage, select on sequence public.scans_id_seq to service_role;
+
+-- Row Level Security: blocks anon/authenticated direct access
 alter table public.scans enable row level security;
 
 -- No public read/write — all access goes through the server-side admin client

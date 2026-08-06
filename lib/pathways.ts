@@ -48,7 +48,7 @@ export const PATHWAYS: Pathway[] = [
     cost: "Free. About an hour of your time.",
     intrusiveness: "Nothing installed, nothing touched. Only public data is read.",
     limitation:
-      "The scan can only see your internet-facing estate, so almost every answer about your devices comes from you. That is acceptable to an assessor — but if you are unsure how your machines are configured, you will be guessing.",
+      "The scan can only see your internet-facing estate, so almost every answer about your devices comes from you — that is acceptable to an assessor if you know how your devices/endpoints are configured.",
   },
   {
     id: "agent-assisted",
@@ -65,7 +65,7 @@ export const PATHWAYS: Pathway[] = [
     intrusiveness:
       "You run it yourself with administrator rights. It reads settings and writes a file; it changes nothing unless you separately ask it to.",
     limitation:
-      "It only reports on the machines you actually run it on, and it cannot see your cloud tenant, your mobile devices or your network hardware. Those clauses still come back to you.",
+      "It only reports on the machines you actually run it on, and it cannot see your cloud tenant, your mobile devices or your network hardware.",
   },
 ];
 
