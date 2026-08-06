@@ -216,7 +216,7 @@ export default function PreparePage() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Capability 05 · Prepare"
+        eyebrow="Capability 04 · Assess"
         title="The Cyber Essentials self-assessment"
         lead="Answered against the published clauses, with anything the scan could verify already filled in. Only negatives are pre-filled — a control we cannot see from outside still needs your confirmation, which is what keeps the submission defensible."
       />

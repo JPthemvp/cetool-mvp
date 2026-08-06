@@ -273,6 +273,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           mode: options?.mode ?? "passive",
           attested: options?.attested ?? false,
           verify: options?.verify ?? false,
+          // Org identifiers for scan tracking (no PII — UEN and codes only)
+          uen: state.org.uen || undefined,
+          sector: state.org.sector || undefined,
+          pathway: state.pathway || undefined,
         }),
       });
       if (res.status === 403) {
@@ -477,8 +481,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       scanRun: !!state.scan,
       assessmentComplete: readiness.completion === 100,
     });
+    // Auto-skip toolkit when the user chose the self-assess pathway — it only
+    // applies to agent-assisted installs.
+    if (state.pathway === "self-assess") auto.add("toolkit");
     return resolveJourney(new Set([...auto, ...state.acknowledged]));
-  }, [state.org, state.scan, state.acknowledged, readiness.completion]);
+  }, [state.org, state.scan, state.acknowledged, state.pathway, readiness.completion]);
 
   const value: StoreValue = {
     ...state,

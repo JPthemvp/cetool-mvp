@@ -32,9 +32,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="border-t border-brand-700/35 pt-6 text-xs leading-relaxed text-brand-200/70">
               <p>
                 Prototype. Framework content is modelled on CSA&apos;s published Cyber Essentials
-                mark (V202503, as expanded 15 Apr 2025) and Cyber Trust mark (V202504)
-                publications. This tool is not affiliated with CSA and does not itself confer
-                certification — an appointed certification body performs the independent
+                mark (V202503, as expanded 15 Apr 2025). The Cyber Essentials mark is valid
+                for two years from award date; re-assessment against the current framework
+                is required to renew. This tool is not affiliated with CSA and does not itself
+                confer certification — an appointed certification body performs the independent
                 assessment.
               </p>
             </div>

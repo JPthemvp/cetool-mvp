@@ -11,7 +11,6 @@ import {
   type ResultRow,
 } from "@/lib/assessment";
 import { CATEGORIES, MEASURE_BY_ID, measuresInCategory } from "@/lib/ce-framework";
-import { TIERS, ceCoverageOfTier } from "@/lib/ct-framework";
 import { CERTIFICATION_STEPS } from "@/lib/guidance";
 import { SECTOR_BY_ID, extraObligations } from "@/lib/sectors";
 import { ObligationLabel } from "@/components/detail";
@@ -38,7 +37,6 @@ export default function ResultsPage() {
 
   const shown = showAll ? rows : rows.filter((r) => r.answer !== "yes" && r.answer !== "na");
 
-  const supporter = ceCoverageOfTier("supporter");
   const sector = SECTOR_BY_ID.get(org.sector);
   const beyond = extraObligations(org.sector);
 
@@ -139,7 +137,7 @@ export default function ResultsPage() {
     return (
       <div>
         <SectionTitle
-          eyebrow="Capability 05 · Prepare"
+          eyebrow="Capability 04 · Assess"
           title="Results"
           lead="This is what replaces the results tab in CSA's self-assessment."
         />
@@ -155,7 +153,7 @@ export default function ResultsPage() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Capability 05 · Prepare"
+        eyebrow="Capability 04 · Assess"
         title="Cyber Essentials mark — self-assessment results"
         lead="One row per applicable clause, carrying the answer, its provenance, and the evidence reference an assessor will read. Export it as CSV for the submission or JSON for a certification body to ingest."
       />
@@ -409,58 +407,6 @@ export default function ResultsPage() {
           </Card>
         </>
       )}
-
-      {/* Forward look to Cyber Trust */}
-      <h2 className="mt-12 mb-4 text-xl font-semibold tracking-tight text-white">
-        What this earns you towards Cyber Trust
-      </h2>
-      <Card className="p-6">
-        <p className="max-w-3xl text-[13px] leading-relaxed text-brand-100/80">
-          CSA&apos;s own tier table marks eight Cyber Trust domains as already covered by
-          Cyber Essentials measures. At the Supporter tier that is{" "}
-          <span className="font-semibold text-white/90">
-            {supporter.covered} of {supporter.total} domains
-          </span>{" "}
-          — so finishing this assessment does most of the work for the next mark, not just
-          this one.
-        </p>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-5">
-          {TIERS.map((t) => {
-            const cov = ceCoverageOfTier(t.id);
-            const pct = Math.round((cov.covered / cov.total) * 100);
-            return (
-              <div key={t.id} className="rounded-xl border border-ink-700/60 bg-ink-850/60 p-4">
-                <p className="text-[13px] font-semibold text-white/90">{t.name}</p>
-                <p className="mt-0.5 text-[11px] text-brand-200/70">Tier {t.level}</p>
-                <p className="mt-2 text-lg font-semibold tabular-nums text-white">
-                  {cov.covered}
-                  <span className="text-sm text-brand-200/70">/{cov.total}</span>
-                </p>
-                <div className="mt-2">
-                  <Meter value={pct} tone={pct >= 70 ? "good" : pct >= 40 ? "warn" : "bad"} />
-                </div>
-                <p className="mt-2 text-[11px] leading-snug text-brand-200/70">
-                  {cov.remaining.length} domains to add
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-5 border-t border-brand-700/30 pt-4">
-          <p className="text-[11px] uppercase tracking-wide text-brand-200/70">
-            Still to add for Supporter
-          </p>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {supporter.remaining.map((d) => (
-              <Pill key={d.n}>
-                {d.n}. {d.name}
-              </Pill>
-            ))}
-          </div>
-        </div>
-      </Card>
 
       {/* Hand-off */}
       <h2 className="mt-12 mb-4 text-xl font-semibold tracking-tight text-white">

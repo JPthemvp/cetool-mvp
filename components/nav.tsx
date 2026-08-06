@@ -4,18 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useStore } from "./store";
-import { STEPS } from "@/lib/journey";
+import { activeSteps } from "@/lib/journey";
 import { DetailToggle } from "./detail";
 import { ThemeToggle } from "./theme";
 
 export function Nav() {
   const pathname = usePathname();
-  const { readiness, onboarded, org, started, beginJourney, journey, testMode } = useStore();
+  const { readiness, onboarded, org, started, beginJourney, journey, testMode, pathway } = useStore();
 
   // A deep link into a later step is itself a commitment. The gate decides
   // whether they may stay there; this only stops them landing without a nav.
   useEffect(() => {
-    if (!started && pathname !== "/") beginJourney();
+    if (!started && pathname !== "/" && pathname !== "/onboard") beginJourney();
   }, [started, pathname, beginJourney]);
 
   return (
@@ -42,7 +42,7 @@ export function Nav() {
             <ThemeToggle />
             {started && (
               <span className="rounded-full bg-brand-700/40 px-2.5 py-1 font-medium tabular-nums text-brand-100 ring-1 ring-inset ring-brand-500/30">
-                {journey.completed.size}/{STEPS.length} steps
+                {journey.completed.size}/{activeSteps(pathway).length} steps
                 {readiness.completion > 0 && ` · ${readiness.completion}% assessed`}
               </span>
             )}
@@ -59,9 +59,8 @@ export function Nav() {
             aria-label="Progress"
             className="-mb-px flex gap-1 overflow-x-auto pb-2 pt-0.5 scroll-thin"
           >
-            {STEPS.map((item) => {
-              const active =
-                item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+            {activeSteps(pathway).map((item) => {
+              const active = pathname === item.href || pathname.startsWith(item.href + "/");
               const done = journey.completed.has(item.id);
               const reached = journey.unlocked.some((u) => u.id === item.id);
 

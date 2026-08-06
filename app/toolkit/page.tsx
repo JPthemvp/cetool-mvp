@@ -89,7 +89,7 @@ export default function ToolkitPage() {
   return (
     <div>
       <SectionTitle
-        eyebrow="Optional · Local toolkit"
+        eyebrow="Capability 03b · Harden"
         title="Check and harden the machines themselves"
         lead="The web scan sees your internet-facing estate. This sees the inside — but only because you run it yourself. It is plain PowerShell you can read, it makes no network calls, and nothing leaves the machine unless you paste it back here."
       />

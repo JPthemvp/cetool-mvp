@@ -146,7 +146,7 @@ export const CERTIFICATION_STEPS = [
   {
     title: "Appoint a certification body",
     detail:
-      "CSA-appointed certification bodies conduct the independent assessment. Fees vary, so quote more than one.",
+      "CSA-appointed certification bodies conduct the independent assessment.",
   },
   {
     title: "Independent assessment",
@@ -156,6 +156,6 @@ export const CERTIFICATION_STEPS = [
   {
     title: "Certification",
     detail:
-      "The Cyber Essentials mark is valid for three years. Continuous monitoring keeps you from drifting out of compliance in year two.",
+      "The Cyber Essentials mark is valid for two years from the date of award. A re-assessment against the current framework is required to renew.",
   },
 ];

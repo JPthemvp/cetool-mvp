@@ -38,13 +38,18 @@ export interface Step {
   reviewOnly?: boolean;
   /** Skippable without completing — currently only the local toolkit. */
   optional?: boolean;
+  /**
+   * When set, this step is only shown for the named pathway.
+   * Users on other pathways skip it entirely.
+   */
+  pathwayOnly?: string;
 }
 
 export const STEPS: Step[] = [
   {
     id: "start",
-    href: "/",
-    label: "Start",
+    href: "/onboard",
+    label: "Setup",
     title: "Tell us about your organisation",
     doneWhen: "Name your organisation, pick your sector, and answer the scoping questions.",
     evidenced: true,
@@ -58,45 +63,28 @@ export const STEPS: Step[] = [
     evidenced: true,
   },
   {
-    id: "assets",
-    href: "/assets",
-    label: "Assets",
-    title: "Start your asset inventory",
-    doneWhen: "Review what we found and export it as the starting point for your inventory.",
-    evidenced: false,
-    reviewOnly: true,
-  },
-  {
     id: "prioritise",
     href: "/prioritise",
-    label: "Prioritise",
+    label: "Gap Analysis",
     title: "See which gaps matter most",
     doneWhen: "Read the priority order, especially the quick wins.",
     evidenced: false,
     reviewOnly: true,
   },
   {
-    id: "guide",
-    href: "/guide",
-    label: "Guide",
-    title: "Understand the nine measures",
-    doneWhen: "Look through the measures so the assessment questions make sense.",
-    evidenced: false,
-    reviewOnly: true,
-  },
-  {
     id: "toolkit",
     href: "/toolkit",
-    label: "Toolkit",
+    label: "Harden",
     title: "Check the machines themselves",
-    doneWhen: "Optional. Run the local check, or skip it and answer from what you know.",
+    doneWhen: "Run the local check, or skip it and answer from what you know.",
     evidenced: false,
     optional: true,
+    pathwayOnly: "agent-assisted",
   },
   {
     id: "prepare",
     href: "/prepare",
-    label: "Prepare",
+    label: "Assess",
     title: "Complete the self-assessment",
     doneWhen: "Answer every clause. 'Not sure' counts as an answer.",
     evidenced: true,
@@ -110,22 +98,22 @@ export const STEPS: Step[] = [
     evidenced: false,
   },
   {
-    id: "monitor",
-    href: "/monitor",
-    label: "Monitor",
-    title: "Keep it true",
-    doneWhen: "Choose how often to re-check.",
-    evidenced: false,
-  },
-  {
     id: "integrate",
     href: "/integrate",
-    label: "Integrate",
+    label: "Next Steps",
     title: "Funding, help and certification",
     doneWhen: "You are at the end of the journey.",
     evidenced: false,
   },
 ];
+
+/**
+ * Returns the steps relevant to a given pathway, hiding any steps
+ * that are gated to a different pathway.
+ */
+export function activeSteps(pathway: string): Step[] {
+  return STEPS.filter((s) => !s.pathwayOnly || s.pathwayOnly === pathway);
+}
 
 export const STEP_BY_HREF = new Map(STEPS.map((s) => [s.href, s]));
 export const STEP_BY_ID = new Map(STEPS.map((s) => [s.id, s]));

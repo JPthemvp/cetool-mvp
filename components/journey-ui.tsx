@@ -4,7 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useStore } from "./store";
 import { Button, Card, Meter } from "./ui";
-import { STEPS, STEP_BY_HREF, isUnlocked, stepIndex } from "@/lib/journey";
+import { STEPS, STEP_BY_HREF, activeSteps, isUnlocked, stepIndex } from "@/lib/journey";
 
 /**
  * Sends anyone who lands on a locked step back to where they actually are.
@@ -77,17 +77,18 @@ export function TestModeBanner() {
 /** "Step 3 of 10" plus a bar — the journey's length without exposing its pages. */
 export function StepHeader() {
   const pathname = usePathname();
-  const { journey, started } = useStore();
+  const { journey, started, pathway } = useStore();
   const step = STEP_BY_HREF.get(pathname);
   if (!started || !step) return null;
 
-  const index = stepIndex(pathname);
+  const steps = activeSteps(pathway);
+  const index = steps.findIndex((s) => s.href === pathname);
   const done = journey.completed.has(step.id);
   // Review steps count for less: clicking through a page you read is not the
   // same as answering the assessment, and a bar that treats them equally lies.
   const weight = (s: (typeof STEPS)[number]) => (s.reviewOnly || s.optional ? 0.4 : 1);
-  const totalWeight = STEPS.reduce((t, s) => t + weight(s), 0);
-  const earned = STEPS.reduce(
+  const totalWeight = steps.reduce((t, s) => t + weight(s), 0);
+  const earned = steps.reduce(
     (t, s) => t + (journey.completed.has(s.id) ? weight(s) : 0),
     0,
   );
@@ -97,7 +98,7 @@ export function StepHeader() {
     <div className="mb-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-300">
-          Step {index + 1} of {STEPS.length} · {step.label}
+          Step {index + 1} of {steps.length} · {step.label}
           {step.optional && <span className="ml-2 text-brand-200/70">· optional</span>}
         </p>
         <p className="flex items-center gap-2 text-xs tabular-nums text-brand-200/70">
@@ -119,13 +120,14 @@ export function StepHeader() {
 export function StepFooter() {
   const pathname = usePathname();
   const router = useRouter();
-  const { journey, acknowledgeStep, started, readiness, scan, org } = useStore();
+  const { journey, acknowledgeStep, started, readiness, scan, org, pathway } = useStore();
 
   const step = STEP_BY_HREF.get(pathname);
   if (!started || !step) return null;
 
-  const index = stepIndex(pathname);
-  const next = STEPS[index + 1];
+  const steps = activeSteps(pathway);
+  const index = steps.findIndex((s) => s.href === pathname);
+  const next = steps[index + 1];
   const done = journey.completed.has(step.id);
 
   // Why an evidenced step is not finished yet, in the user's terms.
@@ -155,7 +157,7 @@ export function StepFooter() {
     if (next) router.push(next.href);
   }
 
-  const previous = index > 0 ? STEPS[index - 1] : null;
+  const previous = index > 0 ? steps[index - 1] : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
@@ -188,7 +190,7 @@ export function StepFooter() {
             {next && (
               <Button onClick={advance} disabled={!canAdvance}>
                 {done
-                  ? `Next · ${next.label}`
+                  ? next.label
                   : step.reviewOnly
                     ? `Read it · ${next.label}`
                     : `Mark done · ${next.label}`}{" "}

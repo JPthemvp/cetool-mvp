@@ -45,22 +45,12 @@ export const CERTIFICATION_BODIES: CertificationBody[] = [
 export const CERTIFICATION_REGISTER_URL =
   "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/cyber-essentials/certification-for-the-cyber-essentials-mark/";
 
-export interface CisoaasProvider {
-  name: string;
-  url?: string;
-}
-
 /**
- * Cybersecurity consultants onboarded by CSA to act as an outsourced CISO for
- * SMEs without in-house security staff. Eligible SMEs have been able to claim
- * substantial co-funding, so confirm current subsidy levels before committing.
+ * The CISOaaS provider list is intentionally not hard-coded here. CSA's own
+ * matching listing (CISOAAS_DIRECTORY_URL below) is the authoritative source —
+ * the set of onboarded consultants changes, and a stale hard-coded list is worse
+ * than directing the SME to the live register. Use the CSA links below instead.
  */
-export const CISOAAS_PROVIDERS: CisoaasProvider[] = [
-  { name: "RSM Singapore", url: "https://www.rsm.global/singapore/service/cisoaas" },
-  { name: "Crowe Singapore", url: "https://www.crowe.com/sg/services/risk/cisoaas-consulting" },
-  { name: "M1", url: "https://www.m1.com.sg/business/solutions/managed-security-solutions/cisoaas" },
-  { name: "Acclime Singapore", url: "https://singapore.acclime.com/advisory/cybersecurity/cisoaas-consulting/" },
-];
 
 export const CISOAAS_PROGRAMME_URL =
   "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/ciso-as-a-service-to-develop-cybersecurity-health-plan/";
@@ -70,7 +60,7 @@ export const CISOAAS_DIRECTORY_URL =
   "https://atc.sg/cybersecurity-health-plan-for-SMEs-CISO-as-a-Service-(CiSOaas)-consultants.php";
 
 export const CSA_NON_ENDORSEMENT =
-  "CSA does not endorse or recommend any organisation, individual, product or service linked to the SG Cyber Safe programme, and cannot assure the quality of their work. Neither does this tool. Get more than one quote.";
+  "CSA does not endorse or recommend any organisation, individual, product or service linked to the SG Cyber Safe programme, and cannot assure the quality of their work. Neither does this tool.";
 
 // ── Journey routing ─────────────────────────────────────────────────────────
 
