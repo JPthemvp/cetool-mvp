@@ -21,6 +21,7 @@ import { PATHWAY_BY_ID, humanOnlyClauses, pathwayCoverage } from "@/lib/pathways
 import { answerabilityOf } from "@/lib/answerability";
 import { PLAIN_CATEGORY, plainMeasure } from "@/lib/plain";
 import { resourcesForMeasure, audienceLabel } from "@/lib/csa-resources";
+import { quizToPlainText, quizToKahootCsv, quizToTrackingCsvTemplate } from "@/lib/employee-quiz";
 
 const OPTIONS: Array<{ value: AnswerValue; label: string; tone: string }> = [
   { value: "yes", label: "Yes", tone: "data-[on=true]:bg-emerald-500 data-[on=true]:text-oncolor-dark" },
@@ -30,6 +31,166 @@ const OPTIONS: Array<{ value: AnswerValue; label: string; tone: string }> = [
   { value: "na", label: "N/A", tone: "data-[on=true]:bg-brand-700 data-[on=true]:text-oncolor" },
 ];
 
+// ── Employee Quiz Download Panel (shown inside clause A.1.4(a)) ──────────────
+
+const QUIZ_FORMATS = [
+  {
+    id: "plain",
+    label: "Plain Text",
+    sublabel: "SurveyMonkey · Google Forms · Microsoft Forms",
+    ext: "txt",
+    mime: "text/plain",
+    generate: quizToPlainText,
+  },
+  {
+    id: "kahoot",
+    label: "Kahoot CSV",
+    sublabel: "Import directly into Kahoot",
+    ext: "csv",
+    mime: "text/csv",
+    generate: quizToKahootCsv,
+  },
+  {
+    id: "tracking",
+    label: "Score Tracker",
+    sublabel: "Excel / Google Sheets template",
+    ext: "csv",
+    mime: "text/csv",
+    generate: quizToTrackingCsvTemplate,
+  },
+] as const;
+
+function EmployeeQuizPanel() {
+  const [open, setOpen] = useState(false);
+
+  function download(fmt: typeof QUIZ_FORMATS[number]) {
+    const content = fmt.generate();
+    const blob = new Blob([content], { type: `${fmt.mime};charset=utf-8` });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `csa-employee-cybersecurity-quiz-${fmt.id}.${fmt.ext}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-brand-500/30 bg-brand-700/10 p-4">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-start justify-between gap-3 text-left"
+      >
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-brand-200">
+            📋 CSA Employee Cybersecurity Quiz — ready to use
+          </p>
+          <p className="mt-0.5 text-[12px] leading-relaxed text-brand-100/60">
+            14 questions from the official SG Cyber Safe quiz. Download for SurveyMonkey, Google Forms,
+            Microsoft Forms, Kahoot, or Mentimeter.
+          </p>
+        </div>
+        <span className="mt-0.5 shrink-0 text-[11px] text-brand-200/50">
+          {open ? "▲ Collapse" : "▼ Expand"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          {/* What's inside */}
+          <div className="rounded-lg border border-ink-700/60 bg-ink-900/60 p-4">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-300">
+              Quiz overview — 14 questions, 4 topics
+            </p>
+            <ul className="space-y-1 text-[12px] leading-relaxed text-brand-100/80">
+              <li className="flex gap-2"><span className="text-csa-400 shrink-0">Tip 1</span> Protect yourself from phishing (Q1–4)</li>
+              <li className="flex gap-2"><span className="text-csa-400 shrink-0">Tip 2</span> Set strong passphrases and protect them (Q5–9)</li>
+              <li className="flex gap-2"><span className="text-csa-400 shrink-0">Tip 3</span> Protect your corporate / personal devices (Q10–12)</li>
+              <li className="flex gap-2"><span className="text-csa-400 shrink-0">Tip 4</span> Report cyber incidents (Q13–14)</li>
+            </ul>
+            <p className="mt-2 text-[11px] text-brand-200/50">
+              Source: <a href="https://www.surveymonkey.com/r/sgcybersafe-employee" target="_blank" rel="noreferrer" className="underline-offset-2 hover:underline">CSA SG Cyber Safe Employee Quiz</a> · © Cyber Security Agency of Singapore
+            </p>
+          </div>
+
+          {/* Download buttons */}
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-300">
+              Download for your platform
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {QUIZ_FORMATS.map((fmt) => (
+                <button
+                  key={fmt.id}
+                  onClick={() => download(fmt)}
+                  className="rounded-lg border border-ink-600/60 bg-ink-800 px-3 py-2 text-left transition hover:border-brand-500/50 hover:bg-ink-750"
+                >
+                  <p className="text-[12px] font-semibold text-white">{fmt.label}</p>
+                  <p className="text-[11px] text-brand-100/60">{fmt.sublabel}</p>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-brand-200/50">
+              Mentimeter: use the plain text file — question type &quot;Quiz (Competition)&quot; or &quot;Multiple Choice&quot;, copy each question manually.
+            </p>
+          </div>
+
+          {/* Tracking recommendation */}
+          <div className="rounded-lg border border-amber-500/25 bg-amber-500/8 p-4">
+            <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-amber-300">
+              📊 Recommended: track scores in a database
+            </p>
+            <p className="text-[12px] leading-relaxed text-brand-50">
+              Assessors may ask for evidence that training was completed and assessed. A simple spreadsheet
+              with the fields below satisfies clause A.1.4(a) and supports clause A.1.4(e) (annual refresh).
+            </p>
+            <div className="mt-2.5 overflow-x-auto rounded border border-ink-700/60 bg-ink-950/60">
+              <table className="w-full min-w-[520px] text-left text-[11px]">
+                <thead>
+                  <tr className="border-b border-ink-700/60">
+                    {["Employee Name", "Department", "Date Taken", "Score (/14)", "Pass? (≥70%)", "Retake Date"].map((h) => (
+                      <th key={h} className="px-3 py-2 font-semibold text-brand-300">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="text-brand-100/60 italic">
+                    <td className="px-3 py-1.5">Tan Ah Hock</td>
+                    <td className="px-3 py-1.5">Logistics</td>
+                    <td className="px-3 py-1.5">01/08/2026</td>
+                    <td className="px-3 py-1.5">12 / 14</td>
+                    <td className="px-3 py-1.5 text-emerald-400">Yes</td>
+                    <td className="px-3 py-1.5">—</td>
+                  </tr>
+                  <tr className="border-t border-ink-800/40 text-brand-100/60 italic">
+                    <td className="px-3 py-1.5">Lim Mei Ling</td>
+                    <td className="px-3 py-1.5">Finance</td>
+                    <td className="px-3 py-1.5">01/08/2026</td>
+                    <td className="px-3 py-1.5">8 / 14</td>
+                    <td className="px-3 py-1.5 text-csa-400">No</td>
+                    <td className="px-3 py-1.5">15/08/2026</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <ul className="mt-3 space-y-1 text-[12px] leading-relaxed text-brand-100/70">
+              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">·</span> Pass threshold: <strong className="text-white">10/14 (≥70%)</strong> — staff scoring below should receive targeted training and retest.</li>
+              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">·</span> Run the quiz on onboarding <strong className="text-white">and</strong> at least once annually thereafter (clause A.1.4(e)).</li>
+              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">·</span> Keep completion records for <strong className="text-white">at least 2 years</strong> as evidence for your Cyber Essentials assessor.</li>
+              <li className="flex gap-1.5"><span className="text-amber-400 shrink-0">·</span> For incidents, staff should report to SingCERT: <a href="https://www.csa.gov.sg/singcert/reporting" target="_blank" rel="noreferrer" className="text-brand-300 underline-offset-2 hover:underline">csa.gov.sg/singcert/reporting</a></li>
+            </ul>
+            <button
+              onClick={() => download(QUIZ_FORMATS[2])}
+              className="mt-3 rounded-lg border border-amber-500/30 bg-amber-600/15 px-3 py-1.5 text-[11px] font-medium text-amber-300 transition hover:bg-amber-600/25"
+            >
+              ↓ Download score tracker template (CSV)
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const AUDIENCE_COLOUR: Record<string, string> = {
   employees: "bg-violet-500/20 text-violet-300 ring-violet-500/30",
   "it-teams": "bg-blue-500/20 text-blue-300 ring-blue-500/30",
@@ -37,7 +198,7 @@ const AUDIENCE_COLOUR: Record<string, string> = {
   general: "bg-brand-700/30 text-brand-300 ring-brand-500/30",
 };
 
-function ClauseRow({ clause, measureId }: { clause: Clause; measureId: MeasureId }) {
+function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string }) {
   const { answers, setAnswer, signals, confirmations } = useStore();
   const confirmed = confirmations.get(clause.id);
   const answerability = answerabilityOf(clause.id);
@@ -241,6 +402,9 @@ function ClauseRow({ clause, measureId }: { clause: Clause; measureId: MeasureId
           )}
         </Drilldown>
       </Simple>
+
+      {/* Employee quiz download — shown only for the training awareness clause */}
+      {clause.id === "A.1.4(a)" && <EmployeeQuizPanel />}
     </div>
   );
 }
