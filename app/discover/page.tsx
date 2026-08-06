@@ -14,13 +14,7 @@ import {
 } from "@/components/ui";
 import { mappingFor } from "@/lib/mapping";
 import { Technical } from "@/components/detail";
-import {
-  ATTESTATION_TEXT,
-  INTRUSIVE_DESCRIPTION,
-  PASSIVE_DESCRIPTION,
-  verificationInstructions,
-  type ScanMode,
-} from "@/lib/authorisation";
+import type { ScanMode } from "@/lib/authorisation";
 import { normaliseDomain } from "@/lib/domain";
 import { plainFinding, plainGroup } from "@/lib/plain";
 import type { DiscoveredAsset, Finding, ScanResult } from "@/lib/scan";
@@ -534,10 +528,6 @@ export default function DiscoverPage() {
     URL.revokeObjectURL(url);
   }
   const [input, setInput] = useState(domain);
-  const [mode, setMode] = useState<ScanMode>("passive");
-  const [attested, setAttested] = useState(false);
-  const [showVerify, setShowVerify] = useState(false);
-  const [useVerification, setUseVerification] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [inventoryOpen, setInventoryOpen] = useState(true);
 
@@ -548,8 +538,6 @@ export default function DiscoverPage() {
       return next;
     });
   }
-
-  const blocked = mode === "full" && !attested && !useVerification;
 
   const findings = scan?.findings ?? [];
   const fails = findings.filter((f) => f.status === "fail");
@@ -572,8 +560,8 @@ export default function DiscoverPage() {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (input.trim() && !blocked) {
-              runScan(input, { mode, attested, verify: useVerification });
+            if (input.trim()) {
+              runScan(input, { mode: "passive", attested: false, verify: false });
             }
           }}
           className="flex flex-col gap-3 sm:flex-row sm:items-end"
@@ -596,7 +584,7 @@ export default function DiscoverPage() {
           </div>
           <Button
             type="submit"
-            disabled={scanning || !input.trim() || blocked}
+            disabled={scanning || !input.trim()}
             className="sm:w-44"
           >
             {scanning ? "Scanning…" : "Run scan"}
@@ -609,118 +597,11 @@ export default function DiscoverPage() {
           </div>
         )}
 
-        {/* The boundary, stated before the button rather than after it. */}
-        <div className="mt-5 space-y-2">
-          <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3.5 transition ${
-              mode === "passive"
-                ? "border-brand-500/50 bg-brand-700/15"
-                : "border-ink-700/60 hover:border-ink-600"
-            }`}
-          >
-            <input
-              type="radio"
-              name="scan-mode"
-              checked={mode === "passive"}
-              onChange={() => setMode("passive")}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#2f7dbf]"
-            />
-            <span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-[14px] font-semibold text-white">
-                  Configuration check
-                </span>
-                <Pill tone="good">Safe on any domain</Pill>
-              </span>
-              <span className="mt-1 block text-[12px] leading-relaxed text-brand-100/80">
-                {PASSIVE_DESCRIPTION}
-              </span>
-            </span>
-          </label>
-
-          <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3.5 transition ${
-              mode === "full"
-                ? "border-csa-500/50 bg-csa-500/10"
-                : "border-ink-700/60 hover:border-ink-600"
-            }`}
-          >
-            <input
-              type="radio"
-              name="scan-mode"
-              checked={mode === "full"}
-              onChange={() => setMode("full")}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-[#e31736]"
-            />
-            <span>
-              <span className="flex flex-wrap items-center gap-2">
-                <span className="text-[14px] font-semibold text-white">
-                  Configuration check plus exposure probe
-                </span>
-                <Pill tone="bad">Your own domain only</Pill>
-              </span>
-              <span className="mt-1 block text-[12px] leading-relaxed text-brand-100/80">
-                {INTRUSIVE_DESCRIPTION}
-              </span>
-            </span>
-          </label>
-        </div>
-
-        {mode === "full" && (
-          <div className="mt-3 rounded-lg border border-csa-500/40 bg-csa-500/10 p-4">
-            <p className="text-[13px] leading-relaxed text-brand-50">
-              Requesting these files is a security test, not browsing. It will appear in
-              the target&apos;s logs as reconnaissance, and running it against a domain you
-              are not authorised to test may be an offence under the Computer Misuse Act.
-            </p>
-            <label className="mt-3 flex cursor-pointer items-start gap-2.5 border-t border-csa-500/25 pt-3">
-              <input
-                type="checkbox"
-                checked={attested}
-                onChange={(e) => setAttested(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-600/80 bg-ink-950 accent-[#e31736]"
-              />
-              <span className="text-[13px] leading-relaxed text-white">
-                {ATTESTATION_TEXT}
-              </span>
-            </label>
-
-            <button
-              onClick={() => setShowVerify((v) => !v)}
-              className="mt-3 text-[12px] text-brand-300 underline-offset-2 hover:underline"
-            >
-              {showVerify ? "Hide" : "Prove it by DNS instead (stronger)"}
-            </button>
-
-            {showVerify && (
-              <div className="mt-2.5 rounded-lg border border-ink-700/60 bg-ink-950/50 p-3">
-                <ol className="list-inside list-decimal space-y-1 text-[12px] text-brand-100/80">
-                  {verificationInstructions(normaliseDomain(input || "yourdomain.com")).map(
-                    (line) => (
-                      <li key={line}>{line}</li>
-                    ),
-                  )}
-                </ol>
-                <label className="mt-3 flex cursor-pointer items-center gap-2.5">
-                  <input
-                    type="checkbox"
-                    checked={useVerification}
-                    onChange={(e) => setUseVerification(e.target.checked)}
-                    className="h-4 w-4 shrink-0 rounded border-ink-600/80 bg-ink-950 accent-[#2f7dbf]"
-                  />
-                  <span className="text-[12px] text-brand-50">
-                    I have published the record — check it when scanning
-                  </span>
-                </label>
-              </div>
-            )}
-          </div>
-        )}
-
-        <p className="mt-3 text-xs leading-relaxed text-brand-200/70">
-          Subdomain discovery reads public Certificate Transparency logs, which are
-          third-party records — that query never touches the domain being scanned, so it
-          runs in both modes.
+        <p className="mt-3 text-[12px] leading-relaxed text-brand-200/70">
+          Reads public DNS records, completes a TLS handshake, checks email authentication
+          (SPF / DKIM / DMARC), and fetches security headers — the same boundary
+          CSA&apos;s Internet Hygiene Portal works within. Subdomain discovery reads public
+          Certificate Transparency logs; that query never touches your domain directly.
         </p>
 
         {scanError && (
