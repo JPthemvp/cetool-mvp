@@ -208,17 +208,22 @@ export function clauseSignals(findings: Finding[]): Map<string, ClauseSignal> {
   return out;
 }
 
-export type SuggestedAnswer = "no" | "partial" | null;
+export type SuggestedAnswer = "yes" | "no" | "partial" | null;
 
 /**
- * What the scan lets us pre-fill. Never returns "yes" — see the note at the top
- * of this file. Returning null means "we learned nothing, ask the SME".
+ * What the scan lets us pre-fill.
+ * - "no"  : hard failures observed, strong confidence → definite gap.
+ * - "partial" : at least one failing check → evidence of a partial gap.
+ * - "yes" : scan ran checks for this clause and ALL passed → auto-confirm met.
+ * - null  : no checks mapped to this clause → ask the SME.
  */
 export function suggestedAnswer(signal: ClauseSignal): SuggestedAnswer {
   const hardFails = signal.failing.filter((f) => f.status === "fail");
 
   if (hardFails.length && signal.confidence === "strong") return "no";
   if (signal.failing.length) return "partial";
+  // All checks for this clause passed — auto-fill as met.
+  if (signal.confidence === "strong" || signal.confidence === "supporting") return "yes";
   return null;
 }
 

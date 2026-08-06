@@ -63,15 +63,6 @@ export const STEPS: Step[] = [
     evidenced: true,
   },
   {
-    id: "prioritise",
-    href: "/prioritise",
-    label: "Gap Analysis",
-    title: "See which gaps matter most",
-    doneWhen: "Read the priority order, especially the quick wins.",
-    evidenced: false,
-    reviewOnly: true,
-  },
-  {
     id: "toolkit",
     href: "/toolkit",
     label: "Harden",

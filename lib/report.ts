@@ -497,74 +497,170 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
     "Fill in your organisation's actual assets below the header row.";
   const TEMPLATE_FILL = "FFEFF6FF"; // light blue tint for data rows
 
+  // Creates the worksheet with a styled header row only; caller adds data + note rows.
   function addTemplateSheet(
     name: string,
-    appendixRef: string,
+    _appendixRef: string,
     cols: Array<{ header: string; width: number }>,
-    sampleRows: number = 5,
+    _sampleRows: number = 0,
   ) {
     const ws = wb.addWorksheet(name);
     ws.columns = cols.map((c) => ({ header: c.header, width: c.width }));
     styleHeader(ws.getRow(1));
+  }
 
-    // 5 blank input rows with light tint
-    for (let i = 0; i < sampleRows; i++) {
-      const r = ws.addRow(cols.map(() => ""));
-      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
-      r.height = 18;
-    }
-
-    // Source / disclaimer note
-    ws.addRow([]);
-    const noteRow = ws.addRow([`${appendixRef} — ${TEMPLATE_NOTE}`]);
-    noteRow.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
-    noteRow.getCell(1).alignment = { wrapText: true, vertical: "top" };
-    ws.mergeCells(noteRow.number, 1, noteRow.number, cols.length);
-    noteRow.height = 32;
+  // Helper to add a sample data row (light green tint so it's distinct from blank input rows)
+  const SAMPLE_FILL = "FFE6F4EA";
+  function addSampleRow(ws: import("exceljs").Worksheet, values: string[]) {
+    const r = ws.addRow(values);
+    r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: SAMPLE_FILL } };
+    r.font = { italic: true, color: { argb: "FF374151" }, size: 10 };
+    r.alignment = { wrapText: true, vertical: "top" };
+    r.height = 18;
   }
 
   // Appendix 4 — Hardware Asset Inventory
-  addTemplateSheet("Appx 4 · Hardware", "Appendix 4", [
-    { header: "Hardware Name / Model",       width: 28 },
-    { header: "Asset Tag / Serial Number",   width: 24 },
-    { header: "Asset Type",                  width: 18 },
-    { header: "Asset Location",              width: 20 },
-    { header: "Network Address (IP / MAC)",  width: 24 },
-    { header: "Asset Owner",                 width: 20 },
-    { header: "Asset Classification",        width: 22 },
-    { header: "Department",                  width: 18 },
-    { header: "Approval / Authorised Date",  width: 24 },
-    { header: "EOS Date",                    width: 14 },
-  ]);
+  {
+    const cols = [
+      { header: "Hardware Name / Model",       width: 28 },
+      { header: "Asset Tag / Serial Number",   width: 24 },
+      { header: "Asset Type",                  width: 18 },
+      { header: "Asset Location",              width: 20 },
+      { header: "Network Address (IP / MAC)",  width: 24 },
+      { header: "Asset Owner",                 width: 20 },
+      { header: "Asset Classification",        width: 22 },
+      { header: "Department",                  width: 18 },
+      { header: "Approval / Authorised Date",  width: 24 },
+      { header: "EOS Date",                    width: 14 },
+    ];
+    addTemplateSheet("Appx 4 · Hardware", "Appendix 4", cols, 0);
+    const ws4 = wb.getWorksheet("Appx 4 · Hardware")!;
+    // CSA sample data row (from Appendix 4 of CSA Cybersecurity Toolkit for IT Teams)
+    addSampleRow(ws4, [
+      "ASA5505-BUN-K9 Cisco ASA 5505 Firewall",
+      "FW2000001",
+      "Firewall",
+      "Data Centre 1, Serangoon North Ave 5",
+      "00:17:C5:E1:T7:4Y",
+      "IT Infra Manager",
+      "Critical",
+      "Network",
+      "1/1/2022",
+      "10/1/2030",
+    ]);
+    // Blank input rows
+    for (let i = 0; i < 4; i++) {
+      const r = ws4.addRow(cols.map(() => ""));
+      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
+      r.height = 18;
+    }
+    ws4.addRow([]);
+    const n4 = ws4.addRow([`Appendix 4 — ${TEMPLATE_NOTE}`]);
+    n4.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
+    n4.getCell(1).alignment = { wrapText: true, vertical: "top" };
+    ws4.mergeCells(n4.number, 1, n4.number, cols.length);
+    n4.height = 32;
+  }
 
   // Appendix 5 — Software Asset Inventory
-  addTemplateSheet("Appx 5 · Software", "Appendix 5", [
-    { header: "Software Name",               width: 28 },
-    { header: "Software Publisher",          width: 24 },
-    { header: "Software Version",            width: 18 },
-    { header: "Business Purpose",            width: 34 },
-    { header: "Asset Classification",        width: 22 },
-    { header: "Approval / Authorised Date",  width: 24 },
-    { header: "EOS Date",                    width: 14 },
-  ]);
+  {
+    const cols = [
+      { header: "Software Name",               width: 28 },
+      { header: "Software Publisher",          width: 24 },
+      { header: "Software Version",            width: 18 },
+      { header: "Business Purpose",            width: 34 },
+      { header: "Asset Classification",        width: 22 },
+      { header: "Approval / Authorised Date",  width: 24 },
+      { header: "EOS Date",                    width: 14 },
+    ];
+    addTemplateSheet("Appx 5 · Software", "Appendix 5", cols, 0);
+    const ws5 = wb.getWorksheet("Appx 5 · Software")!;
+    // CSA sample data row (from Appendix 5 of CSA Cybersecurity Toolkit for IT Teams)
+    addSampleRow(ws5, [
+      "Oracle Fusion Cloud ERP",
+      "Oracle",
+      "Version 1.3",
+      "Financial accounting",
+      "Internal",
+      "10/10/2022",
+      "1/1/2030",
+    ]);
+    for (let i = 0; i < 4; i++) {
+      const r = ws5.addRow(cols.map(() => ""));
+      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
+      r.height = 18;
+    }
+    ws5.addRow([]);
+    const n5 = ws5.addRow([`Appendix 5 — ${TEMPLATE_NOTE}`]);
+    n5.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
+    n5.getCell(1).alignment = { wrapText: true, vertical: "top" };
+    ws5.mergeCells(n5.number, 1, n5.number, cols.length);
+    n5.height = 32;
+  }
 
   // Appendix 7 — Data Asset Inventory
-  addTemplateSheet("Appx 7 · Data", "Appendix 7", [
-    { header: "Description",                 width: 40 },
-    { header: "Asset Classification",        width: 24 },
-    { header: "Asset Location",              width: 28 },
-    { header: "Retention Period",            width: 20 },
-  ]);
+  {
+    const cols = [
+      { header: "Description",                 width: 40 },
+      { header: "Asset Classification",        width: 24 },
+      { header: "Asset Location",              width: 28 },
+      { header: "Retention Period",            width: 32 },
+    ];
+    addTemplateSheet("Appx 7 · Data", "Appendix 7", cols, 0);
+    const ws7 = wb.getWorksheet("Appx 7 · Data")!;
+    // CSA sample data row (from Appendix 7 of CSA Cybersecurity Toolkit for IT Teams)
+    addSampleRow(ws7, [
+      "Customer's phone number",
+      "Confidential",
+      "Database",
+      "Retained for 14 days before carrying out destruction",
+    ]);
+    for (let i = 0; i < 4; i++) {
+      const r = ws7.addRow(cols.map(() => ""));
+      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
+      r.height = 18;
+    }
+    ws7.addRow([]);
+    const n7 = ws7.addRow([`Appendix 7 — ${TEMPLATE_NOTE}`]);
+    n7.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
+    n7.getCell(1).alignment = { wrapText: true, vertical: "top" };
+    ws7.mergeCells(n7.number, 1, n7.number, cols.length);
+    n7.height = 32;
+  }
 
   // Appendix 10 — Account Inventory
-  addTemplateSheet("Appx 10 · Accounts", "Appendix 10", [
-    { header: "Name",                        width: 24 },
-    { header: "Username / Email",            width: 30 },
-    { header: "Department",                  width: 20 },
-    { header: "Role / Account Type",         width: 22 },
-    { header: "Date of Access Created",      width: 24 },
-    { header: "Last Logon Date",             width: 20 },
-  ]);
+  {
+    const cols = [
+      { header: "Name",                        width: 24 },
+      { header: "Username / Email",            width: 30 },
+      { header: "Department",                  width: 20 },
+      { header: "Role / Account Type",         width: 22 },
+      { header: "Date of Access Created",      width: 24 },
+      { header: "Last Logon Date",             width: 20 },
+    ];
+    addTemplateSheet("Appx 10 · Accounts", "Appendix 10", cols, 0);
+    const ws10 = wb.getWorksheet("Appx 10 · Accounts")!;
+    // CSA sample data row (from Appendix 10 of CSA Cybersecurity Toolkit for IT Teams)
+    addSampleRow(ws10, [
+      "Tan Ah Hock",
+      "Hock12",
+      "Logistics",
+      "Operator account",
+      "12/10/2022",
+      "20/10/2022",
+    ]);
+    for (let i = 0; i < 4; i++) {
+      const r = ws10.addRow(cols.map(() => ""));
+      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
+      r.height = 18;
+    }
+    ws10.addRow([]);
+    const n10 = ws10.addRow([`Appendix 10 — ${TEMPLATE_NOTE}`]);
+    n10.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
+    n10.getCell(1).alignment = { wrapText: true, vertical: "top" };
+    ws10.mergeCells(n10.number, 1, n10.number, cols.length);
+    n10.height = 32;
+  }
 
   const buffer = await wb.xlsx.writeBuffer();
   return new Blob([buffer], {

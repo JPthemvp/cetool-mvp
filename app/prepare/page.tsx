@@ -20,18 +20,24 @@ import { coverageStats } from "@/lib/coverage";
 import { PATHWAY_BY_ID, humanOnlyClauses, pathwayCoverage } from "@/lib/pathways";
 import { answerabilityOf } from "@/lib/answerability";
 import { PLAIN_CATEGORY, plainMeasure } from "@/lib/plain";
+import { resourcesForMeasure, audienceLabel } from "@/lib/csa-resources";
 
 const OPTIONS: Array<{ value: AnswerValue; label: string; tone: string }> = [
   { value: "yes", label: "Yes", tone: "data-[on=true]:bg-emerald-500 data-[on=true]:text-oncolor-dark" },
   { value: "partial", label: "Partly", tone: "data-[on=true]:bg-amber-500 data-[on=true]:text-oncolor-dark" },
   { value: "no", label: "No", tone: "data-[on=true]:bg-csa-500 data-[on=true]:text-oncolor" },
-  // A real answer, not a cop-out. An unsure SME that is forced to pick Yes/No
-  // guesses, and a guessed Yes travels all the way to the assessor unchallenged.
   { value: "unsure", label: "Not sure", tone: "data-[on=true]:bg-brand-500 data-[on=true]:text-oncolor" },
   { value: "na", label: "N/A", tone: "data-[on=true]:bg-brand-700 data-[on=true]:text-oncolor" },
 ];
 
-function ClauseRow({ clause }: { clause: Clause }) {
+const AUDIENCE_COLOUR: Record<string, string> = {
+  employees: "bg-violet-500/20 text-violet-300 ring-violet-500/30",
+  "it-teams": "bg-blue-500/20 text-blue-300 ring-blue-500/30",
+  "business-owners": "bg-amber-500/20 text-amber-300 ring-amber-500/30",
+  general: "bg-brand-700/30 text-brand-300 ring-brand-500/30",
+};
+
+function ClauseRow({ clause, measureId }: { clause: Clause; measureId: MeasureId }) {
   const { answers, setAnswer, signals, confirmations } = useStore();
   const confirmed = confirmations.get(clause.id);
   const answerability = answerabilityOf(clause.id);
@@ -39,6 +45,12 @@ function ClauseRow({ clause }: { clause: Clause }) {
   const signal = signals.get(clause.id);
   const help = helpFor(clause.id);
   const [showEvidence, setShowEvidence] = useState(false);
+  const [showResources, setShowResources] = useState(false);
+  const resources = resourcesForMeasure(measureId);
+
+  // Scan-answered clauses: if the scan confirmed "yes", show it as auto-confirmed
+  // without requiring the user to re-click.
+  const scanConfirmedYes = answer.source === "scan" && answer.value === "yes";
 
   return (
     <div className="border-b border-brand-700/30 px-5 py-4 last:border-0">
@@ -47,7 +59,11 @@ function ClauseRow({ clause }: { clause: Clause }) {
           <div className="flex flex-wrap items-center gap-2">
             <ClauseCode id={clause.id} />
             <ObligationLabel obligation={clause.obligation} />
-            {answer.source === "scan" && <Pill tone="info">Answered by the scan</Pill>}
+            {answer.source === "scan" && (
+              <Pill tone={scanConfirmedYes ? "good" : "info"}>
+                {scanConfirmedYes ? "✓ Verified by scan" : "Flagged by scan"}
+              </Pill>
+            )}
             <Pill
               tone={
                 answerability === "machine"
@@ -84,9 +100,6 @@ function ClauseRow({ clause }: { clause: Clause }) {
             )}
           </Technical>
 
-          {/* Evidence in the SME's favour. The scan can only ever answer "no", so
-              without this the tool would be a device that lowers your score every
-              time you use its best feature. */}
           {confirmed && answer.value !== "yes" && (
             <div className="mt-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
@@ -99,7 +112,6 @@ function ClauseRow({ clause }: { clause: Clause }) {
             </div>
           )}
 
-          {/* "Not sure" explains rather than penalises. */}
           {answer.value === "unsure" && help?.notSure && (
             <div className="mt-3 rounded-lg border border-brand-500/35 bg-brand-700/20 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
@@ -109,7 +121,6 @@ function ClauseRow({ clause }: { clause: Clause }) {
             </div>
           )}
 
-          {/* The action item, shown once we know it is a gap. */}
           {help && (answer.value === "no" || answer.value === "partial" || answer.value === "unsure") && (
             <div className="mt-2.5 rounded-lg border border-csa-500/30 bg-csa-500/8 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-csa-300">
@@ -120,21 +131,33 @@ function ClauseRow({ clause }: { clause: Clause }) {
           )}
         </div>
 
-        <div className="flex shrink-0 overflow-hidden rounded-lg border border-ink-600/80">
-          {OPTIONS.map((o) => (
-            <button
-              key={o.value}
-              data-on={answer.value === o.value}
-              onClick={() => setAnswer(clause.id, { value: o.value })}
-              className={`px-3 py-1.5 text-xs font-semibold text-brand-100/80 transition hover:text-white ${o.tone}`}
-            >
-              {o.label}
-            </button>
-          ))}
-        </div>
+        {/* Answer buttons — hidden when scan already confirmed yes */}
+        {!scanConfirmedYes && (
+          <div className="flex shrink-0 overflow-hidden rounded-lg border border-ink-600/80">
+            {OPTIONS.map((o) => (
+              <button
+                key={o.value}
+                data-on={answer.value === o.value}
+                onClick={() => setAnswer(clause.id, { value: o.value })}
+                className={`px-3 py-1.5 text-xs font-semibold text-brand-100/80 transition hover:text-white ${o.tone}`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        )}
+        {scanConfirmedYes && (
+          <button
+            onClick={() => setAnswer(clause.id, { value: "yes" })}
+            className="shrink-0 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/20"
+            title="Override the scan-confirmed answer"
+          >
+            ✓ Confirmed · Override
+          </button>
+        )}
       </div>
 
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-3">
         <button
           onClick={() => setShowEvidence((s) => !s)}
           className="text-[11px] uppercase tracking-wide text-brand-200/70 transition hover:text-brand-100/80"
@@ -147,42 +170,77 @@ function ClauseRow({ clause }: { clause: Clause }) {
           )}
         </button>
 
-        {showEvidence && (
-          <div className="mt-2.5 rounded-lg border border-ink-700/60 bg-ink-900/60 p-3">
-            <p className="text-[11px] uppercase tracking-wide text-brand-200/70">
-              What the assessor will ask for
-            </p>
-            <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-[13px] text-brand-100/80">
-              {clause.evidence.map((e) => (
-                <li key={e}>{e}</li>
-              ))}
-            </ul>
-            <input
-              className={`${inputCls} mt-3`}
-              value={answer.evidenceRef ?? ""}
-              placeholder="Reference the document — e.g. 'Asset inventory v3, SharePoint/IT'"
-              onChange={(e) => setAnswer(clause.id, { evidenceRef: e.target.value })}
-            />
-          </div>
+        {resources.length > 0 && (
+          <button
+            onClick={() => setShowResources((s) => !s)}
+            className="text-[11px] uppercase tracking-wide text-brand-200/70 transition hover:text-brand-100/80"
+          >
+            {showResources ? "Hide" : "Resources"}
+          </button>
         )}
-
-        {/* The formal wording, on demand, without switching the whole page. */}
-        <Simple>
-          <Drilldown label="View the published requirement">
-            <p className="font-mono text-[11px] text-brand-300">
-              {clause.id} · {clause.obligation}
-            </p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-brand-50">
-              {clause.statement}
-            </p>
-            {signal && (
-              <p className="mt-2 text-[12px] leading-relaxed text-brand-100/80">
-                {suggestionNote(signal)}
-              </p>
-            )}
-          </Drilldown>
-        </Simple>
       </div>
+
+      {showEvidence && (
+        <div className="mt-2.5 rounded-lg border border-ink-700/60 bg-ink-900/60 p-3">
+          <p className="text-[11px] uppercase tracking-wide text-brand-200/70">
+            What the assessor will ask for
+          </p>
+          <ul className="mt-1.5 list-inside list-disc space-y-0.5 text-[13px] text-brand-100/80">
+            {clause.evidence.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+          <input
+            className={`${inputCls} mt-3`}
+            value={answer.evidenceRef ?? ""}
+            placeholder="Reference the document — e.g. 'Asset inventory v3, SharePoint/IT'"
+            onChange={(e) => setAnswer(clause.id, { evidenceRef: e.target.value })}
+          />
+        </div>
+      )}
+
+      {showResources && resources.length > 0 && (
+        <div className="mt-2.5 rounded-lg border border-ink-700/60 bg-ink-900/60 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-200/70 mb-2">
+            CSA Resources for this measure
+          </p>
+          <ul className="space-y-1.5">
+            {resources.map((r) => (
+              <li key={r.url} className="flex items-start gap-2">
+                <span
+                  className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${AUDIENCE_COLOUR[r.audience] ?? AUDIENCE_COLOUR.general}`}
+                >
+                  {audienceLabel(r.audience)}
+                </span>
+                <a
+                  href={r.url}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  className="text-[12px] text-brand-300 underline-offset-2 hover:underline"
+                >
+                  {r.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <Simple>
+        <Drilldown label="View the published requirement">
+          <p className="font-mono text-[11px] text-brand-300">
+            {clause.id} · {clause.obligation}
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed text-brand-50">
+            {clause.statement}
+          </p>
+          {signal && (
+            <p className="mt-2 text-[12px] leading-relaxed text-brand-100/80">
+              {suggestionNote(signal)}
+            </p>
+          )}
+        </Drilldown>
+      </Simple>
     </div>
   );
 }
@@ -191,9 +249,9 @@ export default function PreparePage() {
   const { readiness, scope, answers, bulkAnswer, prefilledCount, org, pathway, technical } =
     useStore();
   const [openMeasure, setOpenMeasure] = useState<MeasureId | null>("A.1");
-  const [hideAnswered, setHideAnswered] = useState(false);
-  const [focus, setFocus] = useState<"all" | "human" | "machine">("all");
   const [obligation, setObligation] = useState<"all" | "shall" | "should">("all");
+  // Toggle state for "Met all (testing)" — true means all answered yes
+  const [metAllActive, setMetAllActive] = useState(false);
   const sectorName = SECTOR_BY_ID.get(org.sector)?.name ?? "";
   const cov = useMemo(() => coverageStats(), []);
   const activePathway = PATHWAY_BY_ID.get(pathway);
@@ -213,6 +271,17 @@ export default function PreparePage() {
   );
 
   const scoreOf = (id: MeasureId) => readiness.measures.find((m) => m.measureId === id);
+
+  function handleMetAll() {
+    if (metAllActive) {
+      // Reverse: mark all as "no" so they appear as gaps again
+      bulkAnswer([...inScope], "no");
+      setMetAllActive(false);
+    } else {
+      bulkAnswer([...inScope], "yes");
+      setMetAllActive(true);
+    }
+  }
 
   return (
     <div>
@@ -237,7 +306,7 @@ export default function PreparePage() {
         />
       </div>
 
-      {/* Say the split out loud, at the point they are about to feel it. */}
+      {/* Pathway coverage summary */}
       <Card className="mt-6 border-brand-500/30 bg-brand-700/12 p-5">
         <p className="text-sm font-semibold text-brand-300">
           {activePathway?.name}: what is answered for you, and what is not
@@ -292,18 +361,6 @@ export default function PreparePage() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-2 text-xs text-brand-100/80">
-              <input
-                type="checkbox"
-                checked={hideAnswered}
-                onChange={(e) => setHideAnswered(e.target.checked)}
-                className="h-3.5 w-3.5 rounded border-ink-600/80 bg-ink-850 accent-[#2f7dbf]"
-              />
-              Only unanswered
-            </label>
-
-            <span className="h-4 w-px bg-ink-600/60" />
-
             {(
               [
                 ["all", "All clauses"],
@@ -326,34 +383,16 @@ export default function PreparePage() {
 
             <span className="h-4 w-px bg-ink-600/60" />
 
-            {(
-              [
-                ["all", "All"],
-                ["human", "People & process"],
-                ["machine", "Technical"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                onClick={() => setFocus(key)}
-                className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
-                  focus === key
-                    ? "bg-brand-600 text-oncolor"
-                    : "bg-ink-800 text-brand-200/70 hover:text-brand-100"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-
-            <span className="h-4 w-px bg-ink-600/60" />
-
             <button
-              onClick={() => bulkAnswer([...inScope], "yes")}
-              className="rounded-lg bg-amber-600/20 px-2.5 py-1 text-[11px] font-medium text-amber-300 ring-1 ring-inset ring-amber-500/30 transition hover:bg-amber-600/30"
-              title="Testing only — marks all in-scope clauses as Yes"
+              onClick={handleMetAll}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset transition ${
+                metAllActive
+                  ? "bg-emerald-600/20 text-emerald-300 ring-emerald-500/30 hover:bg-emerald-600/30"
+                  : "bg-amber-600/20 text-amber-300 ring-amber-500/30 hover:bg-amber-600/30"
+              }`}
+              title={metAllActive ? "Re-click to un-answer all clauses" : "Testing only — marks all in-scope clauses as Yes"}
             >
-              ⚡ Met all (testing)
+              ! {metAllActive ? "Un-met all (testing)" : "Met all (testing)"}
             </button>
           </div>
         </div>
@@ -371,24 +410,15 @@ export default function PreparePage() {
                 const score = scoreOf(m.id);
                 const isOpen = openMeasure === m.id;
                 let clauses = CLAUSES_BY_MEASURE[m.id].filter((c) => inScope.has(c.id));
-                if (hideAnswered) {
-                  clauses = clauses.filter(
-                    (c) => (answers[c.id]?.value ?? "unanswered") === "unanswered",
-                  );
-                }
                 if (obligation === "shall") {
                   clauses = clauses.filter((c) => c.obligation === "shall");
                 } else if (obligation === "should") {
                   clauses = clauses.filter((c) => c.obligation === "should");
                 }
-                if (focus === "human") {
-                  clauses = clauses.filter((c) => answerabilityOf(c.id) === "human");
-                } else if (focus === "machine") {
-                  clauses = clauses.filter((c) => answerabilityOf(c.id) !== "human");
-                }
                 const allIds = CLAUSES_BY_MEASURE[m.id]
                   .filter((c) => inScope.has(c.id))
                   .map((c) => c.id);
+                const measureResources = resourcesForMeasure(m.id);
 
                 return (
                   <Card key={m.id} className="overflow-hidden">
@@ -453,6 +483,31 @@ export default function PreparePage() {
                             </p>
                           </div>
                         ))}
+
+                        {/* Measure-level CSA resources panel */}
+                        {measureResources.length > 0 && (
+                          <div className="border-t border-brand-700/20 bg-ink-950/30 px-5 py-3.5">
+                            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-300">
+                              CSA Resources
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {measureResources.map((r) => (
+                                <a
+                                  key={r.url}
+                                  href={r.url}
+                                  target="_blank"
+                                  rel="noreferrer noopener"
+                                  className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[11px] font-medium ring-1 ring-inset transition hover:opacity-80 ${AUDIENCE_COLOUR[r.audience] ?? AUDIENCE_COLOUR.general}`}
+                                >
+                                  <span className="opacity-60">{audienceLabel(r.audience)}</span>
+                                  <span>·</span>
+                                  <span>{r.label}</span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="flex items-center justify-end gap-2 border-t border-brand-700/30 bg-ink-950/45 px-5 py-2.5">
                           <span className="mr-auto text-[11px] uppercase tracking-wide text-brand-200/70">
                             Set all in this measure
@@ -472,7 +527,7 @@ export default function PreparePage() {
                             Every clause in this measure is answered.
                           </p>
                         ) : (
-                          clauses.map((c) => <ClauseRow key={c.id} clause={c} />)
+                          clauses.map((c) => <ClauseRow key={c.id} clause={c} measureId={m.id} />)
                         )}
                       </div>
                     )}

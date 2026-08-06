@@ -140,9 +140,8 @@ export default function ResultsPage() {
   const [exportError, setExportError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(true);
 
-  // Declaration state — initialise after mount to avoid hydration mismatch
+  // Declaration state — name intentionally left blank; user must sign manually.
   const [declName, setDeclName] = useState("");
-  useEffect(() => { setDeclName(org.name || ""); }, [org.name]);
   const [declDesignation, setDeclDesignation] = useState("");
   const [declAgreed, setDeclAgreed] = useState(false);
   const [declSignature, setDeclSignature] = useState<string | null>(null);
@@ -420,37 +419,44 @@ export default function ResultsPage() {
           )}
         </div>
 
-        {/* Export */}
+        {/* Export — only revealed after declaration is complete */}
         <div className="mt-6 border-t border-brand-700/30 pt-5">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
             For the certification body
           </p>
-          <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-brand-100/80">
-            Both formats carry the same content: every clause with its answer, how that
-            answer was reached, and the evidence log showing what ran and when. The
-            spreadsheet is for the assessor to read; the JSON is for a body that would
-            rather ingest it than re-key it.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Button onClick={exportXlsx} disabled={busy !== null}>
-              {busy === "xlsx" ? "Building…" : "Download submission (Excel)"}
-            </Button>
-            <Button variant="ghost" onClick={exportJson} disabled={busy !== null}>
-              Download submission (JSON)
-            </Button>
-          </div>
-          {exportError && (
-            <p className="mt-2 text-[12px] text-csa-300">{exportError}</p>
+          {!declComplete ? (
+            <p className="mt-3 rounded-lg border border-brand-700/40 bg-ink-900/60 px-4 py-3 text-[13px] leading-relaxed text-brand-100/60">
+              Complete the declaration above — agree to the statement, fill in your name and designation, and draw your signature — to unlock the download options.
+            </p>
+          ) : (
+            <>
+              <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-brand-100/80">
+                Both formats carry the same content: every clause with its answer, how that
+                answer was reached, and the evidence log showing what ran and when. The
+                spreadsheet is for the assessor to read; the JSON is for a body that would
+                rather ingest it than re-key it.
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button onClick={exportXlsx} disabled={busy !== null}>
+                  {busy === "xlsx" ? "Building…" : "Download submission (Excel)"}
+                </Button>
+                <Button variant="ghost" onClick={exportJson} disabled={busy !== null}>
+                  Download submission (JSON)
+                </Button>
+              </div>
+              {exportError && (
+                <p className="mt-2 text-[12px] text-csa-300">{exportError}</p>
+              )}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button variant="ghost" onClick={() => download("csv")}>
+                  Results tab only (CSV)
+                </Button>
+                <Button variant="ghost" onClick={() => window.print()}>
+                  Print
+                </Button>
+              </div>
+            </>
           )}
-        </div>
-
-        <div className="mt-5 flex flex-wrap gap-2 border-t border-brand-700/30 pt-5">
-          <Button variant="ghost" onClick={() => download("csv")}>
-            Results tab only (CSV)
-          </Button>
-          <Button variant="ghost" onClick={() => window.print()}>
-            Print
-          </Button>
         </div>
       </Card>
 
