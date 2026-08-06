@@ -488,6 +488,84 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
     }
   }
 
+  // ── CSA Appendix templates ───────────────────────────────────────────────
+  // Source: CSA Cybersecurity Toolkit for IT Teams — Appendices
+  // https://isomer-user-content.by.gov.sg/36/744568da-0801-4cb5-a2b2-f54615ceed10/Cybersecurity-Toolkit-for-IT-Team-Appendices.pdf
+
+  const TEMPLATE_NOTE =
+    "Template adapted from CSA's Cybersecurity Toolkit for IT Teams (Appendices). " +
+    "Fill in your organisation's actual assets below the header row.";
+  const TEMPLATE_FILL = "FFEFF6FF"; // light blue tint for data rows
+
+  function addTemplateSheet(
+    name: string,
+    appendixRef: string,
+    cols: Array<{ header: string; width: number }>,
+    sampleRows: number = 5,
+  ) {
+    const ws = wb.addWorksheet(name);
+    ws.columns = cols.map((c) => ({ header: c.header, width: c.width }));
+    styleHeader(ws.getRow(1));
+
+    // 5 blank input rows with light tint
+    for (let i = 0; i < sampleRows; i++) {
+      const r = ws.addRow(cols.map(() => ""));
+      r.fill = { type: "pattern", pattern: "solid", fgColor: { argb: TEMPLATE_FILL } };
+      r.height = 18;
+    }
+
+    // Source / disclaimer note
+    ws.addRow([]);
+    const noteRow = ws.addRow([`${appendixRef} — ${TEMPLATE_NOTE}`]);
+    noteRow.getCell(1).font = { italic: true, color: { argb: "FF6B7280" }, size: 9 };
+    noteRow.getCell(1).alignment = { wrapText: true, vertical: "top" };
+    ws.mergeCells(noteRow.number, 1, noteRow.number, cols.length);
+    noteRow.height = 32;
+  }
+
+  // Appendix 4 — Hardware Asset Inventory
+  addTemplateSheet("Appx 4 · Hardware", "Appendix 4", [
+    { header: "Hardware Name / Model",       width: 28 },
+    { header: "Asset Tag / Serial Number",   width: 24 },
+    { header: "Asset Type",                  width: 18 },
+    { header: "Asset Location",              width: 20 },
+    { header: "Network Address (IP / MAC)",  width: 24 },
+    { header: "Asset Owner",                 width: 20 },
+    { header: "Asset Classification",        width: 22 },
+    { header: "Department",                  width: 18 },
+    { header: "Approval / Authorised Date",  width: 24 },
+    { header: "EOS Date",                    width: 14 },
+  ]);
+
+  // Appendix 5 — Software Asset Inventory
+  addTemplateSheet("Appx 5 · Software", "Appendix 5", [
+    { header: "Software Name",               width: 28 },
+    { header: "Software Publisher",          width: 24 },
+    { header: "Software Version",            width: 18 },
+    { header: "Business Purpose",            width: 34 },
+    { header: "Asset Classification",        width: 22 },
+    { header: "Approval / Authorised Date",  width: 24 },
+    { header: "EOS Date",                    width: 14 },
+  ]);
+
+  // Appendix 7 — Data Asset Inventory
+  addTemplateSheet("Appx 7 · Data", "Appendix 7", [
+    { header: "Description",                 width: 40 },
+    { header: "Asset Classification",        width: 24 },
+    { header: "Asset Location",              width: 28 },
+    { header: "Retention Period",            width: 20 },
+  ]);
+
+  // Appendix 10 — Account Inventory
+  addTemplateSheet("Appx 10 · Accounts", "Appendix 10", [
+    { header: "Name",                        width: 24 },
+    { header: "Username / Email",            width: 30 },
+    { header: "Department",                  width: 20 },
+    { header: "Role / Account Type",         width: 22 },
+    { header: "Date of Access Created",      width: 24 },
+    { header: "Last Logon Date",             width: 20 },
+  ]);
+
   const buffer = await wb.xlsx.writeBuffer();
   return new Blob([buffer], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

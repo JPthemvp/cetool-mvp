@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import { runScan, verifyDomainOwnership } from "@/lib/scan";
 import type { ScanAuthorisation, ScanMode } from "@/lib/authorisation";
 import { supabaseAdmin } from "@/lib/supabase";
-import { fetchAttackSurface } from "@/lib/attack-surface";
-
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -88,16 +86,6 @@ export async function POST(req: Request) {
 
   const auth: ScanAuthorisation = { mode, attested, verified };
   const result = await runScan(domain, auth);
-
-  // ── Attack surface enrichment (Shodan / Censys) ───────────────────────────
-  // Passive — we query their databases, not the target. Fire in parallel with
-  // the Supabase write below; both are best-effort and non-blocking to the user.
-  const ips = result.assets
-    .filter((a) => a.kind === "ip")
-    .map((a) => a.value);
-
-  const attackSurface = await fetchAttackSurface(ips).catch(() => null);
-  if (attackSurface) result.attackSurface = attackSurface;
 
   // ── Log to Supabase (best-effort, never blocks the response) ─────────────
   const keysSet =

@@ -76,7 +76,6 @@ export interface ScanResult {
   /** Set when the scan could not run at all (offline, NXDOMAIN). */
   error?: string;
   /** Attack surface data from Shodan / Censys (present only when API keys are configured). */
-  attackSurface?: import("./attack-surface").AttackSurface;
 }
 
 const TIMEOUT = 8000;
