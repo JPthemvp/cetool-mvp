@@ -20,27 +20,29 @@ export type MeasureResources = {
   resources: CsaResource[];
 };
 
+const BASE = "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-resources-for-organisations";
+
 const EMPLOYEE_TOOLKIT: CsaResource = {
-  label: "SG Cyber Safe — Employee Toolkit",
-  url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources/toolkit-for-employees",
+  label: "SG Cyber Safe — Toolkits for Employees",
+  url: `${BASE}/toolkits-for-employees/`,
   audience: "employees",
 };
 
 const IT_TOOLKIT: CsaResource = {
-  label: "SG Cyber Safe — IT Practitioner Toolkit",
-  url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources/toolkit-for-it-teams",
+  label: "SG Cyber Safe — Toolkits for IT Teams",
+  url: `${BASE}/toolkits-for-it-teams/`,
   audience: "it-teams",
 };
 
 const IT_TOOLKIT_APPENDICES: CsaResource = {
-  label: "CSA Cybersecurity Toolkit for IT Teams — Appendices",
+  label: "CSA Cybersecurity Toolkit for IT Teams — Appendices (PDF)",
   url: "https://isomer-user-content.by.gov.sg/36/744568da-0801-4cb5-a2b2-f54615ceed10/Cybersecurity-Toolkit-for-IT-Team-Appendices.pdf",
   audience: "it-teams",
 };
 
 const BUSINESS_TOOLKIT: CsaResource = {
-  label: "SG Cyber Safe — Business Owner Toolkit",
-  url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources/toolkit-for-business-owners",
+  label: "SG Cyber Safe — Toolkits for Enterprise Leaders & SME Owners",
+  url: `${BASE}/toolkits-for-enterprise-leaders-and-sme-owners/`,
   audience: "business-owners",
 };
 
@@ -57,8 +59,8 @@ const SINGCERT_ALERTS: CsaResource = {
 };
 
 const CE_RESOURCES: CsaResource = {
-  label: "CSA — Cyber Essentials Resources",
-  url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cyber-essentials",
+  label: "CSA — Cybersecurity Resources for Organisations",
+  url: `${BASE}/`,
   audience: "general",
 };
 
@@ -70,7 +72,7 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
       BUSINESS_TOOLKIT,
       {
         label: "SG Cyber Safe — Cybersecurity Awareness Training",
-        url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources",
+        url: `${BASE}/toolkits-for-employees/`,
         audience: "employees",
       },
       CE_RESOURCES,
@@ -141,11 +143,7 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
     resources: [
       IT_TOOLKIT,
       SINGCERT_ALERTS,
-      {
-        label: "CSA — Cybersecurity Toolkit for IT Teams (Hardening Guides)",
-        url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources/toolkit-for-it-teams",
-        audience: "it-teams",
-      },
+      IT_TOOLKIT_APPENDICES,
     ],
   },
   {
@@ -166,8 +164,8 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
       IT_TOOLKIT,
       BUSINESS_TOOLKIT,
       {
-        label: "CSA — Backup and Recovery Best Practices",
-        url: "https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/resources",
+        label: "SG Cyber Safe — Backup and Recovery Best Practices",
+        url: `${BASE}/toolkits-for-it-teams/`,
         audience: "it-teams",
       },
     ],

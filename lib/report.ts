@@ -497,16 +497,27 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
     "Fill in your organisation's actual assets below the header row.";
   const TEMPLATE_FILL = "FFEFF6FF"; // light blue tint for data rows
 
-  // Creates the worksheet with a styled header row only; caller adds data + note rows.
+  // Creates the worksheet with a bold title row (row 1) then a styled column header row (row 2).
+  // Callers add data + note rows after.
   function addTemplateSheet(
     name: string,
-    _appendixRef: string,
+    title: string,
     cols: Array<{ header: string; width: number }>,
     _sampleRows: number = 0,
   ) {
     const ws = wb.addWorksheet(name);
-    ws.columns = cols.map((c) => ({ header: c.header, width: c.width }));
-    styleHeader(ws.getRow(1));
+    ws.columns = cols.map((c) => ({ width: c.width }));
+
+    // Row 1 — full descriptive title
+    const titleRow = ws.insertRow(1, [title]);
+    titleRow.font = { bold: true, size: 11, color: { argb: "FF1E3A5F" } };
+    titleRow.alignment = { vertical: "middle", wrapText: false };
+    titleRow.height = 22;
+    ws.mergeCells(1, 1, 1, cols.length);
+
+    // Row 2 — column headers
+    const headerRow = ws.addRow(cols.map((c) => c.header));
+    styleHeader(headerRow);
   }
 
   // Helper to add a sample data row (light green tint so it's distinct from blank input rows)
@@ -533,7 +544,7 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
       { header: "Approval / Authorised Date",  width: 24 },
       { header: "EOS Date",                    width: 14 },
     ];
-    addTemplateSheet("Appx 4 · Hardware", "Appendix 4", cols, 0);
+    addTemplateSheet("Appx 4 · Hardware", "Appendix 4 — Hardware Asset Inventory · CSA's Cybersecurity Toolkit for IT Teams", cols, 0);
     const ws4 = wb.getWorksheet("Appx 4 · Hardware")!;
     // CSA sample data row (from Appendix 4 of CSA Cybersecurity Toolkit for IT Teams)
     addSampleRow(ws4, [
@@ -573,7 +584,7 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
       { header: "Approval / Authorised Date",  width: 24 },
       { header: "EOS Date",                    width: 14 },
     ];
-    addTemplateSheet("Appx 5 · Software", "Appendix 5", cols, 0);
+    addTemplateSheet("Appx 5 · Software", "Appendix 5 — Software Asset Inventory · CSA's Cybersecurity Toolkit for IT Teams", cols, 0);
     const ws5 = wb.getWorksheet("Appx 5 · Software")!;
     // CSA sample data row (from Appendix 5 of CSA Cybersecurity Toolkit for IT Teams)
     addSampleRow(ws5, [
@@ -606,7 +617,7 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
       { header: "Asset Location",              width: 28 },
       { header: "Retention Period",            width: 32 },
     ];
-    addTemplateSheet("Appx 7 · Data", "Appendix 7", cols, 0);
+    addTemplateSheet("Appx 7 · Data", "Appendix 7 — Data Asset Inventory · CSA's Cybersecurity Toolkit for IT Teams", cols, 0);
     const ws7 = wb.getWorksheet("Appx 7 · Data")!;
     // CSA sample data row (from Appendix 7 of CSA Cybersecurity Toolkit for IT Teams)
     addSampleRow(ws7, [
@@ -638,7 +649,7 @@ export async function reportToXlsx(report: CertificationReport): Promise<Blob> {
       { header: "Date of Access Created",      width: 24 },
       { header: "Last Logon Date",             width: 20 },
     ];
-    addTemplateSheet("Appx 10 · Accounts", "Appendix 10", cols, 0);
+    addTemplateSheet("Appx 10 · Accounts", "Appendix 10 — Account Inventory · CSA's Cybersecurity Toolkit for IT Teams", cols, 0);
     const ws10 = wb.getWorksheet("Appx 10 · Accounts")!;
     // CSA sample data row (from Appendix 10 of CSA Cybersecurity Toolkit for IT Teams)
     addSampleRow(ws10, [

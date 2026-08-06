@@ -394,15 +394,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const existing = answers[clauseId];
         if (!existing || existing.source === "user") continue;
         const verdict = clauseVerdict(evidence);
-        if (verdict.answer !== "no") continue;
-        answers[clauseId] = {
-          ...existing,
-          value: "no",
-          source: "scan",
-          note: verdict.note,
-          updatedAt: now,
-        };
-        prefilled++;
+        if (verdict.answer === "no") {
+          answers[clauseId] = {
+            ...existing,
+            value: "no",
+            source: "scan",
+            note: verdict.note,
+            updatedAt: now,
+          };
+          prefilled++;
+        } else if (evidence.passingOn.length > 0 && evidence.failingOn.length === 0) {
+          // Local check passed — auto-fill yes, but surface a reconfirmation prompt
+          // in the assess page so the SME confirms it holds across the full estate.
+          answers[clauseId] = {
+            ...existing,
+            value: "yes",
+            source: "scan",
+            note: verdict.note, // "Passed on X — confirm it holds for every device."
+            updatedAt: now,
+          };
+          prefilled++;
+        }
       }
 
       const failing = report.findings.filter((f) => f.result === "fail").length;

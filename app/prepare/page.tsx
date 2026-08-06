@@ -192,10 +192,10 @@ function EmployeeQuizPanel() {
 }
 
 const AUDIENCE_COLOUR: Record<string, string> = {
-  employees: "bg-violet-500/20 text-violet-300 ring-violet-500/30",
-  "it-teams": "bg-blue-500/20 text-blue-300 ring-blue-500/30",
+  employees: "bg-emerald-500/20 text-emerald-300 ring-emerald-500/30",
+  "it-teams": "bg-cyan-500/20 text-cyan-300 ring-cyan-500/30",
   "business-owners": "bg-amber-500/20 text-amber-300 ring-amber-500/30",
-  general: "bg-brand-700/30 text-brand-300 ring-brand-500/30",
+  general: "bg-brand-500/20 text-brand-200 ring-brand-500/30",
 };
 
 function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string }) {
@@ -261,6 +261,15 @@ function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string })
             )}
           </Technical>
 
+          {scanConfirmedYes && answer.note && (
+            <div className="mt-2.5 rounded-lg border border-emerald-500/25 bg-emerald-500/8 p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
+                ✓ Local check passed — please reconfirm across your full estate
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-brand-100/70">{answer.note}</p>
+            </div>
+          )}
+
           {confirmed && answer.value !== "yes" && (
             <div className="mt-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-300">
@@ -318,25 +327,23 @@ function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string })
         )}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <button
           onClick={() => setShowEvidence((s) => !s)}
-          className="text-[11px] uppercase tracking-wide text-brand-200/70 transition hover:text-brand-100/80"
+          className="rounded border border-ink-600/60 bg-ink-800/60 px-2.5 py-1 text-[11px] font-medium text-brand-200/80 transition hover:border-brand-500/40 hover:bg-ink-700/60 hover:text-brand-100"
         >
-          {showEvidence ? "Hide" : "Evidence"} ·{" "}
-          {answer.evidenceRef ? (
-            <span className="text-brand-400 normal-case">{answer.evidenceRef}</span>
-          ) : (
-            <span className="normal-case text-brand-200/70">none recorded</span>
+          {showEvidence ? "Hide references" : "📎 Attach references"}
+          {!showEvidence && answer.evidenceRef && (
+            <span className="ml-1.5 text-brand-400 normal-case">{answer.evidenceRef}</span>
           )}
         </button>
 
         {resources.length > 0 && (
           <button
             onClick={() => setShowResources((s) => !s)}
-            className="text-[11px] uppercase tracking-wide text-brand-200/70 transition hover:text-brand-100/80"
+            className="rounded border border-ink-600/60 bg-ink-800/60 px-2.5 py-1 text-[11px] font-medium text-brand-200/80 transition hover:border-brand-500/40 hover:bg-ink-700/60 hover:text-brand-100"
           >
-            {showResources ? "Hide" : "Resources"}
+            {showResources ? "Hide resources" : "📚 Show resources"}
           </button>
         )}
       </div>
@@ -366,8 +373,8 @@ function ClauseRow({ clause, measureId }: { clause: Clause; measureId: string })
             CSA Resources for this measure
           </p>
           <ul className="space-y-1.5">
-            {resources.map((r) => (
-              <li key={r.url} className="flex items-start gap-2">
+            {resources.map((r, i) => (
+              <li key={i} className="flex items-start gap-2">
                 <span
                   className={`mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium ring-1 ring-inset ${AUDIENCE_COLOUR[r.audience] ?? AUDIENCE_COLOUR.general}`}
                 >
@@ -655,9 +662,9 @@ export default function PreparePage() {
                               CSA Resources
                             </p>
                             <div className="flex flex-wrap gap-2">
-                              {measureResources.map((r) => (
+                              {measureResources.map((r, i) => (
                                 <a
-                                  key={r.url}
+                                  key={i}
                                   href={r.url}
                                   target="_blank"
                                   rel="noreferrer noopener"

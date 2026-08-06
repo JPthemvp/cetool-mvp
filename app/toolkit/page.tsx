@@ -446,7 +446,10 @@ export default function ToolkitPage() {
               {endpoints.map((ep) => (
                 <div key={ep.computer}>
                   <div className="flex items-baseline justify-between gap-2">
-                    <p className="font-mono text-[12px] text-brand-300">{ep.computer}</p>
+                    <p className="font-mono text-[12px] text-brand-300">
+                      <span className="text-brand-200/55 font-normal not-italic">Computer Name:</span>{" "}
+                      {ep.computer}
+                    </p>
                     <button
                       onClick={() => removeEndpoint(ep.computer)}
                       className="text-[11px] text-brand-200/70 underline-offset-2 hover:text-csa-300 hover:underline"
