@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useStore } from "@/components/store";
 import { Button, Card, EmptyState, Meter, Pill, SectionTitle, Stat } from "@/components/ui";
 import {
@@ -15,6 +15,114 @@ import { CERTIFICATION_STEPS } from "@/lib/guidance";
 import { SECTOR_BY_ID, extraObligations } from "@/lib/sectors";
 import { ObligationLabel } from "@/components/detail";
 import { buildReport, reportFilename, reportToJson, reportToXlsx } from "@/lib/report";
+
+// ── Signature pad ────────────────────────────────────────────────────────────
+
+function SignaturePad({
+  onSigned,
+  onCleared,
+}: {
+  onSigned: (dataUrl: string) => void;
+  onCleared: () => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawing = useRef(false);
+  const lastPos = useRef<{ x: number; y: number } | null>(null);
+
+  const getPos = (e: MouseEvent | TouchEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ("touches" in e) {
+      return {
+        x: (e.touches[0].clientX - rect.left) * scaleX,
+        y: (e.touches[0].clientY - rect.top) * scaleY,
+      };
+    }
+    return {
+      x: ((e as MouseEvent).clientX - rect.left) * scaleX,
+      y: ((e as MouseEvent).clientY - rect.top) * scaleY,
+    };
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+
+    const start = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      drawing.current = true;
+      lastPos.current = getPos(e, canvas);
+    };
+    const move = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      if (!drawing.current || !lastPos.current) return;
+      const pos = getPos(e, canvas);
+      ctx.beginPath();
+      ctx.moveTo(lastPos.current.x, lastPos.current.y);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+      lastPos.current = pos;
+    };
+    const end = () => {
+      if (!drawing.current) return;
+      drawing.current = false;
+      lastPos.current = null;
+      onSigned(canvas.toDataURL("image/png"));
+    };
+
+    canvas.addEventListener("mousedown", start);
+    canvas.addEventListener("mousemove", move);
+    canvas.addEventListener("mouseup", end);
+    canvas.addEventListener("mouseleave", end);
+    canvas.addEventListener("touchstart", start, { passive: false });
+    canvas.addEventListener("touchmove", move, { passive: false });
+    canvas.addEventListener("touchend", end);
+
+    return () => {
+      canvas.removeEventListener("mousedown", start);
+      canvas.removeEventListener("mousemove", move);
+      canvas.removeEventListener("mouseup", end);
+      canvas.removeEventListener("mouseleave", end);
+      canvas.removeEventListener("touchstart", start);
+      canvas.removeEventListener("touchmove", move);
+      canvas.removeEventListener("touchend", end);
+    };
+  }, [onSigned]);
+
+  const clear = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.getContext("2d")!.clearRect(0, 0, canvas.width, canvas.height);
+    onCleared();
+  }, [onCleared]);
+
+  return (
+    <div className="space-y-1.5">
+      <canvas
+        ref={canvasRef}
+        width={600}
+        height={140}
+        className="w-full cursor-crosshair rounded-lg border border-ink-600/80 bg-ink-850 touch-none"
+        style={{ height: "140px" }}
+      />
+      <button
+        type="button"
+        onClick={clear}
+        className="text-[11px] text-brand-200/60 underline-offset-2 hover:text-brand-100/80 hover:underline"
+      >
+        Clear signature
+      </button>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const ANSWER_TONE: Record<AnswerValue, "good" | "warn" | "bad" | "neutral"> = {
   yes: "good",
@@ -31,6 +139,14 @@ export default function ResultsPage() {
   const [busy, setBusy] = useState<"xlsx" | "json" | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(true);
+
+  // Declaration state — initialise after mount to avoid hydration mismatch
+  const [declName, setDeclName] = useState("");
+  useEffect(() => { setDeclName(org.name || ""); }, [org.name]);
+  const [declDesignation, setDeclDesignation] = useState("");
+  const [declAgreed, setDeclAgreed] = useState(false);
+  const [declSignature, setDeclSignature] = useState<string | null>(null);
+  const declComplete = declName.trim().length > 0 && declDesignation.trim().length > 0 && declAgreed && !!declSignature;
 
   const rows = useMemo(() => buildResultRows(answers, scope), [answers, scope]);
   const generatedAt = new Date().toLocaleString("en-SG");
@@ -215,6 +331,94 @@ export default function ResultsPage() {
           <p className="mt-1 text-[13px] leading-relaxed text-brand-100/80">{readiness.verdict}</p>
         </div>
 
+        {/* Declaration */}
+        <div className="mt-6 border-t border-brand-700/30 pt-5">
+          <p className="text-[13px] font-semibold uppercase tracking-wide text-white">
+            Declaration
+          </p>
+          <ul className="mt-3 space-y-3 text-[13px] leading-relaxed text-brand-100/80">
+            <li className="flex gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-csa-400" />
+              <span>
+                We, the Applicant, declare that the facts stated in this application and
+                the accompanying information are true and correct to the best of our
+                knowledge and that we have not withheld / distorted any material facts.
+                We understand that we have a continuing obligation to promptly notify our
+                appointed certification body if there is any change affecting the
+                information set out in this application and declaration.
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-csa-400" />
+              <span>
+                We understand that our appointed certification body may take the relevant
+                action if we provide false or misleading statements or fail to disclose
+                material facts, and the certification body may, at its discretion,
+                withdraw the certification issued or take other follow-on action.
+              </span>
+            </li>
+          </ul>
+
+          {/* Agreement checkbox */}
+          <label className="mt-4 flex cursor-pointer items-start gap-2.5 text-sm">
+            <input
+              type="checkbox"
+              checked={declAgreed}
+              onChange={(e) => setDeclAgreed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-ink-600/80 bg-ink-850 accent-[#2f7dbf]"
+            />
+            <span className="font-medium text-brand-50">Yes, we agree to the above declaration.</span>
+          </label>
+
+          {/* Signatory fields */}
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="block text-[12px] font-medium text-brand-200/80 mb-1">
+                Name (for and on behalf of{" "}
+                <span className="text-brand-50 italic">
+                  {org.name || "your organisation"}
+                </span>
+                )
+              </label>
+              <input
+                className="w-full rounded-lg border border-ink-600/80 bg-ink-850 px-3 py-2 text-sm text-brand-50 placeholder:text-brand-200/40 focus:border-brand-500 focus:outline-none"
+                value={declName}
+                onChange={(e) => setDeclName(e.target.value)}
+                placeholder="Full name"
+              />
+            </div>
+            <div>
+              <label className="block text-[12px] font-medium text-brand-200/80 mb-1">
+                Designation
+              </label>
+              <input
+                className="w-full rounded-lg border border-ink-600/80 bg-ink-850 px-3 py-2 text-sm text-brand-50 placeholder:text-brand-200/40 focus:border-brand-500 focus:outline-none"
+                value={declDesignation}
+                onChange={(e) => setDeclDesignation(e.target.value)}
+                placeholder="e.g. Director, CEO, IT Manager"
+              />
+            </div>
+          </div>
+
+          {/* Digital signature */}
+          <div className="mt-4">
+            <label className="block text-[12px] font-medium text-brand-200/80 mb-1">
+              Signature <span className="text-brand-200/50">(draw with mouse or touch)</span>
+            </label>
+            <SignaturePad
+              onSigned={(dataUrl) => setDeclSignature(dataUrl)}
+              onCleared={() => setDeclSignature(null)}
+            />
+          </div>
+
+          {declComplete && (
+            <p className="mt-3 text-[12px] text-emerald-400">
+              ✓ Declaration complete — will be included in your submission export.
+            </p>
+          )}
+        </div>
+
+        {/* Export */}
         <div className="mt-6 border-t border-brand-700/30 pt-5">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
             For the certification body

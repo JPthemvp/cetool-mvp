@@ -300,7 +300,6 @@ export const SCOPING_QUESTIONS: ScopingQuestion[] = [
     options: [
       { value: "whole", label: "Yes, it would cover the whole organisation" },
       { value: "part", label: "No, only part of the organisation" },
-      { value: "unsure", label: "I am not sure what the difference means" },
     ],
   },
   {
@@ -312,17 +311,6 @@ export const SCOPING_QUESTIONS: ScopingQuestion[] = [
       { value: "internal", label: "Someone in-house looks after it" },
       { value: "vendor", label: "An external IT company or vendor" },
       { value: "mixed", label: "A bit of both" },
-      { value: "nobody", label: "Nobody really — we manage as we go" },
-    ],
-  },
-  {
-    id: "homeworking",
-    question: "Do staff ever work from home or outside the office?",
-    note:
-      "Home and remote working brings personal networks and devices into scope, which affects the access control and configuration questions later.",
-    options: [
-      { value: "yes", label: "Yes, regularly or occasionally" },
-      { value: "no", label: "No, everyone works on site" },
     ],
   },
 ];

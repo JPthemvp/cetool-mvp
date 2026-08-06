@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/components/store";
 import {
@@ -36,6 +36,10 @@ export default function OnboardPage() {
   const { org, setOrg, setScoping, scope, setScope, onboarded, reset, pathway, setPathway, beginJourney } =
     useStore();
   const [corppassBusy, setCorppassBusy] = useState(false);
+
+  // Kick off the journey as soon as the user lands on this page so the
+  // StepFooter Next button renders (it requires started === true).
+  useEffect(() => { beginJourney(); }, [beginJourney]);
   const activeSector = SECTOR_BY_ID.get(org.sector);
   const humanOnly = useMemo(() => humanOnlyClauses().length, []);
 
@@ -317,7 +321,7 @@ export default function OnboardPage() {
                 ["byod", "Staff personal devices used for work (BYOD)"],
                 ["cloud", "Cloud services (Microsoft 365, Google Workspace, AWS…)"],
                 ["ot", "Operational technology or industrial equipment"],
-                ["ai", "AI tools or services"],
+                ["ai", "AI tools or services (ChatGPT, Co-Pilot, Claude etc.)"],
               ] as const
             ).map(([key, label]) => (
               <label key={key} className="flex cursor-pointer items-start gap-2.5 text-sm">

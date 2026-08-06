@@ -193,6 +193,7 @@ export default function PreparePage() {
   const [openMeasure, setOpenMeasure] = useState<MeasureId | null>("A.1");
   const [hideAnswered, setHideAnswered] = useState(false);
   const [focus, setFocus] = useState<"all" | "human" | "machine">("all");
+  const [obligation, setObligation] = useState<"all" | "mandatory" | "recommended">("all");
   const sectorName = SECTOR_BY_ID.get(org.sector)?.name ?? "";
   const cov = useMemo(() => coverageStats(), []);
   const activePathway = PATHWAY_BY_ID.get(pathway);
@@ -300,10 +301,35 @@ export default function PreparePage() {
               />
               Only unanswered
             </label>
+
+            <span className="h-4 w-px bg-ink-600/60" />
+
+            {(
+              [
+                ["all", "All clauses"],
+                ["mandatory", "Requirements"],
+                ["recommended", "Recommendations"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                onClick={() => setObligation(key)}
+                className={`rounded-lg px-2.5 py-1 text-[11px] font-medium transition ${
+                  obligation === key
+                    ? "bg-csa-600 text-oncolor"
+                    : "bg-ink-800 text-brand-200/70 hover:text-brand-100"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+
+            <span className="h-4 w-px bg-ink-600/60" />
+
             {(
               [
                 ["all", "All"],
-                ["human", "People and process"],
+                ["human", "People & process"],
                 ["machine", "Technical"],
               ] as const
             ).map(([key, label]) => (
@@ -319,6 +345,22 @@ export default function PreparePage() {
                 {label}
               </button>
             ))}
+
+            <span className="h-4 w-px bg-ink-600/60" />
+
+            <button
+              onClick={() => {
+                const ids = [...inScope].filter((id) => {
+                  const c = [...Object.values(CLAUSES_BY_MEASURE)].flat().find((cl) => cl.id === id);
+                  return c !== undefined;
+                });
+                bulkAnswer(ids, "yes");
+              }}
+              className="rounded-lg bg-amber-600/20 px-2.5 py-1 text-[11px] font-medium text-amber-300 ring-1 ring-inset ring-amber-500/30 transition hover:bg-amber-600/30"
+              title="Testing only — marks all in-scope clauses as Yes"
+            >
+              ⚡ Met all (testing)
+            </button>
           </div>
         </div>
       </Card>
@@ -339,6 +381,11 @@ export default function PreparePage() {
                   clauses = clauses.filter(
                     (c) => (answers[c.id]?.value ?? "unanswered") === "unanswered",
                   );
+                }
+                if (obligation === "mandatory") {
+                  clauses = clauses.filter((c) => c.obligation === "mandatory");
+                } else if (obligation === "recommended") {
+                  clauses = clauses.filter((c) => c.obligation === "recommended");
                 }
                 if (focus === "human") {
                   clauses = clauses.filter((c) => answerabilityOf(c.id) === "human");

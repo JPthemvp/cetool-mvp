@@ -99,7 +99,7 @@ export async function POST(req: Request) {
     const fail = result.findings.filter((f) => f.status === "fail").length;
     const warn = result.findings.filter((f) => f.status === "warn").length;
 
-    supabaseAdmin
+    const { error: dbError } = await supabaseAdmin
       .from("scans")
       .insert({
         domain: result.domain,
@@ -117,10 +117,12 @@ export async function POST(req: Request) {
         findings: result.findings,
         ip: req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? null,
         user_agent: req.headers.get("user-agent") ?? null,
-      })
-      .then(({ error }) => {
-        if (error) console.error("[supabase] scan insert failed:", error.message);
       });
+    if (dbError) {
+      console.error("[supabase] scan insert failed:", dbError.code, dbError.message, dbError.details);
+    } else {
+      console.log("[supabase] scan logged for", result.domain);
+    }
   }
 
   return NextResponse.json(result);
