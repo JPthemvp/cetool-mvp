@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useStore } from "@/components/store";
 import { Card, Pill, SectionTitle, Stat } from "@/components/ui";
-import { EFFORT_LABEL } from "@/lib/risk";
 import {
   CERTIFICATION_BODIES,
   CERTIFICATION_REGISTER_URL,
@@ -44,8 +43,8 @@ export default function IntegratePage() {
     <div>
       <SectionTitle
         eyebrow="Capability 05 · Next Steps"
-        title="Funding and hand-off to certification"
-        lead="A gap list with no funding and nobody to call is where most SME security programmes stop. This page routes you to the right hand-off — help closing the gaps, or a certification body when you are ready."
+        title="CISOaaS Consulting, Funding & Certification"
+        lead="A gap list with no funding and nobody to call is where most SME security programmes stop. This page routes you to the right hand-off — CISOaaS consulting to close gaps, or a certification body when you are ready."
       />
 
       <div className="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/8 px-5 py-4 text-[13px] leading-relaxed text-brand-50">
@@ -139,49 +138,21 @@ export default function IntegratePage() {
               </div>
             </Card>
 
-          {gaps.filter((g) => g.effort === "project").length > 0 && (
-            <Card className="mt-3 p-5">
-              <h3 className="text-sm font-semibold text-white">What to put in the brief</h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-brand-100/80">
-                Send the JSON export from your results tab. A provider quoting against real
-                clause-level findings scopes tighter than one quoting blind, and you avoid
-                paying for a discovery workshop that repeats what you already know.
-              </p>
-              <div className="mt-4 space-y-2">
-                {gaps
-                  .filter((g) => g.effort === "project")
-                  .slice(0, 6)
-                  .map((g) => (
-                    <div
-                      key={g.clause.id}
-                      className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 rounded-lg border border-ink-700/60 bg-ink-900/60 px-3 py-2.5"
-                    >
-                      <span className="font-mono text-[11px] text-brand-400">{g.clause.id}</span>
-                      <span className="text-[13px] text-white/90">{g.clause.title}</span>
-                      <span className="ml-auto text-[11px] text-brand-200/70">
-                        {EFFORT_LABEL[g.effort]}
-                      </span>
-                    </div>
-                  ))}
-              </div>
-            </Card>
-          )}
         </>
       )}
 
-      {/* Certification bodies — only once the mandatory clauses are actually closed */}
-      <h2 className="mt-10 mb-2 text-xl font-semibold tracking-tight text-white">
-        Certification bodies
-      </h2>
-
-      {rec.step === "get-certified" ? (
+      {/* Certification bodies — only shown when ready to submit */}
+      {rec.step === "get-certified" && (
         <>
+          <h2 className="mt-10 mb-2 text-xl font-semibold tracking-tight text-white">
+            Certification bodies
+          </h2>
           <p className="mb-4 max-w-3xl text-sm leading-relaxed text-brand-100/80">
             Appointed by CSA to conduct the independent assessment. Send them the JSON export
             from your results tab — it carries your clause-level answers, their provenance, and
             your evidence references, so the assessor is not re-keying your submission.
           </p>
-          <div className="mb-4 rounded-lg border border-csa-500/30 bg-csa-500/8 px-4 py-3 text-[13px] leading-relaxed text-brand-50">
+          <div className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/8 px-4 py-3 text-[13px] leading-relaxed text-brand-50">
             <span className="font-semibold text-emerald-300">Validity:</span>{" "}
             The Cyber Essentials mark is valid for{" "}
             <span className="font-medium text-white">two years</span> from the date of
@@ -216,25 +187,6 @@ export default function IntegratePage() {
             </a>
           </Card>
         </>
-      ) : (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <Pill>Not yet applicable</Pill>
-            <span className="text-[14px] font-medium text-white">
-              {readiness.blocking} mandatory clause{readiness.blocking === 1 ? "" : "s"} stand
-              between you and booking an assessment
-            </span>
-          </div>
-          <p className="mt-3 max-w-3xl text-[13px] leading-relaxed text-brand-100/80">
-            The list of certification bodies is withheld until the mandatory clauses are closed. Engaging an assessor with outstanding mandatory items means commissioning an assessment that is unlikely to pass, and the findings returned would largely duplicate the priority list already available to you here. We recommend addressing those first.
-          </p>
-          <a
-            href="/prioritise"
-            className="mt-4 inline-block text-[13px] text-brand-300 underline-offset-2 hover:underline"
-          >
-            View outstanding items in priority order →
-          </a>
-        </Card>
       )}
 
       {/* Funding, routed by sector */}
