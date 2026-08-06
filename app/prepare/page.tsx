@@ -349,13 +349,7 @@ export default function PreparePage() {
             <span className="h-4 w-px bg-ink-600/60" />
 
             <button
-              onClick={() => {
-                const ids = [...inScope].filter((id) => {
-                  const c = [...Object.values(CLAUSES_BY_MEASURE)].flat().find((cl) => cl.id === id);
-                  return c !== undefined;
-                });
-                bulkAnswer(ids, "yes");
-              }}
+              onClick={() => bulkAnswer([...inScope], "yes")}
               className="rounded-lg bg-amber-600/20 px-2.5 py-1 text-[11px] font-medium text-amber-300 ring-1 ring-inset ring-amber-500/30 transition hover:bg-amber-600/30"
               title="Testing only — marks all in-scope clauses as Yes"
             >

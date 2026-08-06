@@ -147,6 +147,8 @@ export default function ResultsPage() {
   const [declAgreed, setDeclAgreed] = useState(false);
   const [declSignature, setDeclSignature] = useState<string | null>(null);
   const declComplete = declName.trim().length > 0 && declDesignation.trim().length > 0 && declAgreed && !!declSignature;
+  const onSigned = useCallback((dataUrl: string) => setDeclSignature(dataUrl), []);
+  const onSignatureCleared = useCallback(() => setDeclSignature(null), []);
 
   const rows = useMemo(() => buildResultRows(answers, scope), [answers, scope]);
   const generatedAt = new Date().toLocaleString("en-SG");
@@ -406,14 +408,14 @@ export default function ResultsPage() {
               Signature <span className="text-brand-200/50">(draw with mouse or touch)</span>
             </label>
             <SignaturePad
-              onSigned={(dataUrl) => setDeclSignature(dataUrl)}
-              onCleared={() => setDeclSignature(null)}
+              onSigned={onSigned}
+              onCleared={onSignatureCleared}
             />
           </div>
 
           {declComplete && (
             <p className="mt-3 text-[12px] text-emerald-400">
-              ✓ Declaration complete — will be included in your submission export.
+              ✓ Declaration complete — print this page or take a screenshot to capture the signed declaration alongside your export.
             </p>
           )}
         </div>
