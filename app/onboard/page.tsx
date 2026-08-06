@@ -63,7 +63,8 @@ export default function OnboardPage() {
   const canProceed =
     org.name.trim().length > 0 &&
     org.sector &&
-    Object.values(org.scoping ?? {}).some(Boolean);
+    Object.values(org.scoping ?? {}).some(Boolean) &&
+    !!(org.scoping?.["locations"] && parseInt(org.scoping["locations"], 10) >= 1);
 
   function handleBegin() {
     beginJourney();
@@ -307,6 +308,34 @@ export default function OnboardPage() {
                 </select>
               </div>
             ))}
+
+            {/* Location count — number input, inserted after who-runs-it */}
+            <div>
+              <div className="flex items-center gap-1">
+                <p className="text-[13px] font-medium text-brand-50">
+                  How many location(s) are in scope?
+                </p>
+                <RequiredMark />
+              </div>
+              <p className="mt-1 text-[12px] leading-relaxed text-brand-100/70">
+                Count each distinct physical site or network boundary — an office, a branch, a data centre. A fully cloud-based organisation with no on-premise equipment can enter 1.
+              </p>
+              <input
+                type="number"
+                min={1}
+                step={1}
+                className={`${inputCls} mt-2 w-32`}
+                placeholder="e.g. 1"
+                value={org.scoping["locations"] ?? ""}
+                onChange={(e) => {
+                  const raw = e.target.value;
+                  // Accept only positive integers
+                  if (raw === "" || (/^\d+$/.test(raw) && parseInt(raw, 10) >= 1)) {
+                    setScoping("locations", raw);
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
 
