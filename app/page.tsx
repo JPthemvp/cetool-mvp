@@ -61,7 +61,7 @@ export default function LandingPage() {
           </div>
 
           <p className="mt-3 text-[12px] leading-relaxed text-brand-200/70">
-            About one hour &#xB7; progress saved in your browser &#xB7; nothing submitted on your behalf
+            Progress saved in your browser &#xB7; nothing submitted on your behalf
           </p>
 
           {/* About the mark */}
@@ -106,6 +106,7 @@ export default function LandingPage() {
             <Stat label="Categories" value={CATEGORIES.length} />
             <Stat label="Measures" value={MEASURES.length} />
             <Stat label="Clauses assessed" value={75} />
+            <Stat label="Valid for" value="2 years" hint="Certification validity period from date of award" />
           </div>
         </div>
       </section>
@@ -113,7 +114,7 @@ export default function LandingPage() {
       {/* What to expect */}
       <section>
         <div className="rounded-xl border border-ink-700/60 bg-ink-900/50 p-6">
-          <p className="text-sm font-semibold text-white">What to expect &#xB7; about one hour</p>
+          <p className="text-sm font-semibold text-white">What to expect</p>
           <ul className="mt-3 space-y-2.5">
             {WHAT_TO_EXPECT.map((p) => (
               <li key={p} className="flex gap-2.5 text-[13px] leading-relaxed">
