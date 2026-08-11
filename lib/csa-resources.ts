@@ -52,11 +52,6 @@ const SINGCERT_REPORT: CsaResource = {
   audience: "general",
 };
 
-const SINGCERT_ALERTS: CsaResource = {
-  label: "SingCERT — Alerts & Advisories",
-  url: "https://www.csa.gov.sg/singcert/Advisories",
-  audience: "it-teams",
-};
 
 const CE_RESOURCES: CsaResource = {
   label: "CSA — Cybersecurity Resources for Organisations",
@@ -116,12 +111,6 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
     measureId: "A.4",
     resources: [
       IT_TOOLKIT,
-      SINGCERT_ALERTS,
-      {
-        label: "SingCERT — Malware Removal Guide",
-        url: "https://www.csa.gov.sg/singcert/Advisories",
-        audience: "it-teams",
-      },
       CE_RESOURCES,
     ],
   },
@@ -142,7 +131,6 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
     measureId: "A.6",
     resources: [
       IT_TOOLKIT,
-      SINGCERT_ALERTS,
       IT_TOOLKIT_APPENDICES,
     ],
   },
@@ -150,12 +138,6 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
     measureId: "A.7",
     resources: [
       IT_TOOLKIT,
-      SINGCERT_ALERTS,
-      {
-        label: "SingCERT — Critical Patch Advisories",
-        url: "https://www.csa.gov.sg/singcert/Advisories",
-        audience: "it-teams",
-      },
     ],
   },
   {
@@ -174,7 +156,6 @@ export const MEASURE_RESOURCES: MeasureResources[] = [
     measureId: "A.9",
     resources: [
       SINGCERT_REPORT,
-      SINGCERT_ALERTS,
       BUSINESS_TOOLKIT,
       {
         label: "SingCERT — Incident Response Resources",

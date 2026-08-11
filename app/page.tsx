@@ -70,9 +70,7 @@ export default function LandingPage() {
               About the Cyber Essentials mark
             </p>
             <p className="mt-2 text-[13px] leading-relaxed text-brand-100/80">
-              {"CSA Singapore's foundational cybersecurity certification for organisations that have met a baseline set of security controls across nine measures. "}
-              <span className="font-medium text-white">Certification is valid for two years</span>
-              {" from the date of award, after which a re-assessment against the current framework version is required."}
+              {"CSA Singapore's foundational cybersecurity certification for organisations that have met a baseline set of security controls across nine measures."}
             </p>
             <a
               href="https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/cyber-essentials"
@@ -108,7 +106,6 @@ export default function LandingPage() {
             <Stat label="Categories" value={CATEGORIES.length} />
             <Stat label="Measures" value={MEASURES.length} />
             <Stat label="Clauses assessed" value={75} />
-            <Stat label="Valid for" value="2 years" hint="Re-assessment required after 2 years" />
           </div>
         </div>
       </section>
