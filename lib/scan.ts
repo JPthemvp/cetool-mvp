@@ -75,7 +75,19 @@ export interface ScanResult {
   discovered?: DiscoveredHost[];
   /** Set when the scan could not run at all (offline, NXDOMAIN). */
   error?: string;
-  /** Attack surface data from Shodan / Censys (present only when API keys are configured). */
+  /** Attack surface data from Shodan InternetDB (free, no key required). */
+  shodan?: ShodanData;
+}
+
+export interface ShodanData {
+  ip: string;
+  ports: number[];
+  hostnames: string[];
+  tags: string[];
+  /** Known CVEs from Shodan's data */
+  vulns: string[];
+  /** True when Shodan had no record for this IP */
+  noRecord?: boolean;
 }
 
 const TIMEOUT = 8000;

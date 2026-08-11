@@ -490,6 +490,104 @@ export default function ToolkitPage() {
           </div>
         )}
       </Card>
+
+      {/* ── Wazuh EDR / SIEM Integration ──────────────────────────────── */}
+      <Card className="mt-6 overflow-hidden">
+        <div className="px-5 py-4 border-b border-brand-700/30">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-[15px] font-semibold text-white">🛡️ Wazuh — EDR &amp; SIEM Integration</h2>
+            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300 ring-1 ring-inset ring-amber-500/30">Bring your own instance</span>
+          </div>
+          <p className="mt-2 max-w-3xl text-[13px] leading-relaxed text-brand-100/70">
+            Wazuh is a free, open-source security platform that covers endpoint detection (EDR), log analysis (SIEM), vulnerability scanning, and compliance mapping — including CIS Controls and PCI-DSS. If your organisation runs Wazuh, connecting it here would replace the PowerShell script with continuous, real-time evidence.
+          </p>
+        </div>
+
+        <div className="grid gap-0 divide-y divide-brand-700/30 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+          <div className="px-5 py-4">
+            <h3 className="mb-2 text-[13px] font-semibold text-white">What Wazuh covers for CE</h3>
+            <ul className="space-y-1.5 text-[13px] text-brand-100/70">
+              {[
+                { clause: "A.2", text: "Asset inventory — agent auto-discovers endpoints" },
+                { clause: "A.3", text: "Patch status — Wazuh vulnerability detector maps CVEs" },
+                { clause: "A.4", text: "Malware — active response blocks known IOCs" },
+                { clause: "A.5", text: "Network — FIM detects unauthorised file/config changes" },
+                { clause: "A.6", text: "Access control — monitors failed logins, privilege escalation" },
+                { clause: "A.9", text: "Incident response — alerting rules generate audit trail" },
+              ].map(({ clause, text }) => (
+                <li key={clause} className="flex items-start gap-2">
+                  <span className="mt-0.5 shrink-0 rounded bg-brand-700/60 px-1 py-0.5 text-[10px] font-bold text-brand-300">CE {clause}</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="px-5 py-4">
+            <h3 className="mb-2 text-[13px] font-semibold text-white">To connect your Wazuh instance</h3>
+            <ol className="space-y-1.5 text-[13px] text-brand-100/70 list-decimal list-inside">
+              <li>Deploy Wazuh Manager (self-hosted or cloud) and install agents on each endpoint</li>
+              <li>Enable the Wazuh REST API (default port 55000) and create an API user</li>
+              <li>Add <code className="rounded bg-ink-700/80 px-1 text-brand-300">WAZUH_URL</code>, <code className="rounded bg-ink-700/80 px-1 text-brand-300">WAZUH_USER</code>, and <code className="rounded bg-ink-700/80 px-1 text-brand-300">WAZUH_PASS</code> to your Vercel environment variables</li>
+              <li>The Harden page will then pull live agent compliance data automatically</li>
+            </ol>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a href="https://documentation.wazuh.com/current/installation-guide/index.html" target="_blank" rel="noreferrer"
+                className="text-[12px] text-brand-300 underline-offset-2 hover:underline">Install guide ↗</a>
+              <a href="https://documentation.wazuh.com/current/user-manual/api/index.html" target="_blank" rel="noreferrer"
+                className="text-[12px] text-brand-300 underline-offset-2 hover:underline">API reference ↗</a>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* ── CIS Controls Mapping ──────────────────────────────────────── */}
+      <Card className="mt-6 overflow-hidden">
+        <div className="px-5 py-4 border-b border-brand-700/30">
+          <h2 className="text-[15px] font-semibold text-white">📋 CIS Controls v8 — Mapping to Cyber Essentials</h2>
+          <p className="mt-1.5 max-w-3xl text-[13px] leading-relaxed text-brand-100/70">
+            CIS Controls v8 are globally recognised security best practices. Each Cyber Essentials measure maps to one or more CIS Controls — use this to cross-reference if your organisation also follows CIS.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] border-collapse text-[13px]">
+            <thead>
+              <tr className="border-b border-brand-700/30 bg-ink-900/50">
+                <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">CE Measure</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Topic</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">CIS Controls v8</th>
+                <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">CIS Sub-control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { ce: "A.1", topic: "Awareness & Training",    cis: "CIS 14",      detail: "14.1 Establish security awareness, 14.2 Training for roles" },
+                { ce: "A.2", topic: "Asset Management",         cis: "CIS 1 + 2",  detail: "1.1 Establish asset inventory, 2.1 Establish software inventory" },
+                { ce: "A.3", topic: "Secure Configuration",     cis: "CIS 4",      detail: "4.1 Establish secure config, 4.2 Maintain secure images" },
+                { ce: "A.4", topic: "Malware Protection",       cis: "CIS 10",     detail: "10.1 Deploy anti-malware, 10.2 Configure auto-update signatures" },
+                { ce: "A.5", topic: "Network Security",         cis: "CIS 12 + 13",detail: "12.2 Manage network infra, 13.4 Perform traffic filtering" },
+                { ce: "A.6", topic: "Access Control",           cis: "CIS 5 + 6",  detail: "5.1 Establish account inventory, 6.3 Require MFA for admin" },
+                { ce: "A.7", topic: "Patch Management",         cis: "CIS 7",      detail: "7.1 Establish patch process, 7.2 Remediate based on risk" },
+                { ce: "A.8", topic: "Backup",                   cis: "CIS 11",     detail: "11.1 Establish data recovery, 11.2 Protect backup data" },
+                { ce: "A.9", topic: "Incident Response",        cis: "CIS 17",     detail: "17.1 Designate personnel, 17.4 Establish incident process" },
+              ].map((row, i) => (
+                <tr key={row.ce} className={`border-b border-brand-800/60 ${i % 2 === 0 ? "" : "bg-ink-900/30"}`}>
+                  <td className="px-4 py-3">
+                    <span className="rounded bg-brand-700/60 px-2 py-0.5 text-[11px] font-bold text-brand-300">{row.ce}</span>
+                  </td>
+                  <td className="px-4 py-3 font-medium text-white">{row.topic}</td>
+                  <td className="px-4 py-3">
+                    <span className="rounded bg-sky-600/20 px-2 py-0.5 text-[11px] font-semibold text-sky-300">{row.cis}</span>
+                  </td>
+                  <td className="px-4 py-3 text-brand-100/60">{row.detail}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="border-t border-brand-700/30 px-5 py-3 text-[11px] text-brand-100/30">
+          Source: <a href="https://www.cisecurity.org/controls/v8" target="_blank" rel="noreferrer" className="underline hover:text-brand-100/60">CIS Controls v8 (cisecurity.org)</a> · Mapping is indicative — exact sub-control applicability depends on your organisation&apos;s scope and implementation group (IG1–IG3).
+        </div>
+      </Card>
     </div>
   );
 }

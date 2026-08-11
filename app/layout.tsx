@@ -6,7 +6,7 @@ import { StepFooter, StepGate, StepHeader, TestModeBanner } from "@/components/j
 import { themeScript } from "@/components/theme";
 
 export const metadata: Metadata = {
-  title: "Cyber Essentials Tool",
+  title: "Cyber Essentials Readiness Tool",
   description:
     "Free, non-intrusive cyber posture assessment for Singapore SMEs — every finding mapped to a CSA Cyber Essentials measure, prioritised by risk, and carried through to a submission-ready self-assessment.",
 };

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { runScan, verifyDomainOwnership } from "@/lib/scan";
+import dns from "node:dns/promises";
+import { runScan, verifyDomainOwnership, type ShodanData } from "@/lib/scan";
 import type { ScanAuthorisation, ScanMode } from "@/lib/authorisation";
 import { supabaseAdmin } from "@/lib/supabase";
 export const runtime = "nodejs";
@@ -86,6 +87,37 @@ export async function POST(req: Request) {
 
   const auth: ScanAuthorisation = { mode, attested, verified };
   const result = await runScan(domain, auth);
+
+  // ── Shodan InternetDB lookup (free, no key required) ─────────────────────
+  let shodanData: ShodanData | undefined;
+  try {
+    const addrs = await dns.resolve4(domain).catch(() => [] as string[]);
+    const ip = addrs[0];
+    if (ip) {
+      const shodanRes = await fetch(`https://internetdb.shodan.io/${ip}`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (shodanRes.ok) {
+        const j = await shodanRes.json() as {
+          ip?: string; ports?: number[]; hostnames?: string[];
+          tags?: string[]; vulns?: string[];
+        };
+        shodanData = {
+          ip,
+          ports: j.ports ?? [],
+          hostnames: j.hostnames ?? [],
+          tags: j.tags ?? [],
+          vulns: j.vulns ?? [],
+        };
+      } else if (shodanRes.status === 404) {
+        shodanData = { ip, ports: [], hostnames: [], tags: [], vulns: [], noRecord: true };
+      }
+    }
+  } catch {
+    // Shodan lookup is best-effort — never block the scan result
+  }
+  if (shodanData) (result as typeof result & { shodan: ShodanData }).shodan = shodanData;
 
   // ── Log to Supabase (best-effort, never blocks the response) ─────────────
   const keysSet =

@@ -16,6 +16,143 @@ import { SECTOR_BY_ID, extraObligations } from "@/lib/sectors";
 import { ObligationLabel } from "@/components/detail";
 import { buildReport, reportFilename, reportToJson, reportToXlsx } from "@/lib/report";
 
+// ── Email to Certification Body ──────────────────────────────────────────────
+
+const CERT_BODIES = [
+  { name: "CYBERTRUST ASIA PTE. LTD.", email: "certbody@cybertrust-asia.com.sg" },
+  { name: "SAIQA PTE. LTD.",           email: "ce-assessment@saiqa.com.sg" },
+  { name: "WIZLYNX PTE. LTD.",         email: "cemarks@wizlynx.com.sg" },
+  { name: "NCS PTE. LTD.",             email: "cyberessentials@ncs.com.sg" },
+];
+
+function EmailToCertBody({
+  org, readiness, gaps, scan, declComplete,
+}: {
+  org: { name: string; uen: string; sector: string };
+  readiness: { completion: number; percent: number; blocking: number; certifiable: boolean };
+  gaps: Array<{ band: string }>;
+  scan: { domain: string } | null;
+  declComplete: boolean;
+}) {
+  const [selectedBody, setSelectedBody] = useState(CERT_BODIES[0]);
+  const [copied, setCopied] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const today = new Date().toLocaleDateString("en-SG", { day: "numeric", month: "long", year: "numeric" });
+  const completionPct = Math.round(readiness.completion);
+  const criticalGaps = gaps.filter((g) => g.band === "critical").length;
+
+  const template = `To: ${selectedBody.email}
+Subject: Cyber Essentials Mark — Assessment Submission — ${org.name || "[Organisation Name]"}
+
+Dear ${selectedBody.name} Assessment Team,
+
+I am writing to submit our organisation for the CSA Cyber Essentials Mark assessment.
+
+ORGANISATION DETAILS
+────────────────────
+Organisation name : ${org.name || "[Organisation Name]"}
+UEN               : ${org.uen || "[UEN]"}
+Sector            : ${org.sector || "[Sector]"}
+Assessment date   : ${today}
+Scanned domain    : ${scan?.domain || "[domain.com.sg]"}
+
+SELF-ASSESSMENT SUMMARY
+────────────────────────
+Overall completion : ${completionPct}%
+Certifiable status : ${readiness.certifiable ? "Yes — all mandatory clauses met" : `No — ${readiness.blocking} mandatory clause(s) still open`}
+Open gaps          : ${gaps.length} (${criticalGaps} critical)
+Weighted score     : ${readiness.percent}%
+
+ATTACHED
+────────
+Please find attached our completed self-assessment export (Excel + JSON) generated from the Cyber Essentials Readiness Tool. The export contains clause-by-clause answers, evidence references, and scan data mapped to each CE measure.
+
+We confirm that the information provided is accurate to the best of our knowledge and that we have conducted this self-assessment in good faith.
+
+Please advise on next steps and your scheduling for the independent assessment.
+
+Yours sincerely,
+
+[Authorised Signatory Name]
+[Designation]
+${org.name || "[Organisation Name]"}
+[Contact number]
+[Email address]`;
+
+  function copy() {
+    navigator.clipboard.writeText(template).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    });
+  }
+
+  const mailtoHref = `mailto:${selectedBody.email}?subject=${encodeURIComponent(`Cyber Essentials Mark — Assessment Submission — ${org.name || "Organisation"}`)}&body=${encodeURIComponent(template)}`;
+
+  return (
+    <Card className="mt-6 overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-ink-850/50"
+      >
+        <span className="flex items-center gap-3">
+          <span className="text-[15px] font-semibold text-white">✉️ Submit to Certification Body</span>
+          {!declComplete && (
+            <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300 ring-1 ring-inset ring-amber-500/30">
+              Complete declaration first
+            </span>
+          )}
+          {declComplete && (
+            <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-500/30">
+              Ready to send
+            </span>
+          )}
+        </span>
+        <span className="text-brand-200/60" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s" }}>▾</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-brand-700/30">
+          <div className="px-5 py-4 border-b border-brand-700/30">
+            <p className="text-[13px] text-brand-100/70 mb-3">Select a CSA-appointed certification body, then send the pre-filled email with your Excel export attached.</p>
+            <div className="flex flex-wrap gap-2">
+              {CERT_BODIES.map((b) => (
+                <button key={b.name} onClick={() => setSelectedBody(b)}
+                  className={`rounded-lg border px-3 py-1.5 text-[12px] font-medium transition ${selectedBody.name === b.name ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300" : "border-ink-600/60 bg-ink-800/60 text-brand-200/70 hover:border-brand-500/40"}`}>
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="px-5 py-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Pre-filled email template</p>
+              <div className="flex gap-2">
+                <button onClick={copy}
+                  className="rounded border border-ink-600/60 bg-ink-800/60 px-2.5 py-1 text-[11px] font-medium text-brand-200/80 transition hover:border-brand-500/40 hover:text-white">
+                  {copied ? "✓ Copied" : "Copy"}
+                </button>
+                <a href={mailtoHref}
+                  className="rounded border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-300 transition hover:bg-emerald-500/20">
+                  Open in email client ↗
+                </a>
+              </div>
+            </div>
+            <pre className="overflow-x-auto rounded-lg border border-ink-700/50 bg-ink-900 p-4 text-[11px] leading-relaxed text-brand-100/70 whitespace-pre-wrap font-mono">
+              {template}
+            </pre>
+            <p className="mt-2 text-[11px] text-brand-100/30">
+              ⚠ These are dummy email addresses for demonstration. Replace with the actual certification body contact from <a href="https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cyber-essentials-and-cyber-trust-mark/certification-body-and-assessors" target="_blank" rel="noreferrer" className="underline hover:text-brand-100/60">CSA&apos;s register ↗</a>.
+              Attach your Excel export before sending.
+            </p>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
 // ── Signature pad ────────────────────────────────────────────────────────────
 
 function SignaturePad({
@@ -464,6 +601,15 @@ export default function ResultsPage() {
           )}
         </div>
       </Card>
+
+      {/* ── Email to Certification Body ──────────────────────────────── */}
+      <EmailToCertBody
+        org={org}
+        readiness={readiness}
+        gaps={gaps}
+        scan={scan}
+        declComplete={declComplete}
+      />
 
       {/* Per-measure summary */}
       <h2 className="mt-10 mb-4 text-xl font-semibold tracking-tight text-white">

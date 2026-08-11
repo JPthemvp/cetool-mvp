@@ -193,7 +193,7 @@ function EmployeeQuizPanel() {
 
 const AUDIENCE_COLOUR: Record<string, string> = {
   employees: "bg-emerald-500/20 text-emerald-300 ring-emerald-500/30",
-  "it-teams": "bg-sky-700/30 text-sky-200 ring-sky-500/40",
+  "it-teams": "bg-sky-600/50 text-sky-100 ring-sky-400/60",
   "business-owners": "bg-amber-500/20 text-amber-300 ring-amber-500/30",
   general: "bg-brand-500/20 text-brand-200 ring-brand-500/30",
 };

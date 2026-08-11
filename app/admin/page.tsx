@@ -178,7 +178,8 @@ export default function AdminPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Live monitor</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Cyber Essentials Readiness Tool <span className="text-brand-100/40 font-normal">(Overview)</span></h1>
+          <p className="text-[12px] font-semibold uppercase tracking-widest text-emerald-400 mb-0.5">Live Monitor</p>
           <p className="text-[13px] text-brand-100/50">
             {sessions.length} sessions · {scanTotal} domain scans · refreshes every 10 s
             {lastFetch && <> · last fetch <span className="text-brand-100/80">{timeAgo(lastFetch.toISOString())}</span></>}

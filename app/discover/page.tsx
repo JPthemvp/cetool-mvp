@@ -17,7 +17,7 @@ import { Technical } from "@/components/detail";
 import type { ScanMode } from "@/lib/authorisation";
 import { normaliseDomain } from "@/lib/domain";
 import { plainFinding, plainGroup } from "@/lib/plain";
-import type { DiscoveredAsset, Finding, ScanResult } from "@/lib/scan";
+import type { DiscoveredAsset, Finding, ScanResult, ShodanData } from "@/lib/scan";
 import { CLAUSE_BY_ID } from "@/lib/ce-framework";
 
 // ── IHP-style scorecard ───────────────────────────────────────────────────────
@@ -352,6 +352,209 @@ function FindingRow({ finding }: { finding: Finding }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ── Shodan Internet Exposure panel ───────────────────────────────────────────
+
+/** Ports that are worrying if publicly exposed — mapped to CE measures */
+const RISKY_PORTS: Record<number, { label: string; severity: "critical" | "high" | "medium"; measure: string; reason: string }> = {
+  21:   { label: "FTP",        severity: "critical", measure: "A.5", reason: "Unencrypted file transfer — disable or replace with SFTP" },
+  22:   { label: "SSH",        severity: "high",     measure: "A.5", reason: "Admin access open to internet — restrict to known IPs" },
+  23:   { label: "Telnet",     severity: "critical", measure: "A.5", reason: "Plaintext remote access — disable immediately" },
+  25:   { label: "SMTP",       severity: "medium",   measure: "A.5", reason: "Mail relay open — verify it is intentional and authenticated" },
+  80:   { label: "HTTP",       severity: "medium",   measure: "A.6", reason: "Unencrypted web — should redirect to HTTPS" },
+  110:  { label: "POP3",       severity: "high",     measure: "A.5", reason: "Unencrypted mail retrieval — disable or enforce TLS" },
+  135:  { label: "RPC",        severity: "critical", measure: "A.5", reason: "Windows RPC exposed — common attack vector" },
+  139:  { label: "NetBIOS",    severity: "critical", measure: "A.5", reason: "Windows file sharing exposed — should never be public" },
+  445:  { label: "SMB",        severity: "critical", measure: "A.5", reason: "Windows file sharing — primary ransomware pathway, block at firewall" },
+  1433: { label: "MSSQL",      severity: "critical", measure: "A.5", reason: "Database port exposed publicly — restrict to app servers only" },
+  1521: { label: "Oracle DB",  severity: "critical", measure: "A.5", reason: "Database port exposed publicly — restrict to app servers only" },
+  3306: { label: "MySQL",      severity: "critical", measure: "A.5", reason: "Database port exposed publicly — restrict to app servers only" },
+  3389: { label: "RDP",        severity: "critical", measure: "A.5", reason: "Remote desktop open to internet — primary ransomware entry point" },
+  5432: { label: "PostgreSQL", severity: "critical", measure: "A.5", reason: "Database port exposed publicly — restrict to app servers only" },
+  5900: { label: "VNC",        severity: "critical", measure: "A.5", reason: "Remote desktop protocol exposed — restrict immediately" },
+  6379: { label: "Redis",      severity: "critical", measure: "A.5", reason: "Cache/DB with no default auth exposed — critical exposure" },
+  8080: { label: "Alt HTTP",   severity: "medium",   measure: "A.5", reason: "Alternate web port — verify this is intentional" },
+  8443: { label: "Alt HTTPS",  severity: "medium",   measure: "A.5", reason: "Alternate HTTPS port — verify this is intentional" },
+  27017:{ label: "MongoDB",    severity: "critical", measure: "A.5", reason: "Database exposed publicly — common target for data theft" },
+};
+
+const SEV_STYLE: Record<string, { badge: string; row: string }> = {
+  critical: { badge: "bg-red-500/20 text-red-300 ring-red-500/30",     row: "border-l-2 border-red-500/60" },
+  high:     { badge: "bg-amber-500/20 text-amber-300 ring-amber-500/30", row: "border-l-2 border-amber-500/60" },
+  medium:   { badge: "bg-sky-500/15 text-sky-300 ring-sky-500/25",      row: "border-l-2 border-sky-500/40" },
+};
+
+function ShodanPanel({ shodan }: { shodan: ShodanData }) {
+  const [open, setOpen] = useState(true);
+
+  if (shodan.noRecord) {
+    return (
+      <Card className="mt-6 p-5">
+        <div className="flex items-center gap-3">
+          <span className="text-lg">🔍</span>
+          <div>
+            <p className="text-[14px] font-semibold text-white">
+              Shodan — Attack Surface Intelligence
+            </p>
+            <p className="text-[12px] text-brand-100/60">
+              IP <span className="font-mono">{shodan.ip}</span> — no record in Shodan&apos;s database.
+              This is normal for new or low-traffic domains. Data appears after Shodan&apos;s crawlers index the IP.
+            </p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
+  const riskyPorts = shodan.ports
+    .map((p) => ({ port: p, info: RISKY_PORTS[p] }))
+    .filter((p) => p.info)
+    .sort((a, b) => {
+      const order = { critical: 0, high: 1, medium: 2 };
+      return order[a.info!.severity] - order[b.info!.severity];
+    });
+
+  const safePortCount = shodan.ports.length - riskyPorts.length;
+
+  return (
+    <Card className="mt-6 overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between px-5 py-4 text-left transition hover:bg-ink-850/50"
+      >
+        <span className="flex items-center gap-3">
+          <span className="text-[15px] font-semibold text-white">
+            🔍 Shodan — Attack Surface Intelligence
+          </span>
+          <span className="rounded-full bg-brand-700/50 px-2 py-0.5 text-[11px] text-brand-200/70">
+            IP: {shodan.ip}
+          </span>
+          {riskyPorts.length > 0 && (
+            <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[11px] font-semibold text-red-400 ring-1 ring-inset ring-red-500/25">
+              {riskyPorts.length} exposed {riskyPorts.length === 1 ? "service" : "services"}
+            </span>
+          )}
+          {riskyPorts.length === 0 && shodan.ports.length > 0 && (
+            <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-semibold text-emerald-400 ring-1 ring-inset ring-emerald-500/25">
+              No high-risk ports
+            </span>
+          )}
+        </span>
+        <span className="text-brand-200/60" style={{ transform: open ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.2s" }}>▾</span>
+      </button>
+
+      {open && (
+        <div className="border-t border-brand-700/30">
+          {/* Stats */}
+          <div className="grid grid-cols-3 divide-x divide-brand-700/30 border-b border-brand-700/30">
+            <div className="px-5 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-brand-100/40">Open ports</p>
+              <p className="text-xl font-bold tabular-nums text-white">{shodan.ports.length}</p>
+            </div>
+            <div className="px-5 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-brand-100/40">Risky services</p>
+              <p className={`text-xl font-bold tabular-nums ${riskyPorts.length ? "text-red-400" : "text-emerald-400"}`}>{riskyPorts.length}</p>
+            </div>
+            <div className="px-5 py-3">
+              <p className="text-[11px] uppercase tracking-wide text-brand-100/40">Known CVEs</p>
+              <p className={`text-xl font-bold tabular-nums ${shodan.vulns.length ? "text-red-400" : "text-emerald-400"}`}>{shodan.vulns.length}</p>
+            </div>
+          </div>
+
+          {/* All open ports */}
+          <div className="px-5 py-3 border-b border-brand-700/30">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">All open ports</p>
+            <div className="flex flex-wrap gap-1.5">
+              {shodan.ports.map((p) => {
+                const info = RISKY_PORTS[p];
+                return (
+                  <span key={p} className={`rounded px-2 py-0.5 text-[12px] font-mono ring-1 ring-inset ${info ? SEV_STYLE[info.severity].badge : "bg-ink-700/60 text-brand-200/60 ring-ink-600/40"}`}>
+                    {p}{info ? ` ${info.label}` : ""}
+                  </span>
+                );
+              })}
+              {shodan.ports.length === 0 && <span className="text-[13px] text-brand-100/40">No open ports detected</span>}
+            </div>
+          </div>
+
+          {/* Risky ports detail */}
+          {riskyPorts.length > 0 && (
+            <div className="px-5 py-3 border-b border-brand-700/30">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Exposed services — CE clause impact</p>
+              <div className="space-y-2">
+                {riskyPorts.map(({ port, info }) => (
+                  <div key={port} className={`flex items-start gap-3 rounded-lg bg-ink-800/60 p-3 ${SEV_STYLE[info!.severity].row}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-[13px] font-bold text-white">{port}/{info!.label}</span>
+                        <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ring-1 ring-inset ${SEV_STYLE[info!.severity].badge}`}>
+                          {info!.severity}
+                        </span>
+                        <span className="rounded bg-brand-700/60 px-1.5 py-0.5 text-[10px] font-semibold text-brand-200/70">
+                          CE {info!.measure}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-[12px] leading-relaxed text-brand-100/70">{info!.reason}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* CVEs */}
+          {shodan.vulns.length > 0 && (
+            <div className="px-5 py-3 border-b border-brand-700/30">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Known CVEs on this IP</p>
+              <div className="flex flex-wrap gap-1.5">
+                {shodan.vulns.map((v) => (
+                  <a key={v} href={`https://nvd.nist.gov/vuln/detail/${v}`} target="_blank" rel="noreferrer"
+                    className="rounded bg-red-500/15 px-2 py-0.5 text-[11px] font-mono text-red-300 ring-1 ring-inset ring-red-500/25 hover:text-red-200">
+                    {v} ↗
+                  </a>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] text-brand-100/40">Source: Shodan InternetDB · maps to CE A.4 (Secure Update) and A.5 (Perimeter)</p>
+            </div>
+          )}
+
+          {/* Tags & hostnames */}
+          {(shodan.tags.length > 0 || shodan.hostnames.length > 0) && (
+            <div className="grid gap-3 px-5 py-3 sm:grid-cols-2">
+              {shodan.hostnames.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Hostnames on this IP</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {shodan.hostnames.map((h) => <span key={h} className="rounded bg-ink-700/60 px-2 py-0.5 text-[11px] font-mono text-brand-200/60">{h}</span>)}
+                  </div>
+                </div>
+              )}
+              {shodan.tags.length > 0 && (
+                <div>
+                  <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-brand-100/40">Shodan tags</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {shodan.tags.map((t) => <span key={t} className="rounded bg-sky-500/15 px-2 py-0.5 text-[11px] text-sky-300">{t}</span>)}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {safePortCount > 0 && riskyPorts.length === 0 && (
+            <div className="px-5 py-3 text-[13px] text-brand-100/60">
+              {safePortCount} open port{safePortCount !== 1 ? "s" : ""} — none matched known high-risk services. Verify each is intentional.
+            </div>
+          )}
+
+          <div className="border-t border-brand-700/30 px-5 py-3 text-[11px] text-brand-100/30">
+            Data from <a href="https://internetdb.shodan.io" target="_blank" rel="noreferrer" className="underline hover:text-brand-100/60">Shodan InternetDB</a> — free passive intelligence, no active scanning of your network.
+            Risky port findings map to CE <strong className="text-brand-100/50">A.5 (Network Security)</strong> and inform firewall configuration clauses.
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -711,6 +914,9 @@ export default function DiscoverPage() {
             onToggle={() => setInventoryOpen((o) => !o)}
             onExport={exportInventory}
           />
+
+          {/* ── Shodan Internet Exposure ─────────────────────────────────── */}
+          {scan.shodan && <ShodanPanel shodan={scan.shodan} />}
 
         </>
       )}
