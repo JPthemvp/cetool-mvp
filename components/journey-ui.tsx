@@ -120,7 +120,7 @@ export function StepHeader() {
 export function StepFooter() {
   const pathname = usePathname();
   const router = useRouter();
-  const { journey, acknowledgeStep, started, readiness, scan, org, pathway } = useStore();
+  const { journey, acknowledgeStep, started, readiness, scan, org, pathway, sessionId, gaps } = useStore();
 
   const step = STEP_BY_HREF.get(pathname);
   if (!started || !step) return null;
@@ -154,6 +154,49 @@ export function StepFooter() {
 
   function advance() {
     acknowledgeStep(step!.id);
+
+    // Fire-and-forget: snapshot current state to Supabase sessions table.
+    const payload: Record<string, unknown> = {
+      sessionId,
+      currentStep: step!.id,
+    };
+    if (step!.id === "start" || org.name) {
+      payload.org_name       = org.name || null;
+      payload.uen            = org.uen || null;
+      payload.sector         = org.sector || null;
+      payload.pathway        = pathway || null;
+      payload.has_internal_it = org.hasInternalIt;
+    }
+    if (scan) {
+      const pass = scan.findings.filter((f) => f.status === "pass").length;
+      const fail = scan.findings.filter((f) => f.status === "fail").length;
+      const warn = scan.findings.filter((f) => f.status === "warn").length;
+      const total = pass + fail + warn;
+      const pct = total > 0 ? Math.round((pass / total) * 100) : 0;
+      const grade = pct >= 90 ? "A" : pct >= 70 ? "B" : pct >= 50 ? "C" : pct >= 30 ? "D" : "F";
+      payload.domain     = scan.domain;
+      payload.scan_grade = scan.reachable ? grade : null;
+      payload.scan_score = scan.reachable ? pct : null;
+      payload.scan_pass  = pass;
+      payload.scan_fail  = fail;
+      payload.scan_warn  = warn;
+    }
+    if (step!.id === "prepare" || readiness.completion > 0) {
+      payload.clauses_answered = Math.round((readiness.completion / 100) * readiness.totalClauses);
+      payload.clauses_total    = readiness.totalClauses;
+      payload.completion_pct   = Math.round(readiness.completion);
+    }
+    if (step!.id === "results" || step!.id === "integrate") {
+      payload.certifiable    = readiness.certifiable;
+      payload.blocking_count = readiness.blocking;
+      payload.gaps_count     = gaps.length;
+    }
+    fetch("/api/session/sync", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }).catch(() => {/* best-effort, never block navigation */});
+
     if (next) router.push(next.href);
   }
 

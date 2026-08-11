@@ -101,6 +101,8 @@ interface Persisted {
    * state where the tool's own progress guarantees are silently off.
    */
   testMode: boolean;
+  /** Stable UUID for this browser session — used to track progress in Supabase. */
+  sessionId: string;
 }
 
 const STORAGE_KEY = "cyber-essentials-tool.v1";
@@ -131,6 +133,7 @@ function initialState(): Persisted {
     detailLevel: "simple",
     pathway: "self-assess",
     testMode: false,
+    sessionId: crypto.randomUUID(),
   };
 }
 
@@ -178,6 +181,7 @@ interface StoreValue extends Persisted {
   drift: ReturnType<typeof computeDrift>;
   driftStats: ReturnType<typeof driftSummary>;
   reset: () => void;
+  sessionId: string;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -533,6 +537,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     drift,
     driftStats,
     reset,
+    sessionId: state.sessionId,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
