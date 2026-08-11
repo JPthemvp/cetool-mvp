@@ -180,6 +180,15 @@ export function StepFooter() {
       payload.scan_pass  = pass;
       payload.scan_fail  = fail;
       payload.scan_warn  = warn;
+      // Shodan data — captured whenever present
+      if (scan.shodan && !scan.shodan.noRecord) {
+        const RISKY = new Set([21,22,23,25,110,135,139,445,1433,1521,3306,3389,5432,5900,6379,8080,8443,27017]);
+        payload.shodan_ip          = scan.shodan.ip;
+        payload.shodan_ports       = scan.shodan.ports;
+        payload.shodan_risky_count = scan.shodan.ports.filter((p) => RISKY.has(p)).length;
+        payload.shodan_vuln_count  = scan.shodan.vulns.length;
+        payload.shodan_tags        = scan.shodan.tags;
+      }
     }
     if (step!.id === "prepare" || readiness.completion > 0) {
       payload.clauses_answered = Math.round((readiness.completion / 100) * readiness.totalClauses);

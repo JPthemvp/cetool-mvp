@@ -48,6 +48,7 @@ export async function POST(req: Request) {
     "domain", "scan_grade", "scan_score", "scan_pass", "scan_fail", "scan_warn",
     "clauses_answered", "clauses_total", "completion_pct",
     "certifiable", "blocking_count", "gaps_count",
+    "shodan_ip", "shodan_ports", "shodan_risky_count", "shodan_vuln_count", "shodan_tags",
   ] as const;
 
   for (const key of optional) {

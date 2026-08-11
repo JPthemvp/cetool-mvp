@@ -602,14 +602,16 @@ export default function ResultsPage() {
         </div>
       </Card>
 
-      {/* ── Email to Certification Body ──────────────────────────────── */}
-      <EmailToCertBody
-        org={org}
-        readiness={readiness}
-        gaps={gaps}
-        scan={scan}
-        declComplete={declComplete}
-      />
+      {/* ── Email to Certification Body — only after declaration is signed ── */}
+      {declComplete && (
+        <EmailToCertBody
+          org={org}
+          readiness={readiness}
+          gaps={gaps}
+          scan={scan}
+          declComplete={declComplete}
+        />
+      )}
 
       {/* Per-measure summary */}
       <h2 className="mt-10 mb-4 text-xl font-semibold tracking-tight text-white">
