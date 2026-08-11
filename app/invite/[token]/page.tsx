@@ -39,19 +39,22 @@ const CSA_LOGO_SVG = `<svg viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/sv
   <text x="10" y="26" font-family="Arial" font-size="11" font-weight="bold" fill="white">CSA Singapore</text>
 </svg>`;
 
-export default function InvitePage({ params }: { params: { token: string } }) {
+export default function InvitePage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
   const { setOrg, beginJourney, setPathway } = useStore();
   const [payload, setPayload] = useState<InvitePayload>({});
+  const [token, setToken] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [step, setStep] = useState<"email" | "accepting" | "done">("email");
 
   useEffect(() => {
-    const decoded = decodeToken(params.token);
-    setPayload(decoded);
-  }, [params.token]);
+    params.then(({ token: t }) => {
+      setToken(t);
+      setPayload(decodeToken(t));
+    });
+  }, [params]);
 
-  const ref = payload.ref ?? `CSA-CE-${params.token.slice(0, 8).toUpperCase()}`;
+  const ref = payload.ref ?? `CSA-CE-${token.slice(0, 8).toUpperCase()}`;
   const today = new Date().toLocaleDateString("en-SG", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   function accept() {
