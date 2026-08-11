@@ -839,6 +839,8 @@ export default function DiscoverPage() {
 
           <IHPScoreCard findings={findings} />
 
+          {scan.shodan && <ShodanPanel shodan={scan.shodan} />}
+
           {lastPrefilled.length > 0 && (
             <Card className="mt-6 border-brand-500/30 bg-brand-500/5 p-5">
               <div className="flex flex-wrap items-center justify-between gap-4">
@@ -914,9 +916,6 @@ export default function DiscoverPage() {
             onToggle={() => setInventoryOpen((o) => !o)}
             onExport={exportInventory}
           />
-
-          {/* ── Shodan Internet Exposure ─────────────────────────────────── */}
-          {scan.shodan && <ShodanPanel shodan={scan.shodan} />}
 
         </>
       )}
