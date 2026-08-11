@@ -130,6 +130,10 @@ export async function POST(req: Request) {
     const fail = result.findings.filter((f) => f.status === "fail").length;
     const warn = result.findings.filter((f) => f.status === "warn").length;
 
+    // Derive Shodan summary fields for the scans row
+    const RISKY_PORTS = new Set([21,22,23,25,110,135,139,445,1433,1521,3306,3389,5432,5900,6379,8080,8443,27017]);
+    const sd = shodanData && !shodanData.noRecord ? shodanData : null;
+
     const { error: dbError } = await supabaseAdmin
       .from("scans")
       .insert({
@@ -148,6 +152,12 @@ export async function POST(req: Request) {
         findings: result.findings,
         ip: req.headers.get("x-forwarded-for") ?? req.headers.get("x-real-ip") ?? null,
         user_agent: req.headers.get("user-agent") ?? null,
+        // Shodan fields — only set when a record was found
+        shodan_ip:          sd?.ip ?? null,
+        shodan_ports:       sd?.ports ?? null,
+        shodan_risky_count: sd ? sd.ports.filter((p) => RISKY_PORTS.has(p)).length : null,
+        shodan_vuln_count:  sd?.vulns.length ?? null,
+        shodan_tags:        sd?.tags ?? null,
       });
     if (dbError) {
       console.error("[supabase] scan insert failed:", dbError.code, dbError.message, dbError.details);

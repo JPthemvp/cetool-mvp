@@ -16,6 +16,11 @@ interface ScanRow {
   uen: string | null;
   sector: string | null;
   pathway: string | null;
+  shodan_ip: string | null;
+  shodan_ports: number[] | null;
+  shodan_risky_count: number | null;
+  shodan_vuln_count: number | null;
+  shodan_tags: string[] | null;
 }
 
 interface SessionRow {
@@ -40,11 +45,6 @@ interface SessionRow {
   certifiable: boolean | null;
   blocking_count: number | null;
   gaps_count: number | null;
-  shodan_ip: string | null;
-  shodan_ports: number[] | null;
-  shodan_risky_count: number | null;
-  shodan_vuln_count: number | null;
-  shodan_tags: string[] | null;
 }
 
 function gradeColor(grade: string | null) {
@@ -215,8 +215,8 @@ export default function AdminPage() {
           { label: "User sessions", value: sessions.length, tone: "info" },
           { label: "Reached Assess", value: sessions.filter((s) => ["prepare","results","integrate"].includes(s.current_step ?? "")).length, tone: "good" },
           { label: "Certifiable", value: sessions.filter((s) => s.certifiable === true).length, tone: "good" },
-          { label: "Risky ports found", value: sessions.filter((s) => (s.shodan_risky_count ?? 0) > 0).length, tone: "bad" },
-          { label: "CVEs detected", value: sessions.filter((s) => (s.shodan_vuln_count ?? 0) > 0).length, tone: "bad" },
+          { label: "Risky ports found", value: scans.filter((s) => (s.shodan_risky_count ?? 0) > 0).length, tone: "bad" },
+          { label: "CVEs detected", value: scans.filter((s) => (s.shodan_vuln_count ?? 0) > 0).length, tone: "bad" },
         ].map(({ label, value, tone }) => (
           <div key={label} className="rounded-xl border border-ink-700/50 bg-ink-900 p-4">
             <p className="text-[11px] uppercase tracking-wider text-brand-100/40">{label}</p>
@@ -246,7 +246,7 @@ export default function AdminPage() {
             <table className="w-full min-w-[1100px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-ink-700/50 bg-ink-900">
-                  {["Last active", "Step reached", "Org name", "UEN", "Sector", "Pathway", "Domain", "Grade", "Answered", "Complete", "Certifiable", "Gaps", "Shodan IP", "Open ports", "Risky", "CVEs"].map((h) => (
+                  {["Last active", "Step reached", "Org name", "UEN", "Sector", "Pathway", "Domain", "Grade", "Answered", "Complete", "Certifiable", "Gaps"].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-brand-100/40">{h}</th>
                   ))}
                 </tr>
@@ -292,26 +292,6 @@ export default function AdminPage() {
                         {s.certifiable == null && <span className="text-brand-100/30">—</span>}
                       </td>
                       <td className="px-4 py-3 tabular-nums text-brand-100/70">{s.gaps_count ?? "—"}</td>
-                      <td className="px-4 py-3 font-mono text-[11px] text-brand-100/60">{s.shodan_ip ?? "—"}</td>
-                      <td className="px-4 py-3 tabular-nums text-brand-100/70">
-                        {s.shodan_ports != null ? (
-                          <span title={s.shodan_ports.join(", ")}>{s.shodan_ports.length}</span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">
-                        {s.shodan_risky_count != null ? (
-                          <span className={s.shodan_risky_count > 0 ? "font-bold text-red-400" : "text-emerald-400"}>
-                            {s.shodan_risky_count}
-                          </span>
-                        ) : "—"}
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">
-                        {s.shodan_vuln_count != null ? (
-                          <span className={s.shodan_vuln_count > 0 ? "font-bold text-amber-400" : "text-emerald-400"}>
-                            {s.shodan_vuln_count}
-                          </span>
-                        ) : "—"}
-                      </td>
                     </tr>
                   );
                 })}
@@ -329,10 +309,10 @@ export default function AdminPage() {
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-ink-700/50">
-            <table className="w-full min-w-[900px] border-collapse text-[13px]">
+            <table className="w-full min-w-[1200px] border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-ink-700/50 bg-ink-900">
-                  {["Time", "Domain", "Grade", "Score", "✓ Pass", "✗ Fail", "⚠ Warn", "Mode", "Sector", "UEN"].map((h) => (
+                  {["Time", "Domain", "Grade", "Score", "✓ Pass", "✗ Fail", "⚠ Warn", "Mode", "Sector", "UEN", "Shodan IP", "Open ports", "Risky", "CVEs"].map((h) => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-brand-100/40">{h}</th>
                   ))}
                 </tr>
@@ -357,6 +337,26 @@ export default function AdminPage() {
                       </td>
                       <td className="px-4 py-3 text-brand-100/60">{s.sector ?? "—"}</td>
                       <td className="px-4 py-3 font-mono text-brand-100/50">{s.uen ?? "—"}</td>
+                      <td className="px-4 py-3 font-mono text-[11px] text-brand-100/60">{s.shodan_ip ?? "—"}</td>
+                      <td className="px-4 py-3 tabular-nums text-brand-100/70">
+                        {s.shodan_ports != null ? (
+                          <span title={s.shodan_ports.join(", ")}>{s.shodan_ports.length}</span>
+                        ) : "—"}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {s.shodan_risky_count != null ? (
+                          <span className={s.shodan_risky_count > 0 ? "font-bold text-red-400" : "text-emerald-400"}>
+                            {s.shodan_risky_count}
+                          </span>
+                        ) : "—"}
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">
+                        {s.shodan_vuln_count != null ? (
+                          <span className={s.shodan_vuln_count > 0 ? "font-bold text-amber-400" : "text-emerald-400"}>
+                            {s.shodan_vuln_count}
+                          </span>
+                        ) : "—"}
+                      </td>
                     </tr>
                   );
                 })}
