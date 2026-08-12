@@ -10,20 +10,31 @@ export const maxDuration = 30;
 // ── IHP-style scoring (mirrors the client-side scorecard) ──────────────────
 
 const CHECK_WEIGHTS = [
-  { id: "email.spf",        pts: 10, half: true },
-  { id: "email.dkim",       pts: 10, half: true },
-  { id: "email.dmarc",      pts: 10, half: true },
-  { id: "tls.available",    pts: 8,  half: false },
-  { id: "tls.valid",        pts: 6,  half: false },
-  { id: "tls.expiry",       pts: 4,  half: true  },
-  { id: "tls.legacy",       pts: 6,  half: false },
-  { id: "web.https-redirect",pts: 6, half: false },
-  { id: "web.hsts",         pts: 5,  half: false },
-  { id: "web.csp",          pts: 5,  half: false },
-  { id: "dns.caa",          pts: 10, half: true  },
-  { id: "web.xcto",         pts: 5,  half: false },
-  { id: "web.frame",        pts: 5,  half: false },
-  { id: "web.referrer",     pts: 5,  half: false },
+  // ── Email authentication ─────────────────────────────────────────────────
+  { id: "email.spf",         pts: 10, half: true  },
+  { id: "email.dkim",        pts: 10, half: true  },
+  { id: "email.dmarc",       pts: 10, half: true  },
+  { id: "email.starttls",    pts: 8,  half: false },
+  // ── TLS / HTTPS ──────────────────────────────────────────────────────────
+  { id: "tls.available",     pts: 8,  half: false },
+  { id: "tls.valid",         pts: 6,  half: false },
+  { id: "tls.expiry",        pts: 4,  half: true  },
+  { id: "tls.legacy",        pts: 6,  half: false },
+  { id: "tls.v13",           pts: 5,  half: false },
+  { id: "tls.ciphers",       pts: 6,  half: false },
+  { id: "tls.pqc",           pts: 4,  half: false },
+  // ── Web headers ──────────────────────────────────────────────────────────
+  { id: "web.https-redirect", pts: 6, half: false },
+  { id: "web.hsts",          pts: 5,  half: false },
+  { id: "web.csp",           pts: 5,  half: false },
+  { id: "web.xcto",          pts: 5,  half: false },
+  { id: "web.frame",         pts: 5,  half: false },
+  { id: "web.referrer",      pts: 5,  half: false },
+  // ── DNS ──────────────────────────────────────────────────────────────────
+  { id: "dns.caa",           pts: 8,  half: true  },
+  { id: "dns.dnssec",        pts: 8,  half: false },
+  { id: "dns.ipv6",          pts: 4,  half: false },
+  { id: "dns.dane",          pts: 5,  half: false },
 ] as const;
 
 function computeScore(findings: Array<{ checkId: string; status: string }>) {
