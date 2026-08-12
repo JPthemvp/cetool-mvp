@@ -134,6 +134,31 @@ function unknownFinding(
 // client component can use them without dragging node:dns into the bundle.
 export { normaliseDomain, isPlausibleDomain } from "./domain";
 
+// ── Organisational-domain helper ─────────────────────────────────────────────
+/**
+ * Returns the "organisational domain" for a subdomain per RFC 7489 §3.2.
+ * e.g. ihp.csa.gov.sg → csa.gov.sg, mail.example.com → example.com.
+ * Returns null when the domain is already at the apex (no parent to check).
+ */
+function getOrgDomain(domain: string): string | null {
+  const parts = domain.split(".");
+  if (parts.length <= 2) return null; // already apex
+
+  // Singapore and other common second-level TLDs that need 3-part apex
+  const sld2 = new Set([
+    "gov.sg","edu.sg","com.sg","org.sg","net.sg","mil.sg","per.sg",
+    "co.uk","org.uk","gov.uk","ac.uk","net.uk","me.uk",
+    "com.au","gov.au","org.au","net.au","edu.au","asn.au",
+    "co.nz","govt.nz","org.nz","net.nz",
+  ]);
+  const tail2 = parts.slice(-2).join(".");
+  if (sld2.has(tail2)) {
+    // x.csa.gov.sg → org domain is csa.gov.sg (3 parts)
+    return parts.length > 3 ? parts.slice(-3).join(".") : null;
+  }
+  return parts.slice(-2).join(".");
+}
+
 // ── DNS and email authentication ────────────────────────────────────────────
 
 export interface DnsOutcome {
@@ -217,7 +242,27 @@ async function dnsChecks(domain: string, dns: DnsClient): Promise<DnsOutcome> {
     findings.push(unknownFinding("email.spf", "SPF record", domain, "email", failureCode(txtL)));
   } else {
   const flatTxt = resolved(txtL) ?? [];
-  const spf = flatTxt.find((r) => r.toLowerCase().startsWith("v=spf1"));
+  let spf = flatTxt.find((r) => r.toLowerCase().startsWith("v=spf1"));
+
+  // Subdomain fallback: if no SPF on this subdomain, check parent/org domain.
+  // SPF is not inherited by RFC 7208, but many orgs publish SPF only at the
+  // apex and rely on DMARC's organisational domain alignment to cover them.
+  // When a subdomain has no MX and no own SPF we surface a gentler warning
+  // and surface the parent's record as evidence so admins can decide whether
+  // to publish `v=spf1 -all` on the subdomain itself.
+  let spfFromOrg = false;
+  if (!spf) {
+    const orgDomain = getOrgDomain(domain);
+    if (orgDomain) {
+      const orgTxtL = await dns.txt(orgDomain);
+      const orgSpf = (resolved(orgTxtL) ?? []).find((r) => r.toLowerCase().startsWith("v=spf1"));
+      if (orgSpf) {
+        spf = orgSpf;
+        spfFromOrg = true;
+      }
+    }
+  }
+
   if (!spf) {
     findings.push({
       checkId: "email.spf",
@@ -226,6 +271,18 @@ async function dnsChecks(domain: string, dns: DnsClient): Promise<DnsOutcome> {
       severity: hasMail ? "high" : "medium",
       detail:
         "Nothing stops an attacker sending email that appears to come from your domain. SPF lists the servers allowed to send as you.",
+      asset: domain,
+      group: "email",
+    });
+  } else if (spfFromOrg) {
+    const orgDomain = getOrgDomain(domain)!;
+    findings.push({
+      checkId: "email.spf",
+      title: "SPF found on parent domain only",
+      status: "warn",
+      severity: hasMail ? "medium" : "low",
+      detail: `No SPF record on ${domain} itself, but the organisational domain ${orgDomain} has one. SPF is not automatically inherited by subdomains — if this subdomain sends mail, publish its own SPF record. If it does not send mail, publish \`v=spf1 -all\` here to prevent spoofing.`,
+      evidence: spf,
       asset: domain,
       group: "email",
     });
@@ -249,12 +306,29 @@ async function dnsChecks(domain: string, dns: DnsClient): Promise<DnsOutcome> {
   }
   }
 
-  // DMARC
+  // DMARC — per RFC 7489 §6.6.3, if no record at _dmarc.{domain} the receiver
+  // falls back to _dmarc.{organisational-domain}. We mirror that logic so the
+  // score matches what compliant receivers (and CSA's IHP) would report.
   const dmarcL = await dns.txt(`_dmarc.${domain}`);
   if (inconclusive(dmarcL)) {
     findings.push(unknownFinding("email.dmarc", "DMARC record", domain, "email", failureCode(dmarcL)));
   } else {
-  const dmarc = (resolved(dmarcL) ?? []).find((r) => r.toLowerCase().startsWith("v=dmarc1"));
+  let dmarc = (resolved(dmarcL) ?? []).find((r) => r.toLowerCase().startsWith("v=dmarc1"));
+  let dmarcFromOrg = false;
+
+  if (!dmarc) {
+    // RFC 7489 organisational domain fallback
+    const orgDomain = getOrgDomain(domain);
+    if (orgDomain) {
+      const orgDmarcL = await dns.txt(`_dmarc.${orgDomain}`);
+      const orgDmarc = (resolved(orgDmarcL) ?? []).find((r) => r.toLowerCase().startsWith("v=dmarc1"));
+      if (orgDmarc) {
+        dmarc = orgDmarc;
+        dmarcFromOrg = true;
+      }
+    }
+  }
+
   if (!dmarc) {
     findings.push({
       checkId: "email.dmarc",
@@ -267,16 +341,19 @@ async function dnsChecks(domain: string, dns: DnsClient): Promise<DnsOutcome> {
       group: "email",
     });
   } else {
+    const orgDomain = dmarcFromOrg ? getOrgDomain(domain)! : null;
     const policy = /p=(\w+)/.exec(dmarc)?.[1] ?? "none";
     const enforcing = policy === "reject" || policy === "quarantine";
     findings.push({
       checkId: "email.dmarc",
-      title: enforcing ? `DMARC enforcing (p=${policy})` : "DMARC published but not enforcing",
+      title: enforcing
+        ? `DMARC enforcing (p=${policy})${dmarcFromOrg ? " via org domain" : ""}`
+        : `DMARC published but not enforcing${dmarcFromOrg ? " (inherited from org domain)" : ""}`,
       status: enforcing ? "pass" : "warn",
       severity: enforcing ? "info" : "medium",
       detail: enforcing
-        ? `Mail failing authentication is ${policy === "reject" ? "rejected" : "quarantined"}.`
-        : "DMARC is set to p=none, which only monitors. Move to quarantine, then reject, once the reports look clean.",
+        ? `Mail failing authentication is ${policy === "reject" ? "rejected" : "quarantined"}.${dmarcFromOrg ? ` Policy inherited from organisational domain ${orgDomain} per RFC 7489.` : ""}`
+        : `DMARC is set to p=none, which only monitors. Move to quarantine, then reject, once the reports look clean.${dmarcFromOrg ? ` Record inherited from organisational domain ${orgDomain}.` : ""}`,
       evidence: dmarc,
       asset: domain,
       group: "email",
@@ -284,8 +361,40 @@ async function dnsChecks(domain: string, dns: DnsClient): Promise<DnsOutcome> {
   }
   }
 
-  // DKIM — probe the selectors the common providers use.
-  const selectors = ["default", "google", "selector1", "selector2", "k1", "s1", "mail"];
+  // DKIM — probe selectors used by common mail providers and governments.
+  // Organised by provider to make it easy to extend.
+  const selectors = [
+    // Generic / custom
+    "default", "mail", "dkim", "dkim1", "dkim2", "key1", "key2", "smtp", "email",
+    // Google Workspace
+    "google",
+    // Microsoft 365 / Exchange Online
+    "selector1", "selector2",
+    // Amazon SES
+    "amazonses",
+    // Mailchimp / Mandrill
+    "k1", "k2", "k3", "mandrill",
+    // SendGrid
+    "s1", "s2", "s3", "sendgrid",
+    // Fastmail
+    "fm1", "fm2", "fm3",
+    // Mimecast
+    "mimecast",
+    // Proofpoint
+    "proofpoint",
+    // Mailjet
+    "mailjet",
+    // Zoho
+    "zoho",
+    // Campaign Monitor
+    "cm",
+    // Postmark
+    "pm",
+    // HubSpot
+    "hs1", "hs2",
+    // Generic numeric / enterprise
+    "m1", "m2", "mx", "s1024", "s2048",
+  ];
   const dkimHits: string[] = [];
   let dkimInconclusive = 0;
   await Promise.all(

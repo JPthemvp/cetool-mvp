@@ -31,8 +31,7 @@ select
   shodan_ports,
   shodan_risky_count,
   shodan_vuln_count,
-  shodan_tags,
-  created_at
+  shodan_tags
 from public.scans;
 
 -- Re-grant select (recreating the view drops previous grants)
