@@ -15,7 +15,7 @@ export function Nav() {
   // A deep link into a later step is itself a commitment. The gate decides
   // whether they may stay there; this only stops them landing without a nav.
   useEffect(() => {
-    if (!started && pathname !== "/" && pathname !== "/onboard") beginJourney();
+    if (!started && pathname !== "/" && pathname !== "/onboard" && pathname !== "/start") beginJourney();
   }, [started, pathname, beginJourney]);
 
   return (

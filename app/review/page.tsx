@@ -1,0 +1,514 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import { useStore } from "@/components/store";
+import { Button, Card, Meter, Pill, SectionTitle, Stat } from "@/components/ui";
+import { applicableClauses } from "@/lib/ce-framework";
+import { answerabilityOf } from "@/lib/answerability";
+import { buildResultRows, toCsv } from "@/lib/assessment";
+import { CSA_ELEARNING } from "@/lib/training/gophish";
+import { generateIRPlan } from "@/lib/training/irplan";
+
+type WizardSection = "training" | "irplan" | "done";
+
+// ── Human-only clauses that need wizard answers ───────────────────────────────
+
+const HUMAN_WIZARD_QUESTIONS: Array<{
+  clauseId: string;
+  question: string;
+  options: Array<{ value: string; label: string }>;
+  hint: string;
+}> = [
+  {
+    clauseId: "A.1.4(a)",
+    question: "Does your organisation have a documented cybersecurity awareness training programme for all employees?",
+    options: [
+      { value: "yes", label: "Yes — documented and delivered" },
+      { value: "partial", label: "Partly — some staff trained, not all" },
+      { value: "no", label: "No — not yet implemented" },
+    ],
+    hint: "Self-learning materials, external training providers, and online courses all count. CSA e-learning below is free.",
+  },
+  {
+    clauseId: "A.1.4(b)",
+    question: "Do you have written cyber hygiene guidelines for employees?",
+    options: [
+      { value: "yes", label: "Yes — written and distributed" },
+      { value: "partial", label: "Partly — verbal guidance only" },
+      { value: "no", label: "No" },
+    ],
+    hint: "An email policy, acceptable use policy, or similar document counts.",
+  },
+  {
+    clauseId: "A.5.4(c)",
+    question: "Is there a formal process to approve new user accounts before they are created?",
+    options: [
+      { value: "yes", label: "Yes — manager approval required" },
+      { value: "partial", label: "Partly — informal approval" },
+      { value: "no", label: "No formal process" },
+    ],
+    hint: "Even an email approval trail counts.",
+  },
+  {
+    clauseId: "A.5.4(g)",
+    question: "Are accounts disabled or deleted promptly when an employee leaves?",
+    options: [
+      { value: "yes", label: "Yes — same day or within 24 hours" },
+      { value: "partial", label: "Partly — done but sometimes delayed" },
+      { value: "no", label: "No formal off-boarding process" },
+    ],
+    hint: "This includes email accounts, cloud services, and any system access.",
+  },
+  {
+    clauseId: "A.8.4(g)",
+    question: "Are backup copies stored offline or in a location inaccessible from the main network?",
+    options: [
+      { value: "yes", label: "Yes — offline or air-gapped backup exists" },
+      { value: "partial", label: "Partly — some backups are isolated" },
+      { value: "no", label: "No — all backups are on connected drives" },
+    ],
+    hint: "A backup connected to the same network as your systems will be encrypted by ransomware too.",
+  },
+  {
+    clauseId: "A.8.4(i)",
+    question: "Has your organisation tested restoring from backup in the last 12 months?",
+    options: [
+      { value: "yes", label: "Yes — restore test completed and documented" },
+      { value: "partial", label: "Partly — tested informally" },
+      { value: "no", label: "No restore test has been done" },
+    ],
+    hint: "An untested backup is not a backup. A restore test can be as simple as recovering one folder.",
+  },
+  {
+    clauseId: "A.9.4(a)",
+    question: "Does your organisation have a documented incident response plan?",
+    options: [
+      { value: "yes", label: "Yes — documented and staff are aware of it" },
+      { value: "partial", label: "Partly — exists informally" },
+      { value: "no", label: "No — we will use the generated plan below" },
+    ],
+    hint: "An IR plan does not need to be complex. The generated plan below satisfies this clause.",
+  },
+  {
+    clauseId: "A.9.4(d)",
+    question: "Does your organisation conduct post-incident reviews after cybersecurity events?",
+    options: [
+      { value: "yes", label: "Yes — reviewed and documented" },
+      { value: "partial", label: "Partly — informal discussion only" },
+      { value: "no", label: "No formal review process" },
+      { value: "na", label: "N/A — no incidents have occurred" },
+    ],
+    hint: "The IR plan above includes a post-incident review template.",
+  },
+];
+
+export default function ReviewPage() {
+  const store = useStore();
+  const { org, scan, answers, setAnswer, endpoints, markCompleted, scope } = store;
+  const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>({});
+  const [trainingEvidence, setTrainingEvidence] = useState<"csa" | "gophish" | "other" | null>(null);
+  const [irplanDownloaded, setIrplanDownloaded] = useState(false);
+  const [exported, setExported] = useState(false);
+
+  // ── Compute auto-filled vs needs-human ────────────────────────────────────
+
+  const clauses = useMemo(() => applicableClauses(scope), [scope]);
+
+  const autoFilledCount = useMemo(() =>
+    clauses.filter((c) => {
+      const a = answerabilityOf(c.id);
+      return a === "machine" && answers[c.id]?.value && answers[c.id].value !== "unsure";
+    }).length, [clauses, answers]);
+
+  const humanNeeded = useMemo(() =>
+    HUMAN_WIZARD_QUESTIONS.filter((q) => {
+      const existing = answers[q.clauseId]?.value;
+      return !existing || existing === "unsure";
+    }), [answers]);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _wizardComplete = humanNeeded.every((q) => wizardAnswers[q.clauseId]);
+
+  const wizardComplete = humanNeeded.every((q) => wizardAnswers[q.clauseId]);
+
+  // ── Scoring ───────────────────────────────────────────────────────────────
+
+  const allAnswers = useMemo(() => {
+    const merged = { ...answers };
+    for (const [clauseId, val] of Object.entries(wizardAnswers)) {
+      merged[clauseId] = { value: val as "yes" | "no" | "partial" | "unsure" | "na", source: "user", updatedAt: new Date().toISOString() };
+    }
+    return merged;
+  }, [answers, wizardAnswers]);
+
+  const rows = useMemo(() => buildResultRows(allAnswers, scope), [allAnswers, scope]);
+
+  const blocking = rows.filter((r) => r.obligation === "shall" && r.answer === "no").length;
+  const completion = Math.round((rows.filter((r) => r.answer && r.answer !== "unsure").length / rows.length) * 100);
+  const certifiable = blocking === 0 && completion >= 90;
+
+  // ── IR Plan download ──────────────────────────────────────────────────────
+
+  function downloadIRPlan() {
+    const plan = generateIRPlan({
+      name: org.name || "Your Organisation",
+      uen: org.uen || "",
+      sector: org.sector || "general",
+      contactName: "",
+      contactEmail: "",
+    });
+    const blob = new Blob([plan], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `IR-Plan-${(org.name || "org").replace(/\s+/g, "-")}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setIrplanDownloaded(true);
+    // Auto-answer A.9.4(a) since we just generated a plan
+    setWizardAnswers((prev: Record<string, string>) => ({ ...prev, "A.9.4(a)": "yes" }));
+  }
+
+  // ── Export ────────────────────────────────────────────────────────────────
+
+  function downloadJson() {
+    const report = {
+      generatedAt: new Date().toISOString(),
+      org: { name: org.name, uen: org.uen, sector: org.sector },
+      summary: { completion, blocking, certifiable, clauseCount: rows.length },
+      clauses: rows,
+    };
+    const json = JSON.stringify(report, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `CE-Assessment-${(org.name || "org").replace(/\s+/g, "-")}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExported(true);
+    markCompleted("review");
+  }
+
+  function downloadCsv() {
+    const csv = toCsv(rows, org.name || "Organisation", new Date().toISOString());
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `CE-Assessment-${(org.name || "org").replace(/\s+/g, "-")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setExported(true);
+    markCompleted("review");
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-8">
+      <SectionTitle
+        eyebrow="Step 3 of 3"
+        title="Review & submit"
+        lead="Your assessment is auto-populated from the scans. Answer the short human checklist below, then export a submission-ready report."
+      />
+
+      {/* ── Score summary ────────────────────────────────────────────────── */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-base font-semibold text-white">Assessment summary</h2>
+          <Pill tone={certifiable ? "good" : blocking > 0 ? "bad" : "warn"}>
+          {certifiable ? "Likely certifiable" : blocking > 0 ? `${blocking} blocking gap${blocking !== 1 ? "s" : ""}` : "In progress"}
+        </Pill>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+          <Stat label="Completion" value={`${completion}%`} />
+          <Stat label="Auto-filled" value={`${autoFilledCount} clauses`} />
+          <Stat label="Blocking gaps" value={blocking} />
+          <Stat label="Clauses assessed" value={rows.length} />
+        </div>
+        <Meter value={completion} tone={certifiable ? "good" : "brand"} />
+      </Card>
+
+      {/* ── Auto-fill breakdown ──────────────────────────────────────────── */}
+      <Card className="p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-white">What was auto-populated</h2>
+        <div className="space-y-2">
+          {[
+            { label: "External domain scan (DNS, TLS, email auth, headers)", tool: "Nuclei + sslyze + checkdmarc", count: scan?.findings?.length ?? 0, icon: "🌐" },
+            { label: "Device scan (AV, firewall, encryption, patches, accounts)", tool: "osquery / PowerShell", count: autoFilledCount, icon: "💻" },
+          ].map((s) => (
+            <div key={s.label} className="flex items-start gap-3 rounded-lg border border-ink-700/40 bg-ink-900/40 p-3">
+              <span className="text-base mt-0.5">{s.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-white">{s.label}</p>
+                <p className="text-[11px] text-brand-300/60 mt-0.5">Tool: {s.tool}</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-emerald-800/40 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                {s.count} filled
+              </span>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Human wizard ─────────────────────────────────────────────────── */}
+      <Card className="p-6 space-y-5">
+        <h2 className="text-base font-semibold text-white">
+          Short checklist — {humanNeeded.length} questions only you can answer
+        </h2>
+        <p className="text-[13px] text-brand-100/60">
+          These {humanNeeded.length} clauses concern how your organisation operates —
+          training, approvals, offboarding, backups, incident plans. No tool can answer them.
+        </p>
+
+        <div className="space-y-5">
+          {HUMAN_WIZARD_QUESTIONS.map((q) => {
+            const existing = answers[q.clauseId]?.value;
+            const current = wizardAnswers[q.clauseId] ?? existing ?? "";
+            return (
+              <div key={q.clauseId} className="space-y-2.5">
+                <div className="flex items-start gap-2">
+                  <code className="shrink-0 rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-mono text-brand-300">{q.clauseId}</code>
+                  <p className="text-[13px] font-medium text-white leading-snug">{q.question}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {q.options.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setWizardAnswers((prev: Record<string, string>) => ({ ...prev, [q.clauseId]: opt.value }))}
+                      data-on={current === opt.value}
+                      className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition hover:border-brand-500/40 data-[on=true]:border-csa-500/60 data-[on=true]:bg-csa-900/40 data-[on=true]:text-csa-200"
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                {q.hint && (
+                  <p className="text-[11px] text-brand-300/50 pl-0.5">{q.hint}</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* ── A.1 Training section ─────────────────────────────────────────── */}
+      <Card className="p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <code className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-mono text-brand-300">A.1 · People</code>
+          <h2 className="text-base font-semibold text-white">Cybersecurity awareness training</h2>
+        </div>
+
+        <p className="text-[13px] text-brand-100/60">
+          All five A.1 clauses concern whether staff are trained and how. No scanner can
+          verify this — the tools below create the evidence.
+        </p>
+
+        {/* CSA e-learning embed */}
+        <div className="rounded-xl border border-brand-700/40 bg-brand-900/20 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🎓</span>
+            <div>
+              <p className="text-[13px] font-semibold text-white">SG Cyber Safe Employee e-Learning</p>
+              <p className="text-[11px] text-brand-300/60">Free · 15 minutes · Certificate provided · By CSA Singapore</p>
+            </div>
+            <a
+              href={CSA_ELEARNING.url}
+              target="_blank"
+              rel="noreferrer"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-700/60 px-4 py-2 text-[12px] font-semibold text-brand-100 transition hover:bg-brand-600/60"
+            >
+              Open e-learning ↗
+            </a>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-[12px] text-brand-100/60">
+            {CSA_ELEARNING.topics.map((t) => (
+              <div key={t} className="flex gap-1.5">
+                <span className="text-brand-400">·</span> {t}
+              </div>
+            ))}
+          </div>
+          <p className="text-[11px] text-brand-300/50">
+            After completing: screenshot the certificate and upload below as A.1 evidence.
+          </p>
+          <div className="flex gap-2">
+            {(["csa", "other"] as const).map((v) => (
+              <button
+                key={v}
+                onClick={() => setTrainingEvidence(v)}
+                data-on={trainingEvidence === v}
+                className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition data-[on=true]:border-emerald-600/60 data-[on=true]:bg-emerald-900/30 data-[on=true]:text-emerald-200"
+              >
+                {v === "csa" ? "✓ CSA e-learning completed" : "✓ We use another training provider"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* GoPhish simulation */}
+        <div className="rounded-xl border border-amber-700/30 bg-amber-900/10 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🎣</span>
+            <div>
+              <p className="text-[13px] font-semibold text-white">Phishing simulation — GoPhish</p>
+              <p className="text-[11px] text-amber-300/60">Free · Open source (MIT) · Self-hosted · Proves training effectiveness</p>
+            </div>
+          </div>
+          <p className="text-[12px] text-brand-100/60">
+            Send a simulated phishing email to staff. GoPhish tracks who clicked, who
+            reported it, and auto-enrols clickers in follow-up training. The click rate
+            and training completion become your A.1 evidence.
+          </p>
+          <div className="flex gap-3">
+            <a
+              href="https://getgophish.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-700/40 px-3 py-1.5 text-[12px] font-medium text-amber-300 transition hover:border-amber-600/60"
+            >
+              GoPhish website ↗
+            </a>
+            <a
+              href="https://github.com/gophish/gophish"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-ink-700/40 px-3 py-1.5 text-[12px] font-medium text-brand-300 transition hover:border-ink-600"
+            >
+              GitHub (MIT) ↗
+            </a>
+          </div>
+          <p className="text-[11px] text-brand-300/40">
+            A managed GoPhish instance for CE Tool users is on the roadmap. For now,
+            self-host or use a managed GoPhish SaaS (Lucy, KnowBe4 have free tiers).
+          </p>
+        </div>
+
+        {/* Wazuh monitoring */}
+        <div className="rounded-xl border border-brand-700/30 bg-ink-900/40 p-5 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🛡</span>
+            <div>
+              <p className="text-[13px] font-semibold text-white">Ongoing monitoring — Wazuh</p>
+              <p className="text-[11px] text-brand-300/60">Free · Open source (GPL-2.0) · SIEM + EDR + CIS Benchmarks</p>
+            </div>
+          </div>
+          <p className="text-[12px] text-brand-100/60">
+            After certification, Wazuh keeps you continuously compliant — agent-based
+            monitoring for all A.4–A.9 measures, drift alerts, and auto-remediation
+            playbooks. Used by governments and enterprises worldwide.
+          </p>
+          <div className="flex gap-3 flex-wrap">
+            <a
+              href="https://wazuh.com"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-brand-700/40 px-3 py-1.5 text-[12px] font-medium text-brand-300 transition hover:border-brand-600"
+            >
+              Wazuh.com ↗
+            </a>
+            <a
+              href="https://documentation.wazuh.com/current/compliance/cis/index.html"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-ink-700/40 px-3 py-1.5 text-[12px] font-medium text-brand-300 transition hover:border-ink-600"
+            >
+              CIS Benchmark compliance ↗
+            </a>
+            <a
+              href="https://github.com/wazuh/wazuh"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-ink-700/40 px-3 py-1.5 text-[12px] font-medium text-brand-300 transition hover:border-ink-600"
+            >
+              GitHub ↗
+            </a>
+          </div>
+          <p className="text-[11px] text-brand-300/40">
+            GPL-2.0 — free to self-host. Managed cloud version available from Wazuh Inc.
+            and qualified resellers. NCSS social service agencies: ask your CISOaaS provider
+            about Wazuh deployment under the Transformation Sustainability Scheme.
+          </p>
+        </div>
+      </Card>
+
+      {/* ── A.9 IR Plan ──────────────────────────────────────────────────── */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <code className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-mono text-brand-300">A.9 · Respond</code>
+          <h2 className="text-base font-semibold text-white">Incident response plan</h2>
+        </div>
+        <p className="text-[13px] text-brand-100/60">
+          An IR plan is required for A.9.4(a). We generate one pre-filled with your
+          organisation details, sector obligations (PDPA, MAS, MOH), and CSA SingCERT
+          contacts. Download, review, and have management sign it.
+        </p>
+        <button
+          onClick={downloadIRPlan}
+          className="inline-flex items-center gap-2 rounded-lg border border-brand-600/40 bg-brand-900/40 px-5 py-2.5 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:bg-brand-900/60"
+        >
+          ⬇ Download IR Plan (.md)
+          {irplanDownloaded && <span className="text-emerald-400">✓</span>}
+        </button>
+        {irplanDownloaded && (
+          <p className="text-[12px] text-emerald-400">
+            IR Plan downloaded. A.9.4(a) has been pre-answered as &ldquo;Yes&rdquo;.
+            Review the plan, add your IT contact and DPO details, and have it signed by management.
+          </p>
+        )}
+      </Card>
+
+      {/* ── Export ───────────────────────────────────────────────────────── */}
+      <Card className="p-6 space-y-4">
+        <h2 className="text-base font-semibold text-white">Export submission-ready report</h2>
+        <div className="rounded-lg bg-ink-900/50 border border-ink-700/40 p-4 space-y-2">
+          <div className="flex justify-between text-[13px]">
+            <span className="text-brand-100/70">Completion</span>
+            <span className="font-semibold text-white">{completion}%</span>
+          </div>
+          <div className="flex justify-between text-[13px]">
+            <span className="text-brand-100/70">Blocking gaps (shall clauses not met)</span>
+            <span className={`font-semibold ${blocking === 0 ? "text-emerald-400" : "text-csa-400"}`}>{blocking}</span>
+          </div>
+          <div className="flex justify-between text-[13px]">
+            <span className="text-brand-100/70">Certification status</span>
+            <span className={`font-semibold ${certifiable ? "text-emerald-400" : "text-amber-400"}`}>
+              {certifiable ? "Likely certifiable" : "Gaps to resolve"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={downloadJson}>⬇ Export JSON (for assessor)</Button>
+          <Button onClick={downloadCsv}>⬇ Export CSV</Button>
+        </div>
+
+        {exported && (
+          <div className="rounded-lg border border-emerald-700/30 bg-emerald-900/15 p-4 space-y-1.5">
+            <p className="text-[13px] font-semibold text-emerald-300">✓ Report exported</p>
+            <p className="text-[12px] text-brand-100/60">
+              Send the JSON or CSV to your chosen certification body. Certification bodies
+              in Singapore: Cybertrust Asia, SAIQA, Wizlynx, NCS.
+            </p>
+          </div>
+        )}
+
+        {/* Cert bodies */}
+        <div className="rounded-lg border border-ink-700/40 bg-ink-900/30 p-4 text-[12px]">
+          <p className="font-semibold text-brand-200 mb-2">Appointed certification bodies (Singapore)</p>
+          <div className="space-y-1 text-brand-100/60">
+            {[
+              ["Cybertrust Asia", "certbody@cybertrust-asia.com.sg"],
+              ["SAIQA", "ce-assessment@saiqa.com.sg"],
+              ["Wizlynx", "cemarks@wizlynx.com.sg"],
+              ["NCS", "cyberessentials@ncs.com.sg"],
+            ].map(([name, email]) => (
+              <div key={name} className="flex justify-between">
+                <span>{name}</span>
+                <a href={`mailto:${email}`} className="text-brand-300 hover:underline">{email}</a>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}

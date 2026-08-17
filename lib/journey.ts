@@ -45,55 +45,40 @@ export interface Step {
   pathwayOnly?: string;
 }
 
+/**
+ * Three-click journey:
+ *
+ *   1. /start  — Corppass login + domain → auto-launches external scan
+ *   2. /scan   — Download .exe scanner (or PS script) → results auto-import
+ *   3. /review — Auto-populated assessment + short human wizard + export
+ *
+ * Legacy routes (/onboard, /discover, /prepare, /results, /toolkit, /guide,
+ * /prioritise, /assets, /monitor, /integrate) remain reachable for power users
+ * but are not part of the primary step sequence.
+ */
 export const STEPS: Step[] = [
   {
     id: "start",
-    href: "/onboard",
-    label: "Setup",
-    title: "Tell us about your organisation",
-    doneWhen: "Name your organisation, pick your sector, and answer the scoping questions.",
+    href: "/start",
+    label: "1 · Start",
+    title: "Log in and enter your domain",
+    doneWhen: "Corppass login complete and domain entered.",
     evidenced: true,
   },
   {
-    id: "discover",
-    href: "/discover",
-    label: "Discover",
-    title: "See what an attacker can see",
-    doneWhen: "Run one scan against your domain.",
+    id: "scan",
+    href: "/scan",
+    label: "2 · Scan",
+    title: "Scan your devices",
+    doneWhen: "Device scan complete or skipped.",
     evidenced: true,
   },
   {
-    id: "toolkit",
-    href: "/toolkit",
-    label: "Harden",
-    title: "Check the machines themselves",
-    doneWhen: "Run the local check, or skip it and answer from what you know.",
-    evidenced: false,
-    optional: true,
-    pathwayOnly: "agent-assisted",
-  },
-  {
-    id: "prepare",
-    href: "/prepare",
-    label: "Assess",
-    title: "Complete the self-assessment",
-    doneWhen: "Answer every clause. 'Not sure' counts as an answer.",
-    evidenced: true,
-  },
-  {
-    id: "results",
-    href: "/results",
-    label: "Results",
-    title: "Your results tab",
-    doneWhen: "Review the results and export them.",
-    evidenced: false,
-  },
-  {
-    id: "integrate",
-    href: "/integrate",
-    label: "Next Steps",
-    title: "Funding, help and certification",
-    doneWhen: "You are at the end of the journey.",
+    id: "review",
+    href: "/review",
+    label: "3 · Review & Submit",
+    title: "Review results and generate report",
+    doneWhen: "Results reviewed and report exported.",
     evidenced: false,
   },
 ];
@@ -125,8 +110,8 @@ export interface EvidenceInput {
 export function autoCompleted(e: EvidenceInput): Set<string> {
   const done = new Set<string>();
   if (e.orgNamed && e.sectorChosen && e.scopingAnswered) done.add("start");
-  if (e.scanRun) done.add("discover");
-  if (e.assessmentComplete) done.add("prepare");
+  if (e.scanRun) done.add("scan");
+  if (e.assessmentComplete) done.add("review");
   return done;
 }
 
