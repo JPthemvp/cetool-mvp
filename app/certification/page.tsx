@@ -258,7 +258,7 @@ export default function CertificationPage() {
         {" "}· Always verify contact details on the CSA website before sending
       </p>
 
-      {/* ── Reset all ──────────────────────────────────────────────── */}
+      {/* ── Reset all ──────────────────────────────────────────────────────── */}
       <div className="border-t border-brand-700/30 pt-8">
         <div className="rounded-xl border border-red-800/30 bg-red-950/20 p-5">
           <p className="text-sm font-semibold text-red-300">Reset all data</p>
