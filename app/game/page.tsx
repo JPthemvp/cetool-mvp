@@ -1,15 +1,19 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SECTORS } from '@/lib/game-data';
 import { generateRoomCode } from '@/lib/game-utils';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
 
 type Step = 'home' | 'sector' | 'setup' | 'join';
 
@@ -29,7 +33,7 @@ export default function GameHomePage() {
     setError('');
     try {
       const code = generateRoomCode();
-      const { error: roomErr } = await supabase.from('game_rooms').insert({
+      const { error: roomErr } = await getSupabase().from('game_rooms').insert({
         room_code: code,
         sector: selectedSector,
         mode: 'attack',
@@ -37,7 +41,7 @@ export default function GameHomePage() {
       });
       if (roomErr) throw roomErr;
 
-      const { error: playerErr } = await supabase.from('game_players').insert({
+      const { error: playerErr } = await getSupabase().from('game_players').insert({
         room_code: code,
         player_name: hostName.trim(),
         is_host: true,
@@ -62,7 +66,7 @@ export default function GameHomePage() {
     setError('');
     try {
       const code = joinCode.trim().toUpperCase();
-      const { data: room, error: roomErr } = await supabase
+      const { data: room, error: roomErr } = await getSupabase()
         .from('game_rooms')
         .select('*')
         .eq('room_code', code)
@@ -70,7 +74,7 @@ export default function GameHomePage() {
       if (roomErr || !room) throw new Error('Room not found. Check the code and try again.');
       if (room.status === 'ended') throw new Error('This game has already ended.');
 
-      const { error: playerErr } = await supabase.from('game_players').insert({
+      const { error: playerErr } = await getSupabase().from('game_players').insert({
         room_code: code,
         player_name: playerName.trim(),
         is_host: false,

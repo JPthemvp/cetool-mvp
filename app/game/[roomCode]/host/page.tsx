@@ -1,13 +1,15 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 import { CYBER_ATTACK_QUESTIONS, CYBER_QUEST_SCENARIOS, SECTORS, type QuestScenario } from '@/lib/game-data';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
 );
 
 type GameMode = 'attack' | 'quest';
