@@ -13,6 +13,7 @@ import {
   SectionTitle,
   inputCls,
 } from "@/components/ui";
+import { CorppassButton } from "@/components/corppass-logo";
 import { SECTORS } from "@/lib/sectors";
 
 // ── Corppass simulation (replace with real Corppass OIDC redirect in prod) ───
@@ -112,29 +113,12 @@ export default function StartPage() {
               Log in with Corppass to auto-fill your UEN, registered name, and sector
               from ACRA. No typing required.
             </p>
-            <button
+            <CorppassButton
               onClick={handleCorppass}
-              disabled={corppassBusy}
-              className="flex w-full items-center justify-center gap-3 rounded-lg border-2 border-[#C8102E] bg-white px-5 py-3.5 text-sm font-semibold text-[#C8102E] transition hover:bg-red-50 disabled:opacity-60"
-            >
-              {corppassBusy ? (
-                <>
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#C8102E]/30 border-t-[#C8102E]" />
-                  <span className="text-[#C8102E]">Connecting to Corppass…</span>
-                </>
-              ) : (
-                <svg viewBox="0 0 120 40" width="78" height="26" aria-label="Corppass" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="0" y="0" width="40" height="40" rx="4" fill="#C8102E"/>
-                  <path d="M20 7 C14 7 10 11 10 15 C10 17 11 19 13 20 L12 24 C12 25 13 26 14 26 L26 26 C27 26 28 25 28 24 L27 20 C29 19 30 17 30 15 C30 11 26 7 20 7 Z" fill="white"/>
-                  <circle cx="17" cy="14" r="1.5" fill="#C8102E"/>
-                  <circle cx="23" cy="14" r="1.5" fill="#C8102E"/>
-                  <path d="M16 18 Q20 21 24 18" stroke="#C8102E" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-                  <path d="M14 10 L16 7 L18 10 L20 6 L22 10 L24 7 L26 10" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                  <text x="48" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#C8102E" letterSpacing="-0.3">Corp</text>
-                  <text x="82" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#333333" letterSpacing="-0.3">pass</text>
-                </svg>
-              )}
-            </button>
+              busy={corppassBusy}
+              size="md"
+              className="w-full"
+            />
             <p className="text-[11px] text-brand-200/50">
               Corppass is Singapore&apos;s corporate digital identity. Your data is fetched
               from ACRA via MyInfo Business — we do not store your Corppass credentials.
