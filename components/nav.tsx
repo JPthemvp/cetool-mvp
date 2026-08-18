@@ -41,7 +41,7 @@ export function Nav() {
             <ThemeToggle />
             {started && (
               <span className="rounded-full bg-brand-700/40 px-2.5 py-1 font-medium tabular-nums text-brand-100 ring-1 ring-inset ring-brand-500/30">
-                {journey.completed.size}/{activeSteps(pathway).length} steps
+                {activeSteps(pathway).filter((s) => journey.completed.has(s.id)).length}/{activeSteps(pathway).length} steps
                 {readiness.completion > 0 && ` · ${readiness.completion}% assessed`}
               </span>
             )}

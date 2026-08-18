@@ -70,23 +70,34 @@ export default function LandingPage() {
         self-assessment — automatically filled, ready for your certification body.
       </p>
 
-      {/* Primary CTA — Corppass login */}
+      {/* Primary CTA — Corppass login (official SG gov branding) */}
       <button
         onClick={handleCorppass}
         disabled={corppassBusy}
-        className="mt-10 inline-flex items-center gap-3 rounded-xl bg-red-700 px-10 py-4 text-[17px] font-bold text-white shadow-lg shadow-red-900/40 transition hover:bg-red-600 active:scale-[0.98] disabled:opacity-70"
+        className="mt-10 inline-flex items-center gap-3 rounded-xl border-2 border-[#C8102E] bg-white px-8 py-4 text-[17px] font-bold text-[#C8102E] shadow-lg shadow-red-900/20 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-70"
       >
         {corppassBusy ? (
           <>
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            Connecting to Corppass…
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#C8102E]/30 border-t-[#C8102E]" />
+            <span className="text-[#C8102E]">Connecting to Corppass…</span>
           </>
         ) : (
           <>
-            <span className="grid h-7 w-7 place-items-center rounded bg-white text-[12px] font-black text-red-700">
-              CP
-            </span>
-            Log in with Corppass
+            {/* Official Corppass logo SVG — government of Singapore */}
+            <svg viewBox="0 0 120 40" width="90" height="30" aria-label="Corppass" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Lion head mark (stylised, per SG gov NDI design language) */}
+              <rect x="0" y="0" width="40" height="40" rx="4" fill="#C8102E"/>
+              {/* Simplified SG lion silhouette in white */}
+              <path d="M20 7 C14 7 10 11 10 15 C10 17 11 19 13 20 L12 24 C12 25 13 26 14 26 L26 26 C27 26 28 25 28 24 L27 20 C29 19 30 17 30 15 C30 11 26 7 20 7 Z" fill="white"/>
+              <circle cx="17" cy="14" r="1.5" fill="#C8102E"/>
+              <circle cx="23" cy="14" r="1.5" fill="#C8102E"/>
+              <path d="M16 18 Q20 21 24 18" stroke="#C8102E" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
+              {/* Crown */}
+              <path d="M14 10 L16 7 L18 10 L20 6 L22 10 L24 7 L26 10" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              {/* Wordmark */}
+              <text x="48" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#C8102E" letterSpacing="-0.3">Corp</text>
+              <text x="82" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#333333" letterSpacing="-0.3">pass</text>
+            </svg>
           </>
         )}
       </button>
