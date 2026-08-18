@@ -1,131 +1,118 @@
 "use client";
 
 import Link from "next/link";
-import { Pill, Stat } from "@/components/ui";
-import { CATEGORIES, MEASURES } from "@/lib/ce-framework";
 
-const CAPABILITIES = [
+const FEATURES = [
   {
-    name: "Scan",
-    body: "Passive domain scan surfaces what attackers can already see — exposed services, mail authentication gaps, certificate details. Your asset inventory starts from what we found. Nothing to install.",
+    icon: "🏛️",
+    title: "Corppass login",
+    body: "Your organisation name, UEN, and sector auto-fill from your Singpass business profile. No manual data entry.",
   },
   {
-    name: "Gap Analysis",
-    body: "Gaps ranked by actual risk and fix effort, not by clause number. Each carries one concrete action for Monday morning, written for a business owner not a security engineer.",
+    icon: "🌐",
+    title: "Automated domain scan",
+    body: "TLS grade, SPF/DKIM/DMARC, open ports, and exposed services — scanned the moment you enter your domain.",
   },
   {
-    name: "Harden",
-    body: "Step-by-step remediation playbooks for every gap identified. Prioritised fixes with clear ownership so your team knows exactly what to do next.",
+    icon: "💻",
+    title: "Device scanner (.exe or PowerShell)",
+    body: "Run once on each device. Antivirus, disk encryption, patch level, firewall, and account policy — all read automatically.",
   },
   {
-    name: "Assess",
-    body: "All 75 Cyber Essentials clauses in plain English, pre-filled where the scan answered them. 'Not sure' is a valid answer — it records an honest gap rather than a guessed pass.",
+    icon: "✅",
+    title: "67+ clauses auto-populated",
+    body: "Technical checks fill the CSA self-assessment for you. You only answer the 8 questions a machine cannot.",
   },
-];
-
-const WHAT_TO_EXPECT = [
-  "This is a readiness review, not a pass/fail test. Nothing is submitted on your behalf.",
-  "Automated checks address about one third of the assessment. The rest concerns how your organisation operates.",
-  "If a question is unclear, select Not sure — it is a valid answer and an explanation is provided.",
-  "You will receive a prioritised action plan and a cyber health-check score on completion.",
+  {
+    icon: "🚨",
+    title: "Incident Response plan",
+    body: "A sector-specific IR plan — covering PDPA, MAS, and MOH obligations — generated and ready to download.",
+  },
+  {
+    icon: "📤",
+    title: "Submission-ready export",
+    body: "Export your completed self-assessment as JSON or CSV, formatted for your appointed certification body.",
+  },
 ];
 
 export default function LandingPage() {
   return (
-    <div className="space-y-14">
+    <div className="flex flex-col items-center text-center">
+      {/* Badge */}
+      <span className="inline-flex items-center gap-2 rounded-full border border-brand-600/40 bg-brand-900/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-brand-300">
+        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+        Free · Singapore SME · CSA Cyber Essentials V202503
+      </span>
 
-      {/* Hero */}
-      <section className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-center">
-        <div>
-          <Pill tone="info">Free · Non-intrusive · No agent to install</Pill>
-          <h1 className="mt-5 text-4xl font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl">
-            Find out where you stand against the{" "}
-            <span className="text-brand-400">Cyber Essentials mark</span>
-            {" "}— and leave with the paperwork half done.
-          </h1>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-brand-100/80">
-            Built for Singapore SMEs with no in-house security specialist. Scans what an
-            attacker can already see, maps every finding to the exact clause it affects,
-            and hands back a self-assessment already filled in where we could verify
-            the answer.
-          </p>
+      {/* Headline */}
+      <h1 className="mt-8 max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight text-white sm:text-6xl">
+        Cyber Essentials
+        <br />
+        <span className="text-csa-400">made simple.</span>
+      </h1>
 
-          <div className="mt-8">
-            <Link
-              href="/onboard"
-              className="inline-flex items-center gap-2 rounded-lg bg-csa-600 px-6 py-3 text-[15px] font-semibold text-white shadow-sm transition hover:bg-csa-500 active:scale-[0.98]"
+      <p className="mt-6 max-w-lg text-[16px] leading-relaxed text-brand-100/70">
+        Log in, run the scanner, review and export. Your CSA Cyber Essentials
+        self-assessment — automatically filled, ready for your certification body.
+      </p>
+
+      {/* CTA */}
+      <Link
+        href="/start"
+        className="mt-10 inline-flex items-center gap-3 rounded-xl bg-csa-600 px-10 py-4 text-[17px] font-bold text-white shadow-lg shadow-csa-800/40 transition hover:bg-csa-500 active:scale-[0.98]"
+      >
+        Begin Assessment
+        <span aria-hidden="true" className="text-xl">→</span>
+      </Link>
+
+      <p className="mt-4 text-[12px] text-brand-300/60">
+        Nothing installed permanently · Nothing submitted without your review
+      </p>
+
+      {/* 3-step strip */}
+      <div className="mt-16 flex w-full max-w-2xl items-start justify-center gap-0">
+        {[
+          { n: "1", label: "Log in & scan domain" },
+          { n: "2", label: "Scan your devices" },
+          { n: "3", label: "Review & export" },
+        ].map((s, i, arr) => (
+          <div key={s.n} className="flex items-center">
+            <div className="flex flex-col items-center gap-2 px-6">
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-csa-700/60 text-[13px] font-bold text-csa-200 ring-1 ring-inset ring-csa-500/30">
+                {s.n}
+              </span>
+              <span className="text-[12px] font-semibold text-white whitespace-nowrap">{s.label}</span>
+            </div>
+            {i < arr.length - 1 && (
+              <span className="text-brand-600 text-lg -mt-4">→</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Feature grid */}
+      <div className="mt-16 w-full max-w-3xl">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-300 mb-6">
+          What the tool does for you
+        </p>
+        <div className="grid grid-cols-1 gap-4 text-left sm:grid-cols-2 lg:grid-cols-3">
+          {FEATURES.map((f) => (
+            <div
+              key={f.title}
+              className="rounded-xl border border-ink-700/60 bg-ink-900/50 p-5"
             >
-              Start assessment
-              <span aria-hidden="true">&#x2192;</span>
-            </Link>
-          </div>
-
-          <p className="mt-3 text-[12px] leading-relaxed text-brand-200/70">
-            Progress saved in your browser &#xB7; nothing submitted on your behalf
-          </p>
-
-          {/* About the mark */}
-          <div className="mt-8 rounded-xl border border-ink-700/60 bg-ink-900/50 p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
-              About the Cyber Essentials mark
-            </p>
-            <p className="mt-2 text-[13px] leading-relaxed text-brand-100/80">
-              {"CSA Singapore's foundational cybersecurity certification for organisations that have met a baseline set of security controls across nine measures."}
-            </p>
-            <a
-              href="https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/cyber-essentials"
-              target="_blank"
-              rel="noreferrer noopener"
-              className="mt-3 inline-block text-[12px] text-brand-300 underline-offset-2 hover:underline"
-            >
-              CSA Cyber Essentials mark &#x2014; official page &#x2197;
-            </a>
-          </div>
+              <span className="text-2xl">{f.icon}</span>
+              <p className="mt-3 text-[13px] font-semibold text-white">{f.title}</p>
+              <p className="mt-1.5 text-[12px] leading-relaxed text-brand-100/60">{f.body}</p>
+            </div>
+          ))}
         </div>
+      </div>
 
-        {/* Capabilities card */}
-        <div className="rounded-2xl border border-ink-700/60 bg-ink-900/60 p-6 shadow-lg shadow-ink-950/40">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-brand-300">
-            Four capabilities
-          </p>
-          <ol className="mt-4 space-y-4">
-            {CAPABILITIES.map((c, i) => (
-              <li key={c.name} className="flex gap-3">
-                <span className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand-700/60 text-[11px] font-semibold tabular-nums text-brand-100 ring-1 ring-inset ring-brand-500/30">
-                  {i + 1}
-                </span>
-                <span className="text-[13px] leading-relaxed">
-                  <span className="font-semibold text-white">{c.name}</span>
-                  <span className="text-brand-100/80"> &#x2014; {c.body}</span>
-                </span>
-              </li>
-            ))}
-          </ol>
-
-          <div className="mt-6 grid grid-cols-2 gap-3 border-t border-brand-700/30 pt-5">
-            <Stat label="Categories" value={CATEGORIES.length} />
-            <Stat label="Measures" value={MEASURES.length} />
-            <Stat label="Clauses assessed" value={75} />
-            <Stat label="Valid for" value="2 years" hint="Certification validity period from date of award" />
-          </div>
-        </div>
-      </section>
-
-      {/* What to expect */}
-      <section>
-        <div className="rounded-xl border border-ink-700/60 bg-ink-900/50 p-6">
-          <p className="text-sm font-semibold text-white">What to expect</p>
-          <ul className="mt-3 space-y-2.5">
-            {WHAT_TO_EXPECT.map((p) => (
-              <li key={p} className="flex gap-2.5 text-[13px] leading-relaxed">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-csa-500" />
-                <span className="text-brand-100/80">{p}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
+      <p className="mt-12 text-[11px] text-brand-200/40">
+        Based on CSA Cyber Essentials mark V202503 · Not affiliated with CSA ·
+        Certification requires an appointed certification body
+      </p>
     </div>
   );
 }

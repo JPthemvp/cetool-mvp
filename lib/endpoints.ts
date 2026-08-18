@@ -16,7 +16,10 @@ import type { LocalFinding, LocalReport } from "./scripts";
 export interface EndpointResult {
   computer: string;
   generated?: string;
+  generatedAt?: string;
   findings: LocalFinding[];
+  /** Raw scanner JSON from the new osquery/.exe flow. */
+  raw?: Record<string, unknown>;
 }
 
 export function upsertEndpoint(

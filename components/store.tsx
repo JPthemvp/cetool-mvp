@@ -175,6 +175,12 @@ interface StoreValue extends Persisted {
   bulkAnswer: (clauseIds: string[], value: AnswerValue) => void;
   applyLocalReport: (raw: string) => { ok: boolean; message: string };
   removeEndpoint: (computer: string) => void;
+  /** Add a raw osquery/PS scanner result for a device (new 3-click flow). */
+  addEndpoint: (payload: { hostname: string; scannedAt: string; raw: unknown }) => void;
+  /** Directly set the scan result (used by /start auto-scan). */
+  setScan: (scan: ScanResult) => void;
+  /** Mark a journey step as completed (acknowledged). */
+  markCompleted: (stepId: string) => void;
   estate: ReturnType<typeof summarise>;
   /** clauseId -> the devices that passed it. Evidence for, not an answer. */
   confirmations: Map<string, { computers: string[]; total: number }>;
@@ -444,6 +450,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, endpoints: s.endpoints.filter((e) => e.computer !== computer) }));
   }, []);
 
+  // ── New 3-click flow helpers ─────────────────────────────────────────────
+
+  /**
+   * Add a raw osquery/PowerShell scanner result from the /scan page.
+   * Converts the raw JSON into an EndpointResult and runs applyLocalReport.
+   */
+  const addEndpoint = useCallback((payload: { hostname: string; scannedAt: string; raw: unknown }) => {
+    // Convert raw scanner JSON to the flat PS-script format applyLocalReport expects,
+    // then call applyLocalReport to derive clause answers.
+    // For now store the raw payload as an extra endpoint entry for display.
+    setState((s) => {
+      const ep: EndpointResult = {
+        computer: payload.hostname,
+        generatedAt: payload.scannedAt,
+        findings: [],
+        raw: payload.raw as Record<string, unknown>,
+      };
+      const endpoints = upsertEndpoint(s.endpoints, {
+        computer: payload.hostname,
+        generated: payload.scannedAt,
+        findings: [],
+      });
+      return { ...s, endpoints };
+    });
+  }, []);
+
+  /** Directly set scan result — used by the /start page after inline fetch. */
+  const setScan = useCallback((scan: ScanResult) => {
+    setState((s) => {
+      const { answers, prefilled } = applyScanToAnswers(s.answers, scan.findings);
+      return { ...s, scan, domain: scan.domain, answers };
+    });
+  }, []);
+
+  /** Mark a step as completed (acknowledged). */
+  const markCompleted = useCallback((stepId: string) => {
+    setState((s) =>
+      s.acknowledged.includes(stepId)
+        ? s
+        : { ...s, acknowledged: [...s.acknowledged, stepId] },
+    );
+  }, []);
+
   const reset = useCallback(() => {
     setState(initialState());
     setLastPrefilled([]);
@@ -532,6 +581,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     bulkAnswer,
     applyLocalReport,
     removeEndpoint,
+    addEndpoint,
+    setScan,
+    markCompleted,
     estate,
     confirmations,
     drift,

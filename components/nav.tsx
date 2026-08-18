@@ -5,17 +5,17 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useStore } from "./store";
 import { activeSteps } from "@/lib/journey";
-import { DetailToggle } from "./detail";
 import { ThemeToggle } from "./theme";
 
 export function Nav() {
   const pathname = usePathname();
   const { readiness, onboarded, org, started, beginJourney, journey, testMode, pathway } = useStore();
+  // DetailToggle removed — simple/technical distinction removed from UI
 
   // A deep link into a later step is itself a commitment. The gate decides
   // whether they may stay there; this only stops them landing without a nav.
   useEffect(() => {
-    if (!started && pathname !== "/" && pathname !== "/onboard") beginJourney();
+    if (!started && pathname !== "/" && pathname !== "/onboard" && pathname !== "/start") beginJourney();
   }, [started, pathname, beginJourney]);
 
   return (
@@ -30,7 +30,7 @@ export function Nav() {
             </span>
             <span className="text-[15px] font-semibold leading-tight tracking-tight text-white">
               Cyber <span className="text-csa-400">Essentials</span>
-              <span className="ml-1.5 text-[11px] font-normal text-brand-200/70">Tool</span>
+              <span className="ml-1.5 text-[11px] font-normal text-brand-200/70">Readiness Tool</span>
             </span>
           </Link>
 
@@ -38,7 +38,6 @@ export function Nav() {
             {started && onboarded && (
               <span className="hidden text-brand-200/70 lg:inline">{org.name}</span>
             )}
-            {started && <DetailToggle />}
             <ThemeToggle />
             {started && (
               <span className="rounded-full bg-brand-700/40 px-2.5 py-1 font-medium tabular-nums text-brand-100 ring-1 ring-inset ring-brand-500/30">

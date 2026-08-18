@@ -134,12 +134,13 @@ export function StepFooter() {
   let blockedBecause: string | null = null;
   if (step.evidenced && !done) {
     if (step.id === "start") {
-      const missing: string[] = [];
-      if (!org.name.trim()) missing.push("your organisation's name");
-      if (!org.scoping.boundary) missing.push("the scoping questions");
-      blockedBecause = missing.length
-        ? `Still needed: ${missing.join(", ")}.`
-        : "Finish the questions above.";
+      blockedBecause = !org.name.trim()
+        ? "Log in with Corppass and enter your domain to continue."
+        : !scan
+        ? "Run the domain scan to continue."
+        : null;
+    } else if (step.id === "scan") {
+      blockedBecause = "Run the device scanner (or skip it) to continue.";
     } else if (step.id === "discover") {
       blockedBecause = scan
         ? "The scan did not complete. Try again, or check outbound DNS is allowed."

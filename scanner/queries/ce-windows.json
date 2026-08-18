@@ -1,0 +1,142 @@
+{
+  "schedule": {
+    "A2_software_inventory": {
+      "query": "SELECT name, version, install_date, install_source, publisher FROM programs ORDER BY name;",
+      "interval": 1,
+      "description": "A.2.4(d) — Installed software and versions",
+      "clauses": ["A.2.4(d)", "A.2.4(j)"]
+    },
+    "A2_os_version": {
+      "query": "SELECT name, version, build, platform, arch, codename FROM os_version;",
+      "interval": 1,
+      "description": "A.2.4(b)(f) — OS version and EoL status",
+      "clauses": ["A.2.4(b)", "A.2.4(f)"]
+    },
+    "A2_hardware": {
+      "query": "SELECT computer_name, cpu_brand, cpu_physical_cores, physical_memory, hardware_model, hardware_vendor, hardware_serial FROM system_info;",
+      "interval": 1,
+      "description": "A.2.4(a)(b) — Hardware asset",
+      "clauses": ["A.2.4(a)", "A.2.4(b)"]
+    },
+    "A2_network_interfaces": {
+      "query": "SELECT interface, address, mask, type FROM interface_addresses WHERE type != 'other';",
+      "interval": 1,
+      "description": "A.2.4(a) — Network interfaces",
+      "clauses": ["A.2.4(a)"]
+    },
+    "A3_disk_encryption": {
+      "query": "SELECT name, encrypted, type, uid FROM disk_encryption;",
+      "interval": 1,
+      "description": "A.3.4(c) — Disk encryption (BitLocker)",
+      "clauses": ["A.3.4(c)"]
+    },
+    "A4_antivirus": {
+      "query": "SELECT name, state, signatures_up_to_date, type FROM windows_security_products WHERE type = 'Antivirus';",
+      "interval": 1,
+      "description": "A.4.4(a)(b)(c) — Antivirus present, active and up to date",
+      "clauses": ["A.4.4(a)", "A.4.4(b)", "A.4.4(c)"]
+    },
+    "A4_firewall": {
+      "query": "SELECT domain_enabled, private_enabled, public_enabled FROM windows_firewall_rules LIMIT 1;",
+      "interval": 1,
+      "description": "A.4.4(e) — Host-based firewall status",
+      "clauses": ["A.4.4(e)"]
+    },
+    "A4_firewall_profiles": {
+      "query": "SELECT name, enabled, default_inbound_action, default_outbound_action FROM windows_firewall_settings;",
+      "interval": 1,
+      "description": "A.4.4(e) — Firewall profiles (domain/private/public)",
+      "clauses": ["A.4.4(e)"]
+    },
+    "A5_local_accounts": {
+      "query": "SELECT uid, username, description, type, is_hidden FROM users WHERE type = 'local' ORDER BY username;",
+      "interval": 1,
+      "description": "A.5.4(a)(b) — Local user accounts",
+      "clauses": ["A.5.4(a)", "A.5.4(b)"]
+    },
+    "A5_local_admins": {
+      "query": "SELECT gu.username, gu.uid FROM user_groups ug JOIN groups g ON ug.gid = g.gid JOIN users gu ON gu.uid = ug.uid WHERE g.groupname = 'Administrators';",
+      "interval": 1,
+      "description": "A.5.4(d) — Local Administrators group membership",
+      "clauses": ["A.5.4(d)"]
+    },
+    "A5_password_policy": {
+      "query": "SELECT minimum_length, password_history_size, max_age, min_age, complexity FROM password_policy;",
+      "interval": 1,
+      "description": "A.5.4(i) — Password policy",
+      "clauses": ["A.5.4(i)"]
+    },
+    "A5_account_lockout": {
+      "query": "SELECT lockout_threshold, lockout_duration, lockout_observation_window FROM account_policy_data;",
+      "interval": 1,
+      "description": "A.5.4(m) — Account lockout threshold",
+      "clauses": ["A.5.4(m)"]
+    },
+    "A5_rdp_status": {
+      "query": "SELECT name, data FROM registry WHERE path = 'HKEY_LOCAL_MACHINE\\System\\CurrentControlSet\\Control\\Terminal Server' AND name = 'fDenyTSConnections';",
+      "interval": 1,
+      "description": "A.5.4(o) — RDP enabled or disabled",
+      "clauses": ["A.5.4(o)"]
+    },
+    "A6_autorun_disabled": {
+      "query": "SELECT name, data FROM registry WHERE path LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer' AND name = 'NoDriveTypeAutoRun';",
+      "interval": 1,
+      "description": "A.6.4(a) — Autorun/autoplay disabled",
+      "clauses": ["A.6.4(a)"]
+    },
+    "A6_screen_lock": {
+      "query": "SELECT name, data FROM registry WHERE path = 'HKEY_CURRENT_USER\\Software\\Policies\\Microsoft\\Windows\\Control Panel\\Desktop' AND name IN ('ScreenSaverIsSecure','ScreenSaveTimeOut','ScreenSaveActive');",
+      "interval": 1,
+      "description": "A.6.4(b) — Screen lock timeout configured",
+      "clauses": ["A.6.4(b)"]
+    },
+    "A6_guest_account": {
+      "query": "SELECT username, uid, type FROM users WHERE username = 'Guest';",
+      "interval": 1,
+      "description": "A.6.4(c) — Guest account disabled",
+      "clauses": ["A.6.4(c)"]
+    },
+    "A6_smb_version": {
+      "query": "SELECT name, data FROM registry WHERE path LIKE 'HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\LanmanServer\\Parameters' AND name IN ('SMB1', 'SMB2');",
+      "interval": 1,
+      "description": "A.6.4(f) — SMBv1 disabled",
+      "clauses": ["A.6.4(f)"]
+    },
+    "A6_audit_policy": {
+      "query": "SELECT name, action FROM audit_policy;",
+      "interval": 1,
+      "description": "A.6.4(g) — Audit/event logging policy",
+      "clauses": ["A.6.4(g)"]
+    },
+    "A6_startup_items": {
+      "query": "SELECT name, path, args, source, status, username FROM startup_items;",
+      "interval": 1,
+      "description": "A.6.4(i) — Startup items (unexpected persistence)",
+      "clauses": ["A.6.4(i)"]
+    },
+    "A7_windows_updates": {
+      "query": "SELECT hotfix_id, description, installed_on FROM patches ORDER BY installed_on DESC LIMIT 50;",
+      "interval": 1,
+      "description": "A.7.4(a)(c) — Windows Update patch history",
+      "clauses": ["A.7.4(a)", "A.7.4(c)"]
+    },
+    "A7_update_settings": {
+      "query": "SELECT name, data FROM registry WHERE path LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\Windows\\WindowsUpdate\\AU' AND name IN ('AUOptions','ScheduledInstallDay','ScheduledInstallTime');",
+      "interval": 1,
+      "description": "A.7.4(a) — Windows Update automatic update policy",
+      "clauses": ["A.7.4(a)"]
+    },
+    "A8_backup_jobs": {
+      "query": "SELECT name, status, last_run_time, next_run_time, enabled FROM scheduled_tasks WHERE name LIKE '%backup%' OR name LIKE '%Backup%';",
+      "interval": 1,
+      "description": "A.8.4(a) — Scheduled backup tasks",
+      "clauses": ["A.8.4(a)"]
+    },
+    "A8_vss_snapshots": {
+      "query": "SELECT id, set_id, create_time, volume FROM shadow_copies ORDER BY create_time DESC LIMIT 10;",
+      "interval": 1,
+      "description": "A.8.4(d) — VSS shadow copies (local backup indicator)",
+      "clauses": ["A.8.4(d)"]
+    }
+  }
+}

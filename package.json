@@ -12,7 +12,9 @@
     "coverage": "tsx scripts/coverage.ts",
     "pathways": "tsx scripts/pathways.ts",
     "xlsx-smoke": "tsx scripts/xlsx-smoke.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:scanner": "cd scanner && npx tsc launcher.ts --outDir dist-ts --esModuleInterop --resolveJsonModule --target es2020 --module commonjs && npx pkg dist-ts/launcher.js --targets node20-win-x64 --output ../public/downloads/CEScan-win.exe --assets queries/**,bin/windows/osqueryi.exe",
+    "copy:scanner-ps": "cp scanner/ce-audit.ps1 public/downloads/ce-audit.ps1"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.1",
@@ -27,6 +29,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
+    "playwright": "^1.62.1",
     "postcss": "^8.5.0",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.23.1",
