@@ -18,11 +18,14 @@ import { buildReport, reportFilename, reportToJson, reportToXlsx } from "@/lib/r
 
 // ── Email to Certification Body ──────────────────────────────────────────────
 
+// Source: https://www.csa.gov.sg/our-programmes/cybersecurity-certification/cyber-essentials/certification-bodies
 const CERT_BODIES = [
-  { name: "CYBERTRUST ASIA PTE. LTD.", email: "certbody@cybertrust-asia.com.sg" },
-  { name: "SAIQA PTE. LTD.",           email: "ce-assessment@saiqa.com.sg" },
-  { name: "WIZLYNX PTE. LTD.",         email: "cemarks@wizlynx.com.sg" },
-  { name: "NCS PTE. LTD.",             email: "cyberessentials@ncs.com.sg" },
+  { name: "CyberTrust Asia Pte Ltd",          email: "certbody@cybertrust-asia.com.sg",     website: "https://www.cybertrust-asia.com.sg" },
+  { name: "SAIQA Pte Ltd",                    email: "ce-assessment@saiqa.com.sg",          website: "https://www.saiqa.com.sg" },
+  { name: "Wizlynx Pte Ltd",                  email: "cemarks@wizlynx.com.sg",              website: "https://www.wizlynx.com" },
+  { name: "NCS Pte Ltd",                      email: "cyberessentials@ncs.com.sg",          website: "https://www.ncs.co" },
+  { name: "Bureau Veritas Singapore Pte Ltd", email: "sg.cyberessentials@bureauveritas.com", website: "https://www.bureauveritas.com.sg" },
+  { name: "TÜV SÜD PSB Pte Ltd",             email: "psb.cyberessentials@tuvsud.com",      website: "https://www.tuvsud.com/en-sg" },
 ];
 
 function EmailToCertBody({
@@ -142,9 +145,11 @@ ${org.name || "[Organisation Name]"}
             <pre className="overflow-x-auto rounded-lg border border-ink-700/50 bg-ink-900 p-4 text-[11px] leading-relaxed text-brand-100/70 whitespace-pre-wrap font-mono">
               {template}
             </pre>
-            <p className="mt-2 text-[11px] text-brand-100/30">
-              ⚠ These are dummy email addresses for demonstration. Replace with the actual certification body contact from <a href="https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cyber-essentials-and-cyber-trust-mark/certification-body-and-assessors" target="_blank" rel="noreferrer" className="underline hover:text-brand-100/60">CSA&apos;s register ↗</a>.
-              Attach your Excel export before sending.
+            <p className="mt-2 text-[11px] text-brand-100/50">
+              Contact details sourced from{" "}
+              <a href="https://www.csa.gov.sg/our-programmes/cybersecurity-certification/cyber-essentials/certification-bodies" target="_blank" rel="noreferrer" className="underline hover:text-brand-100/70">CSA&apos;s appointed certification bodies register ↗</a>.
+              Verify before sending and attach your exported results.{" "}
+              <a href="/certification" className="underline hover:text-brand-100/70">Full CB directory →</a>
             </p>
           </div>
         </div>

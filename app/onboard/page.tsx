@@ -45,17 +45,11 @@ export default function OnboardPage() {
 
   function simulateCorppass() {
     setCorppassBusy(true);
-    // Stands in for the real flow: Corppass authenticates the officer, and ACRA
-    // returns the entity's registered particulars so none of this is typed by hand.
+    // In production: Corppass OIDC → MyInfo Business API returns ACRA-registered
+    // particulars automatically. For demo: marks session authenticated — user
+    // enters their own organisation details; nothing is pre-filled.
     setTimeout(() => {
-      setOrg({
-        name: "Marina Precision Engineering Pte Ltd",
-        uen: "201534217K",
-        industry: "Manufacturing",
-        size: "10–49 employees",
-        hasInternalIt: false,
-        onboardedVia: "corppass",
-      });
+      setOrg({ onboardedVia: "corppass" });
       setCorppassBusy(false);
     }, 900);
   }

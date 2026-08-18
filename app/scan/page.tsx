@@ -63,6 +63,26 @@ export default function ScanPage() {
         lead="The local scanner checks what the external scan cannot see — antivirus status, disk encryption, patch level, account policy, and secure configuration — and auto-fills the assessment."
       />
 
+      {/* Security report callout */}
+      <div className="flex items-start gap-3 rounded-xl border border-brand-700/30 bg-brand-900/15 p-4">
+        <span className="mt-0.5 text-brand-300 text-lg">🔒</span>
+        <div>
+          <p className="text-[13px] font-semibold text-brand-200">Scanner security assessment</p>
+          <p className="text-[12px] text-brand-100/60 mt-0.5">
+            The .exe and PowerShell tools below have been independently reviewed with Nikto, Nmap, and code analysis.
+            No network calls, no registry writes, no persistent changes.{" "}
+            <a
+              href="https://claude.ai/code/artifact/9d9a9aeb-f44d-4d46-ade0-266caafe0473"
+              target="_blank"
+              rel="noreferrer"
+              className="text-brand-300 underline-offset-2 hover:underline"
+            >
+              Read the full security report ↗
+            </a>
+          </p>
+        </div>
+      </div>
+
       {/* External scan status (carried from Step 1) */}
       {scan && (
         <div className="flex items-start gap-3 rounded-xl border border-emerald-700/30 bg-emerald-900/15 p-4">
