@@ -16,17 +16,8 @@ import {
 import { SECTORS } from "@/lib/sectors";
 
 // ── Corppass simulation (replace with real Corppass OIDC redirect in prod) ───
-
-const DEMO_ORG = {
-  name: "Marina Precision Engineering Pte Ltd",
-  uen: "201534217K",
-  industry: "Manufacturing",
-  size: "10–49 employees",
-  hasInternalIt: false,
-  onboardedVia: "corppass" as const,
-  sector: "general" as const,
-  scoping: { locations: "1", mobile: "no", byod: "no", servers: "yes" },
-};
+// In production: Corppass OIDC → MyInfo Business API → ACRA registered particulars
+// For demo: marks session as Corppass-authenticated; org details filled by user below
 
 export default function StartPage() {
   const router = useRouter();
@@ -46,16 +37,12 @@ export default function StartPage() {
 
   function handleCorppass() {
     setCorppassBusy(true);
-    // In production: redirect to Corppass OIDC endpoint, then callback fills
-    // org details from ACRA via MyInfo Business API.
+    // In production: redirect to Corppass OIDC endpoint → MyInfo Business API
+    // returns ACRA-registered name, UEN, industry, and size automatically.
+    // For demo: marks the session as Corppass-authenticated; user still enters
+    // their own org details — nothing is pre-filled with dummy data.
     setTimeout(() => {
-      setOrg({
-        ...DEMO_ORG,
-        sector: org.sector || "general",
-        scoping: org.scoping ?? DEMO_ORG.scoping,
-      });
-      // Populate scoping question answers one by one
-      for (const [k, v] of Object.entries(DEMO_ORG.scoping)) setScoping(k, v);
+      setOrg({ onboardedVia: "corppass" });
       setLoggedIn(true);
       setCorppassBusy(false);
     }, 1200);
@@ -150,23 +137,34 @@ export default function StartPage() {
             </p>
           </>
         ) : (
-          <div className="grid grid-cols-2 gap-3 rounded-lg bg-emerald-900/20 border border-emerald-700/30 p-4">
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">Organisation</p>
-              <p className="text-sm font-medium text-white">{org.name}</p>
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 rounded-lg border border-emerald-700/30 bg-emerald-900/15 px-4 py-3 text-[13px] text-emerald-300">
+              <span className="text-base">✓</span>
+              Corppass session verified — enter your organisation details below.
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">UEN</p>
-              <p className="text-sm font-medium text-white">{org.uen}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">Registered Name</label>
+                <input
+                  className="w-full rounded-lg border border-ink-700/60 bg-ink-900/60 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
+                  value={org.name}
+                  placeholder="e.g. Tan Brothers Pte Ltd"
+                  onChange={(e) => setOrg({ name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">UEN</label>
+                <input
+                  className="w-full rounded-lg border border-ink-700/60 bg-ink-900/60 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
+                  value={org.uen}
+                  placeholder="e.g. 202312345A"
+                  onChange={(e) => setOrg({ uen: e.target.value })}
+                />
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">Industry</p>
-              <p className="text-sm font-medium text-white">{org.industry}</p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">Size</p>
-              <p className="text-sm font-medium text-white">{org.size}</p>
-            </div>
+            <p className="text-[11px] text-brand-200/50">
+              In production, ACRA fills these automatically from MyInfo Business. Enter your registered details above.
+            </p>
           </div>
         )}
       </Card>

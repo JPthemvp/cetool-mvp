@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const FEATURES = [
   {
@@ -36,6 +38,18 @@ const FEATURES = [
 ];
 
 export default function LandingPage() {
+  const router = useRouter();
+  const [corppassBusy, setCorppassBusy] = useState(false);
+
+  function handleCorppass() {
+    setCorppassBusy(true);
+    // In production: redirect to Corppass OIDC endpoint → callback fills org from ACRA
+    // For the demo: navigate to /start where user enters their own org details
+    setTimeout(() => {
+      router.push("/start");
+    }, 900);
+  }
+
   return (
     <div className="flex flex-col items-center text-center">
       {/* Badge */}
@@ -48,24 +62,53 @@ export default function LandingPage() {
       <h1 className="mt-8 max-w-3xl text-5xl font-bold leading-[1.08] tracking-tight text-white sm:text-6xl">
         Cyber Essentials
         <br />
-        <span className="text-csa-400">made simple.</span>
+        <span className="text-csa-400">Simplified.</span>
       </h1>
 
       <p className="mt-6 max-w-lg text-[16px] leading-relaxed text-brand-100/70">
-        Log in, run the scanner, review and export. Your CSA Cyber Essentials
+        Log in with Corppass, run the scanner, review and export. Your CSA Cyber Essentials
         self-assessment — automatically filled, ready for your certification body.
       </p>
 
-      {/* CTA */}
+      {/* Primary CTA — Corppass login */}
+      <button
+        onClick={handleCorppass}
+        disabled={corppassBusy}
+        className="mt-10 inline-flex items-center gap-3 rounded-xl bg-red-700 px-10 py-4 text-[17px] font-bold text-white shadow-lg shadow-red-900/40 transition hover:bg-red-600 active:scale-[0.98] disabled:opacity-70"
+      >
+        {corppassBusy ? (
+          <>
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            Connecting to Corppass…
+          </>
+        ) : (
+          <>
+            <span className="grid h-7 w-7 place-items-center rounded bg-white text-[12px] font-black text-red-700">
+              CP
+            </span>
+            Log in with Corppass
+          </>
+        )}
+      </button>
+
+      <p className="mt-3 text-[12px] text-brand-300/60">
+        Singapore&apos;s corporate digital identity · Your credentials are never stored
+      </p>
+
+      <div className="mt-3 flex items-center gap-3">
+        <span className="h-px w-20 bg-ink-700" />
+        <span className="text-[11px] uppercase tracking-widest text-brand-200/50">or</span>
+        <span className="h-px w-20 bg-ink-700" />
+      </div>
+
       <Link
         href="/start"
-        className="mt-10 inline-flex items-center gap-3 rounded-xl bg-csa-600 px-10 py-4 text-[17px] font-bold text-white shadow-lg shadow-csa-800/40 transition hover:bg-csa-500 active:scale-[0.98]"
+        className="mt-3 text-[13px] text-brand-300 underline-offset-2 hover:underline"
       >
-        Begin Assessment
-        <span aria-hidden="true" className="text-xl">→</span>
+        Continue without Corppass →
       </Link>
 
-      <p className="mt-4 text-[12px] text-brand-300/60">
+      <p className="mt-2 text-[11px] text-brand-300/40">
         Nothing installed permanently · Nothing submitted without your review
       </p>
 
