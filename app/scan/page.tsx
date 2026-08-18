@@ -114,7 +114,7 @@ export default function ScanPage() {
             <p className="text-[14px] font-semibold text-white">Download the scanner</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="space-y-2">
             <a
               href="/downloads/CEScan-win.exe"
               download
@@ -123,6 +123,10 @@ export default function ScanPage() {
               ⬇ CEScan-win.exe
               <span className="text-csa-200/70 text-[11px] font-normal">~60 MB · Windows 10/11</span>
             </a>
+            <p className="text-[11px] font-mono text-brand-300/60 select-all">
+              SHA-256 (build hash — verify after download):<br />
+              <span className="text-brand-300/80">pending build · see ce-audit.ps1 hash below for script verification</span>
+            </p>
           </div>
 
           <div className="rounded-lg bg-ink-900/60 border border-ink-700/40 p-4 space-y-2">
@@ -141,7 +145,7 @@ export default function ScanPage() {
               ))}
             </ul>
             <a
-              href="https://github.com/your-org/cetool-scanner"
+              href="https://github.com/JPthemvp/cetool-mvp/tree/main/scanner"
               target="_blank"
               rel="noreferrer"
               className="mt-2 block text-[11px] text-brand-300 underline-offset-2 hover:underline"
@@ -194,14 +198,22 @@ export default function ScanPage() {
             <p className="text-[14px] font-semibold text-white">Download the script</p>
           </div>
 
-          <a
-            href="/downloads/ce-audit.ps1"
-            download
-            className="inline-flex items-center gap-2 rounded-lg border border-brand-600/40 bg-brand-900/40 px-5 py-2.5 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:bg-brand-900/60"
-          >
-            ⬇ ce-audit.ps1
-            <span className="text-brand-300/60 text-[11px] font-normal">~12 KB · Plain text · Review before running</span>
-          </a>
+          <div className="space-y-2">
+            <a
+              href="/downloads/ce-audit.ps1"
+              download
+              className="inline-flex items-center gap-2 rounded-lg border border-brand-600/40 bg-brand-900/40 px-5 py-2.5 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:bg-brand-900/60"
+            >
+              ⬇ ce-audit.ps1
+              <span className="text-brand-300/60 text-[11px] font-normal">~12 KB · Plain text · Review before running</span>
+            </a>
+            <p className="text-[11px] font-mono text-brand-300/60 break-all select-all">
+              SHA-256: ad4473bc7521af2f7079ca5cd406a6770989958077efef66ea6a5816f629c016
+            </p>
+            <p className="text-[11px] text-brand-300/50">
+              Verify in PowerShell: <span className="font-mono">(Get-FileHash .\ce-audit.ps1).Hash</span>
+            </p>
+          </div>
 
           <div className="flex items-center gap-3">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-700/60 text-[12px] font-bold text-brand-200 ring-1 ring-inset ring-brand-500/30">2</span>
