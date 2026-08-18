@@ -29,13 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
           <StepFooter />
           <footer className="mx-auto max-w-7xl px-4 pb-12 sm:px-6">
-            <div className="border-t border-brand-700/35 pt-6 text-xs leading-relaxed text-brand-200/70 space-y-3">
-              <div className="flex flex-wrap gap-x-5 gap-y-1">
-                <a href="/training" className="hover:text-brand-200/90 underline-offset-2 hover:underline">Training Quiz</a>
-                <a href="/certification" className="hover:text-brand-200/90 underline-offset-2 hover:underline">Certification Bodies</a>
-                <a href="https://www.csa.gov.sg/our-programmes/cybersecurity-certification/cyber-essentials" target="_blank" rel="noreferrer" className="hover:text-brand-200/90 underline-offset-2 hover:underline">CSA Cyber Essentials ↗</a>
-                <a href="https://www.surveymonkey.com/r/sgcybersafe-employee" target="_blank" rel="noreferrer" className="hover:text-brand-200/90 underline-offset-2 hover:underline">SGCybersafe Quiz ↗</a>
-              </div>
+            <div className="border-t border-brand-700/35 pt-6 text-xs leading-relaxed text-brand-200/70">
               <p>
                 Prototype. Framework content is modelled on CSA&apos;s published Cyber Essentials
                 mark (V202503, as expanded 15 Apr 2025). This tool is not affiliated with CSA

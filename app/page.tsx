@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CorppassButton } from "@/components/corppass-logo";
 
 const FEATURES = [
   {
@@ -53,9 +54,9 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col items-center text-center">
       {/* Badge */}
-      <span className="inline-flex items-center gap-2 rounded-full border border-brand-600/40 bg-brand-900/60 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-brand-300">
-        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        Free · Singapore SME · CSA Cyber Essentials V202503
+      <span className="inline-flex items-center gap-2 rounded-full border border-csa-600/50 bg-csa-700/20 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-csa-500">
+        <span className="h-1.5 w-1.5 rounded-full bg-csa-400 animate-pulse" />
+        Free | CSA&apos;s Cyber Essentials Mark
       </span>
 
       {/* Headline */}
@@ -67,40 +68,16 @@ export default function LandingPage() {
 
       <p className="mt-6 max-w-lg text-[16px] leading-relaxed text-brand-100/70">
         Log in with Corppass, run the scanner, review and export. Your CSA Cyber Essentials
-        self-assessment — automatically filled, ready for your certification body.
+        self-assessment — automatically filled, results ready for certification body.
       </p>
 
-      {/* Primary CTA — Corppass login (official SG gov branding) */}
-      <button
+      {/* Primary CTA — Corppass login */}
+      <CorppassButton
         onClick={handleCorppass}
-        disabled={corppassBusy}
-        className="mt-10 inline-flex items-center gap-3 rounded-xl border-2 border-[#C8102E] bg-white px-8 py-4 text-[17px] font-bold text-[#C8102E] shadow-lg shadow-red-900/20 transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-70"
-      >
-        {corppassBusy ? (
-          <>
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#C8102E]/30 border-t-[#C8102E]" />
-            <span className="text-[#C8102E]">Connecting to Corppass…</span>
-          </>
-        ) : (
-          <>
-            {/* Official Corppass logo SVG — government of Singapore */}
-            <svg viewBox="0 0 120 40" width="90" height="30" aria-label="Corppass" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Lion head mark (stylised, per SG gov NDI design language) */}
-              <rect x="0" y="0" width="40" height="40" rx="4" fill="#C8102E"/>
-              {/* Simplified SG lion silhouette in white */}
-              <path d="M20 7 C14 7 10 11 10 15 C10 17 11 19 13 20 L12 24 C12 25 13 26 14 26 L26 26 C27 26 28 25 28 24 L27 20 C29 19 30 17 30 15 C30 11 26 7 20 7 Z" fill="white"/>
-              <circle cx="17" cy="14" r="1.5" fill="#C8102E"/>
-              <circle cx="23" cy="14" r="1.5" fill="#C8102E"/>
-              <path d="M16 18 Q20 21 24 18" stroke="#C8102E" strokeWidth="1.2" strokeLinecap="round" fill="none"/>
-              {/* Crown */}
-              <path d="M14 10 L16 7 L18 10 L20 6 L22 10 L24 7 L26 10" stroke="white" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-              {/* Wordmark */}
-              <text x="48" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#C8102E" letterSpacing="-0.3">Corp</text>
-              <text x="82" y="27" fontFamily="Arial, Helvetica, sans-serif" fontWeight="700" fontSize="16" fill="#333333" letterSpacing="-0.3">pass</text>
-            </svg>
-          </>
-        )}
-      </button>
+        busy={corppassBusy}
+        size="lg"
+        className="mt-10 shadow-lg shadow-red-100/30 rounded-xl"
+      />
 
       <p className="mt-3 text-[12px] text-brand-300/60">
         Singapore&apos;s corporate digital identity · Your credentials are never stored
