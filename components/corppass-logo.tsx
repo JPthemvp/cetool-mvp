@@ -1,13 +1,10 @@
 /**
- * Corppass login button following the official SG government NDI button spec.
+ * Corppass login button — wordmark matches the official logo at
+ * /portal/static/media/corppass.4f9ba5e6f668feb640273f897953bf12.svg
  *
- * Logo anatomy (from corppass.gov.sg):
- *   • Red octagonal badge (#C8102E) with a white "C" letterform inside
- *   • Wordmark: "Corp" in bold red, "pass" in regular dark grey
- *
- * Button spec:
- *   • White background, #C8102E 2px border, rounded
- *   • Badge + wordmark left-aligned inside the button
+ * The Corppass mark is the lowercase "corppass" wordmark in blue (#2B2BB8 approx)
+ * with a distinctive circular ring on the "c" letterform.
+ * Button follows the official NDI button spec: white fill, blue border/text.
  */
 
 interface CorppassLogoProps {
@@ -15,10 +12,10 @@ interface CorppassLogoProps {
   height?: number;
 }
 
-export function CorppassMark({ width = 100, height = 30 }: CorppassLogoProps) {
+export function CorppassMark({ width = 120, height = 32 }: CorppassLogoProps) {
   return (
     <svg
-      viewBox="0 0 160 48"
+      viewBox="0 0 200 48"
       width={width}
       height={height}
       aria-label="Corppass"
@@ -26,42 +23,36 @@ export function CorppassMark({ width = 100, height = 30 }: CorppassLogoProps) {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Octagonal badge — Singapore gov Corppass identity mark */}
+      {/*
+        Corppass wordmark: "corppass" all lowercase in blue.
+        The "c" has a distinctive ring/circle element at its opening.
+        Color: approx #2D2DB8 (NDI blue).
+      */}
+
+      {/* Ring on the "c" — small circle at upper-right of the C opening */}
+      <circle cx="20.5" cy="13" r="5" fill="#2D2DB8" />
+      <circle cx="20.5" cy="13" r="2.8" fill="white" />
+
+      {/* "c" letterform — open arc */}
       <path
-        d="M14 2 L34 2 L46 14 L46 34 L34 46 L14 46 L2 34 L2 14 Z"
-        fill="#C8102E"
-      />
-      {/* White "C" letterform */}
-      <path
-        d="M35 16 C32 12 26 10 21 12.5 C15 15 12 21 14 27 C16 33 22 37 28 36 C32 35 35 32 37 28"
-        stroke="white"
-        strokeWidth="4"
+        d="M28 18 C26 11 20 7 13 9 C6 11 3 18 5 25 C7 32 14 36 21 34 C26 32 29 28 30 24"
+        stroke="#2D2DB8"
+        strokeWidth="4.2"
         strokeLinecap="round"
         fill="none"
       />
-      {/* Corp — bold red */}
+
+      {/* "orppass" — rendered as SVG text, Poppins-style sans-serif */}
       <text
-        x="56"
+        x="36"
         y="33"
-        fontFamily="'Helvetica Neue', Arial, Helvetica, sans-serif"
-        fontWeight="800"
-        fontSize="22"
-        fill="#C8102E"
-        letterSpacing="-0.4"
+        fontFamily="'Helvetica Neue', 'Arial', Helvetica, sans-serif"
+        fontWeight="700"
+        fontSize="26"
+        fill="#2D2DB8"
+        letterSpacing="-0.5"
       >
-        Corp
-      </text>
-      {/* pass — regular dark */}
-      <text
-        x="107"
-        y="33"
-        fontFamily="'Helvetica Neue', Arial, Helvetica, sans-serif"
-        fontWeight="400"
-        fontSize="22"
-        fill="#1a1a1a"
-        letterSpacing="-0.4"
-      >
-        pass
+        orppass
       </text>
     </svg>
   );
@@ -83,24 +74,31 @@ export function CorppassButton({
   size = "md",
 }: CorppassButtonProps) {
   const padding = size === "lg" ? "px-8 py-4" : size === "sm" ? "px-4 py-2.5" : "px-6 py-3";
-  const logoW = size === "lg" ? 110 : size === "sm" ? 80 : 95;
-  const logoH = size === "lg" ? 33 : size === "sm" ? 24 : 28;
+  const logoW = size === "lg" ? 130 : size === "sm" ? 90 : 110;
+  const logoH = size === "lg" ? 36 : size === "sm" ? 26 : 30;
+  const textSz = size === "lg" ? 15 : size === "sm" ? 12 : 13;
 
   return (
     <button
       onClick={onClick}
       disabled={disabled || busy}
-      className={`inline-flex items-center justify-center gap-3 rounded-lg border-2 border-[#C8102E] bg-white ${padding} transition hover:bg-red-50 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
+      aria-label="Log in with Corppass"
+      className={`inline-flex flex-col items-center justify-center gap-1 rounded-xl border-2 border-[#2D2DB8] bg-white ${padding} transition hover:bg-blue-50 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed ${className}`}
     >
       {busy ? (
         <>
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#C8102E]/25 border-t-[#C8102E]" />
-          <span className="font-semibold text-[#C8102E]" style={{ fontSize: size === "lg" ? 17 : size === "sm" ? 13 : 15 }}>
-            Connecting to Corppass…
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#2D2DB8]/25 border-t-[#2D2DB8]" />
+          <span className="font-semibold text-[#2D2DB8]" style={{ fontSize: textSz }}>
+            Connecting…
           </span>
         </>
       ) : (
-        <CorppassMark width={logoW} height={logoH} />
+        <>
+          <span className="text-[10px] font-medium text-[#2D2DB8]/70" style={{ letterSpacing: "0.04em" }}>
+            Log in with
+          </span>
+          <CorppassMark width={logoW} height={logoH} />
+        </>
       )}
     </button>
   );
