@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/components/store";
 import { Button, Card, Meter, Pill, SectionTitle, Stat } from "@/components/ui";
 import { applicableClauses } from "@/lib/ce-framework";
@@ -104,12 +105,24 @@ const HUMAN_WIZARD_QUESTIONS: Array<{
 ];
 
 export default function ReviewPage() {
+  const router = useRouter();
   const store = useStore();
-  const { org, scan, answers, setAnswer, endpoints, markCompleted, scope } = store;
+  const { org, scan, answers, setAnswer, endpoints, markCompleted, scope, reset } = store;
   const [wizardAnswers, setWizardAnswers] = useState<Record<string, string>>({});
   const [trainingEvidence, setTrainingEvidence] = useState<"csa" | "gophish" | "other" | null>(null);
   const [irplanDownloaded, setIrplanDownloaded] = useState(false);
   const [exported, setExported] = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+
+  function handleReset() {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      setTimeout(() => setConfirmReset(false), 4000);
+      return;
+    }
+    reset();
+    router.push("/");
+  }
 
   // ── Compute auto-filled vs needs-human ────────────────────────────────────
 
@@ -561,6 +574,27 @@ export default function ReviewPage() {
           </div>
         </div>
       </Card>
+
+      {/* ── Reset all ─────────────────────────────────────────────────────── */}
+      <div className="border-t border-brand-700/30 pt-8">
+        <div className="rounded-xl border border-red-800/30 bg-red-950/20 p-5">
+          <p className="text-sm font-semibold text-red-300">Reset all data</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-brand-100/60">
+            Clears all answers, scan results, organisation details, Corppass login, and all
+            assessment progress from this browser. This cannot be undone.
+          </p>
+          <button
+            onClick={handleReset}
+            className={`mt-4 rounded-lg border px-4 py-2 text-[13px] font-semibold transition ${
+              confirmReset
+                ? "border-red-500/60 bg-red-500/20 text-red-300 hover:bg-red-500/30"
+                : "border-red-800/40 bg-red-950/30 text-red-400/80 hover:border-red-700/60 hover:text-red-300"
+            }`}
+          >
+            {confirmReset ? "⚠ Are you sure? Click again to confirm reset" : "Reset all default values"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
