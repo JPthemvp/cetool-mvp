@@ -47,7 +47,7 @@ export default function StartPage() {
         onboardedVia: "corppass",
         name: "Demo Enterprise Pte Ltd",
         uen: "202312345A",
-        sector: "Information and Communications",
+        sector: "general",
       });
       setLoggedIn(true);
       setCorppassBusy(false);
