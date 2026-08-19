@@ -190,7 +190,8 @@ export default function CertificationPage() {
               <p className="mt-1.5 text-[11px] text-brand-300/70">
                 {cb.website.replace(/^https?:\/\//, "").replace(/\/.*$/, "")}
               </p>
-              {cb.phone && <p className="mt-1 text-[11px] text-brand-300/60">{cb.phone}</p>}
+              {cb.email && <p className="mt-0.5 text-[11px] text-brand-300/60">{cb.email}</p>}
+              {cb.phone && <p className="mt-0.5 text-[11px] text-brand-300/60">{cb.phone}</p>}
               <p className="mt-2 text-[11px] leading-relaxed text-brand-100/60">{cb.notes}</p>
             </button>
           );
@@ -218,19 +219,7 @@ export default function CertificationPage() {
           {emailBody}
         </pre>
 
-        <div className={`grid gap-3 pt-1 ${selected.email || selected.phone ? "grid-cols-3" : "grid-cols-1"}`}>
-          {selected.email && (
-            <div className="rounded-lg border border-ink-700/40 bg-ink-900/40 p-3 text-center">
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">Email</p>
-              <p className="mt-1 text-[11px] font-medium text-white break-all">{selected.email}</p>
-            </div>
-          )}
-          {selected.phone && (
-            <div className="rounded-lg border border-ink-700/40 bg-ink-900/40 p-3 text-center">
-              <p className="text-[10px] uppercase tracking-wide text-brand-300">Phone</p>
-              <p className="mt-1 text-[11px] font-medium text-white">{selected.phone}</p>
-            </div>
-          )}
+        <div className="grid gap-3 pt-1 grid-cols-1 sm:grid-cols-3">
           <div className="rounded-lg border border-ink-700/40 bg-ink-900/40 p-3 text-center">
             <p className="text-[10px] uppercase tracking-wide text-brand-300">Website</p>
             <a
@@ -239,9 +228,31 @@ export default function CertificationPage() {
               rel="noreferrer"
               className="mt-1 block text-[11px] font-medium text-csa-300 hover:underline underline-offset-2"
             >
-              Visit ↗
+              {selected.website.replace(/^https?:\/\//, "").replace(/\/.*$/, "")} ↗
             </a>
           </div>
+          {selected.email ? (
+            <div className="rounded-lg border border-ink-700/40 bg-ink-900/40 p-3 text-center">
+              <p className="text-[10px] uppercase tracking-wide text-brand-300">Email</p>
+              <p className="mt-1 text-[11px] font-medium text-white break-all">{selected.email}</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-ink-700/40 bg-ink-900/30 p-3 text-center opacity-50">
+              <p className="text-[10px] uppercase tracking-wide text-brand-300">Email</p>
+              <p className="mt-1 text-[11px] text-brand-100/50">Obtain via website</p>
+            </div>
+          )}
+          {selected.phone ? (
+            <div className="rounded-lg border border-ink-700/40 bg-ink-900/40 p-3 text-center">
+              <p className="text-[10px] uppercase tracking-wide text-brand-300">Phone</p>
+              <p className="mt-1 text-[11px] font-medium text-white">{selected.phone}</p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-ink-700/40 bg-ink-900/30 p-3 text-center opacity-50">
+              <p className="text-[10px] uppercase tracking-wide text-brand-300">Phone</p>
+              <p className="mt-1 text-[11px] text-brand-100/50">Obtain via website</p>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -257,6 +268,22 @@ export default function CertificationPage() {
         </a>
         {" "}· Always verify contact details on the CSA website before sending
       </p>
+
+      {/* ── End Session ────────────────────────────────────────────────────── */}
+      <div className="border-t border-brand-700/30 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-white">Done for now?</p>
+          <p className="text-[12px] text-brand-100/60 mt-0.5">
+            Return to home — your assessment progress is saved in this browser.
+          </p>
+        </div>
+        <button
+          onClick={() => router.push("/")}
+          className="shrink-0 rounded-lg border border-ink-600/60 bg-ink-900/60 px-4 py-2 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:text-white active:scale-[0.97]"
+        >
+          ← End session
+        </button>
+      </div>
 
       {/* ── Reset all ──────────────────────────────────────────────────────── */}
       <div className="border-t border-brand-700/30 pt-8">
