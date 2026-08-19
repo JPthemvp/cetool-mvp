@@ -208,9 +208,9 @@ export default function CertificationPage() {
           </div>
           <button
             onClick={handleCopy}
-            className="shrink-0 rounded-lg border border-ink-600/60 bg-ink-900/60 px-3 py-1.5 text-[12px] font-semibold text-brand-200 transition hover:border-brand-500/60"
+            className="shrink-0 rounded-lg border border-csa-600/60 bg-csa-900/30 px-4 py-2 text-[13px] font-semibold text-csa-200 transition hover:bg-csa-800/40 active:scale-[0.97]"
           >
-            {copied ? "✓ Copied" : "Copy"}
+            {copied ? "✓ Copied to clipboard" : "📋 Copy for Outlook"}
           </button>
         </div>
 

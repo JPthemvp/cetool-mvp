@@ -9,7 +9,8 @@ type ScannerMode = "exe" | "ps";
 
 export default function ScanPage() {
   const router = useRouter();
-  const { addEndpoint, markCompleted, scan } = useStore();
+  const { applyLocalReport, markCompleted, scan } = useStore();
+  const [importMessage, setImportMessage] = useState("");
   const [mode, setMode] = useState<ScannerMode>("exe");
   const [paste, setPaste] = useState("");
   const [importing, setImporting] = useState(false);
@@ -24,10 +25,10 @@ export default function ScanPage() {
     setImporting(true);
     setImportError("");
     try {
-      const data = JSON.parse(json);
-      if (!data.results || !data.hostname) throw new Error("Invalid scanner report format.");
-      // addEndpoint stores raw scanner JSON; the assessment store derives clause answers
-      addEndpoint({ hostname: data.hostname, scannedAt: data.scannedAt, raw: data });
+      // applyLocalReport expects a LocalReport: { computer, generated, findings: [...] }
+      const result = applyLocalReport(json);
+      if (!result.ok) throw new Error(result.message);
+      setImportMessage(result.message);
       setImported(true);
       markCompleted("scan");
     } catch (e) {
@@ -206,6 +207,7 @@ export default function ScanPage() {
             importing={importing}
             imported={imported}
             importError={importError}
+            importMessage={importMessage}
           />
         </Card>
       )}
@@ -276,6 +278,7 @@ export default function ScanPage() {
             importing={importing}
             imported={imported}
             importError={importError}
+            importMessage={importMessage}
           />
         </Card>
       )}
@@ -298,17 +301,26 @@ export default function ScanPage() {
           <button
             onClick={() => {
               const sample = JSON.stringify({
-                hostname: "TEST-DEVICE-01",
-                scannedAt: new Date().toISOString(),
-                results: {
-                  antivirus: { installed: true, enabled: true, upToDate: true, product: "Windows Defender" },
-                  firewall: { enabled: true },
-                  diskEncryption: { enabled: true, type: "BitLocker" },
-                  autoUpdates: { enabled: true, lastCheck: "2026-08-18" },
-                  passwordPolicy: { minimumLength: 12, complexity: true, maxAge: 90 },
-                  screenLock: { enabled: true, timeoutMinutes: 5 },
-                  adminAccounts: { count: 1, namedAdmin: true },
-                },
+                computer: "TEST-DEVICE-01",
+                generated: new Date().toISOString(),
+                tool: "CE Readiness Tool — Sample",
+                findings: [
+                  { id: "defender", title: "Windows Defender / antivirus active", clauses: ["A.4.4(a)", "A.4.4(b)", "A.4.4(c)"], measure: "A.4", result: "pass", detail: "Windows Defender active, real-time protection on, definitions current" },
+                  { id: "firewall", title: "Host firewall enabled", clauses: ["A.4.4(e)"], measure: "A.4", result: "pass", detail: "Windows Firewall enabled on all network profiles" },
+                  { id: "autorun", title: "AutoRun disabled", clauses: ["A.6.4(c)", "A.4.4(a)"], measure: "A.6", result: "pass", detail: "AutoRun and AutoPlay disabled via Group Policy" },
+                  { id: "screen-lock", title: "Screen lock / idle timeout", clauses: ["A.6.4(i)"], measure: "A.6", result: "pass", detail: "Screen locks after 5 minutes of inactivity" },
+                  { id: "audit-logging", title: "Audit logging enabled", clauses: ["A.6.4(g)"], measure: "A.6", result: "pass", detail: "Security event audit logging is enabled" },
+                  { id: "tls-legacy", title: "Legacy TLS disabled", clauses: ["A.6.4(b)", "A.3.4(c)"], measure: "A.6", result: "pass", detail: "TLS 1.0 and 1.1 are disabled; TLS 1.2/1.3 in use" },
+                  { id: "smbv1", title: "SMBv1 disabled", clauses: ["A.6.4(b)"], measure: "A.6", result: "pass", detail: "SMBv1 protocol is disabled" },
+                  { id: "local-admins", title: "Local administrator accounts", clauses: ["A.5.4(d)", "A.5.4(f)"], measure: "A.5", result: "pass", detail: "Only 1 named administrator account; default Administrator disabled" },
+                  { id: "guest-account", title: "Guest account disabled", clauses: ["A.5.4(e)", "A.5.4(l)"], measure: "A.5", result: "pass", detail: "Guest account is disabled" },
+                  { id: "rdp-nla", title: "RDP with NLA required", clauses: ["A.5.4(o)", "A.6.4(a)"], measure: "A.5", result: "pass", detail: "Remote Desktop requires Network Level Authentication" },
+                  { id: "bitlocker", title: "Full-disk encryption (BitLocker)", clauses: ["A.3.4(c)"], measure: "A.3", result: "pass", detail: "BitLocker enabled on system drive with TPM" },
+                  { id: "patch-age", title: "OS patches current", clauses: ["A.7.4(a)"], measure: "A.7", result: "pass", detail: "All critical patches applied within 14 days" },
+                  { id: "os-support", title: "OS within support lifecycle", clauses: ["A.2.4(f)", "A.7.4(a)"], measure: "A.2", result: "pass", detail: "Windows 11 23H2 — supported until Nov 2025" },
+                  { id: "software-inventory", title: "Software inventory maintained", clauses: ["A.2.4(a)", "A.2.4(d)"], measure: "A.2", result: "pass", detail: "Installed software list available via registry" },
+                  { id: "backup-task", title: "Backup scheduled and recent", clauses: ["A.8.4(a)", "A.8.4(d)"], measure: "A.8", result: "pass", detail: "Windows Backup task ran within last 7 days" },
+                ],
               }, null, 2);
               navigator.clipboard.writeText(sample).catch(() => {});
               setPaste(sample);
@@ -349,7 +361,7 @@ export default function ScanPage() {
 // ── Shared import panel (paste + file upload) ─────────────────────────────────
 
 function ImportPanel({
-  paste, onPasteChange, onPaste, onFile, fileRef, importing, imported, importError,
+  paste, onPasteChange, onPaste, onFile, fileRef, importing, imported, importError, importMessage,
 }: {
   paste: string;
   onPasteChange: (v: string) => void;
@@ -359,12 +371,13 @@ function ImportPanel({
   importing: boolean;
   imported: boolean;
   importError: string;
+  importMessage: string;
 }) {
   if (imported) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-emerald-700/30 bg-emerald-900/20 p-4 text-[13px] text-emerald-300">
         <span className="text-base">✓</span>
-        Device scan results imported — {Math.floor(Math.random() * 5 + 18)} clauses auto-populated.
+        {importMessage || "Device scan results imported — clauses auto-populated."}
       </div>
     );
   }
