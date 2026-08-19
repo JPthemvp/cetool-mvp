@@ -7,6 +7,7 @@ import { applicableClauses } from "@/lib/ce-framework";
 import { answerabilityOf } from "@/lib/answerability";
 import { buildResultRows, toCsv } from "@/lib/assessment";
 import { CSA_ELEARNING } from "@/lib/training/gophish";
+import Link from "next/link";
 import { generateIRPlan } from "@/lib/training/irplan";
 
 type WizardSection = "training" | "irplan" | "done";
@@ -144,7 +145,7 @@ export default function ReviewPage() {
   const rows = useMemo(() => buildResultRows(allAnswers, scope), [allAnswers, scope]);
 
   const blocking = rows.filter((r) => r.obligation === "shall" && r.answer === "no").length;
-  const completion = Math.round((rows.filter((r) => r.answer && r.answer !== "unsure").length / rows.length) * 100);
+  const completion = Math.round((rows.filter((r) => r.answer && r.answer !== "unsure" && r.answer !== "unanswered").length / rows.length) * 100);
   const certifiable = blocking === 0 && completion >= 90;
 
   // ── IR Plan download ──────────────────────────────────────────────────────
@@ -250,6 +251,59 @@ export default function ReviewPage() {
         </div>
       </Card>
 
+      {/* ── Clause pass/fail breakdown ──────────────────────────────────── */}
+      <Card className="p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-white">Clause results — pass / fail / unanswered</h2>
+        <p className="text-[12px] text-brand-100/60">
+          Rows sourced from the domain scan or device scan show automatically. Unanswered clauses need your input in the checklist below.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="border-b border-ink-700/40 text-left text-brand-300/70">
+                <th className="pb-2 pr-4 font-medium">Clause</th>
+                <th className="pb-2 pr-4 font-medium">Requirement (summary)</th>
+                <th className="pb-2 pr-4 font-medium">Source</th>
+                <th className="pb-2 font-medium">Result</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-ink-800/40">
+              {rows.map((r) => {
+                const tone =
+                  r.answer === "yes" ? "pass"
+                  : r.answer === "na" ? "na"
+                  : r.answer === "partial" ? "partial"
+                  : r.answer === "no" ? "fail"
+                  : r.answer === "unanswered" ? "unanswered"
+                  : "other";
+                const pillCls =
+                  tone === "pass" ? "bg-emerald-800/40 text-emerald-300"
+                  : tone === "na" ? "bg-ink-700/60 text-brand-300/60"
+                  : tone === "partial" ? "bg-amber-800/40 text-amber-300"
+                  : tone === "fail" ? "bg-red-800/40 text-red-300"
+                  : "bg-ink-800/60 text-brand-300/40";
+                const label =
+                  tone === "pass" ? "✓ Pass"
+                  : tone === "na" ? "N/A"
+                  : tone === "partial" ? "~ Partial"
+                  : tone === "fail" ? "✗ Fail"
+                  : "— Unanswered";
+                return (
+                  <tr key={r.clauseId} className="align-top">
+                    <td className="py-1.5 pr-4 font-mono text-brand-300 whitespace-nowrap">{r.clauseId}</td>
+                    <td className="py-1.5 pr-4 text-brand-100/70 leading-snug max-w-xs">{r.requirement?.slice(0, 80)}{r.requirement?.length > 80 ? "…" : ""}</td>
+                    <td className="py-1.5 pr-4 text-brand-300/50 whitespace-nowrap">{r.source === "scan" ? "🌐 scan" : r.source === "user" ? "👤 you" : "—"}</td>
+                    <td className="py-1.5">
+                      <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${pillCls}`}>{label}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
       {/* ── Human wizard ─────────────────────────────────────────────────── */}
       <Card className="p-6 space-y-5">
         <h2 className="text-base font-semibold text-white">
@@ -311,14 +365,12 @@ export default function ReviewPage() {
               <p className="text-[13px] font-semibold text-white">SG Cyber Safe Employee e-Learning</p>
               <p className="text-[11px] text-brand-300/60">Free · 15 minutes · Certificate provided · By CSA Singapore</p>
             </div>
-            <a
-              href={CSA_ELEARNING.url}
-              target="_blank"
-              rel="noreferrer"
+            <Link
+              href="/training"
               className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-brand-700/60 px-4 py-2 text-[12px] font-semibold text-brand-100 transition hover:bg-brand-600/60"
             >
-              Open e-learning ↗
-            </a>
+              Take the quiz →
+            </Link>
           </div>
           <div className="grid grid-cols-2 gap-2 text-[12px] text-brand-100/60">
             {CSA_ELEARNING.topics.map((t) => (

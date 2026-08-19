@@ -18,14 +18,14 @@ import { buildReport, reportFilename, reportToJson, reportToXlsx } from "@/lib/r
 
 // ── Email to Certification Body ──────────────────────────────────────────────
 
-// Source: https://www.csa.gov.sg/our-programmes/cybersecurity-certification/cyber-essentials/certification-bodies
+// Source: https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/how-to-get-certified/
+// Contact details sourced from each CB's public website. Verify on CSA website before contacting.
 const CERT_BODIES = [
-  { name: "CyberTrust Asia Pte Ltd",          email: "certbody@cybertrust-asia.com.sg",     website: "https://www.cybertrust-asia.com.sg" },
-  { name: "SAIQA Pte Ltd",                    email: "ce-assessment@saiqa.com.sg",          website: "https://www.saiqa.com.sg" },
-  { name: "Wizlynx Pte Ltd",                  email: "cemarks@wizlynx.com.sg",              website: "https://www.wizlynx.com" },
-  { name: "NCS Pte Ltd",                      email: "cyberessentials@ncs.com.sg",          website: "https://www.ncs.co" },
-  { name: "Bureau Veritas Singapore Pte Ltd", email: "sg.cyberessentials@bureauveritas.com", website: "https://www.bureauveritas.com.sg" },
-  { name: "TÜV SÜD PSB Pte Ltd",             email: "psb.cyberessentials@tuvsud.com",      website: "https://www.tuvsud.com/en-sg" },
+  { name: "ISOCert Pte Ltd",                                            email: "sales@isocert.com.sg",  website: "https://www.isocert.sg" },
+  { name: "exida Asia Pacific Pte Ltd",                                 email: "",                      website: "https://www.exida.com.sg/csa-cyber-essentials-certification/" },
+  { name: "SOCOTEC Certification International Singapore",              email: "",                      website: "https://www.socotec-certification-international.sg" },
+  { name: "Bureau Veritas Consumer Products Services Singapore Pte Ltd",email: "",                      website: "https://south-east-asia.bureauveritas.com" },
+  { name: "TÜV SÜD PSB Pte Ltd",                                       email: "",                      website: "https://www.tuvsud.com/en-sg" },
 ];
 
 function EmailToCertBody({
@@ -45,7 +45,7 @@ function EmailToCertBody({
   const completionPct = Math.round(readiness.completion);
   const criticalGaps = gaps.filter((g) => g.band === "critical").length;
 
-  const template = `To: ${selectedBody.email}
+  const template = `To: ${selectedBody.email || `[obtain email from ${selectedBody.website}]`}
 Subject: Cyber Essentials Mark — Assessment Submission — ${org.name || "[Organisation Name]"}
 
 Dear ${selectedBody.name} Assessment Team,

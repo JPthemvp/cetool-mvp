@@ -70,14 +70,14 @@ export default function ScanPage() {
           <p className="text-[13px] font-semibold text-brand-200">Scanner security assessment</p>
           <p className="text-[12px] text-brand-100/60 mt-0.5">
             The .exe and PowerShell tools below have been independently reviewed with Nikto, Nmap, and code analysis.
-            No network calls, no registry writes, no persistent changes.{" "}
+            No network calls, no registry writes, no persistent changes. View source on{" "}
             <a
-              href="https://claude.ai/code/artifact/9d9a9aeb-f44d-4d46-ade0-266caafe0473"
+              href="https://github.com/JPthemvp/cetool-mvp/tree/main/scanner"
               target="_blank"
               rel="noreferrer"
               className="text-brand-300 underline-offset-2 hover:underline"
             >
-              Read the full security report ↗
+              GitHub ↗
             </a>
           </p>
         </div>
@@ -291,18 +291,55 @@ export default function ScanPage() {
         </div>
       )}
 
+      {/* Sample JSON callout */}
+      <div className="rounded-xl border border-ink-700/40 bg-ink-900/30 p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] font-semibold text-brand-200">📋 Sample scan result — for testing</p>
+          <button
+            onClick={() => {
+              const sample = JSON.stringify({
+                hostname: "TEST-DEVICE-01",
+                scannedAt: new Date().toISOString(),
+                results: {
+                  antivirus: { installed: true, enabled: true, upToDate: true, product: "Windows Defender" },
+                  firewall: { enabled: true },
+                  diskEncryption: { enabled: true, type: "BitLocker" },
+                  autoUpdates: { enabled: true, lastCheck: "2026-08-18" },
+                  passwordPolicy: { minimumLength: 12, complexity: true, maxAge: 90 },
+                  screenLock: { enabled: true, timeoutMinutes: 5 },
+                  adminAccounts: { count: 1, namedAdmin: true },
+                },
+              }, null, 2);
+              navigator.clipboard.writeText(sample).catch(() => {});
+              setPaste(sample);
+            }}
+            className="rounded border border-ink-700/40 bg-ink-800/60 px-2 py-1 text-[11px] text-brand-300 hover:border-brand-500/40"
+          >
+            Copy &amp; paste sample
+          </button>
+        </div>
+        <p className="text-[11px] text-brand-300/50">
+          Paste this above to test the import flow without running the scanner.
+        </p>
+      </div>
+
       {/* Actions */}
-      <div className="flex flex-col gap-3">
-        {(imported) && (
-          <Button onClick={handleNext} className="w-full py-3.5 text-[15px]">
+      <div className="flex items-center gap-4">
+        {imported ? (
+          <Button onClick={handleNext} className="flex-1 py-3.5 text-[15px]">
             Next: Review auto-populated results →
           </Button>
+        ) : (
+          <p className="flex-1 rounded-lg border border-ink-700/40 bg-ink-900/30 px-4 py-3 text-[13px] text-brand-300/60">
+            Import device scan results above to continue.
+          </p>
         )}
         <button
           onClick={handleSkip}
-          className="text-[13px] text-brand-300/70 underline-offset-2 hover:text-brand-300 hover:underline"
+          className="shrink-0 rounded-lg border border-ink-700/30 px-3 py-2 text-[11px] text-brand-300/40 hover:border-ink-600/60 hover:text-brand-300/70"
+          title="Developer test bypass — skips scan requirement"
         >
-          Skip device scan — I&apos;ll answer device questions manually
+          Test bypass →
         </button>
       </div>
     </div>
