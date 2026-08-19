@@ -578,6 +578,22 @@ export default function ReviewPage() {
         </div>
       </Card>
 
+      {/* ── End Session ───────────────────────────────────────────────────── */}
+      <div className="border-t border-brand-700/30 pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-white">Done for now?</p>
+          <p className="text-[12px] text-brand-100/60 mt-0.5">
+            Return to home — your assessment progress is saved in this browser.
+          </p>
+        </div>
+        <button
+          onClick={() => router.push("/")}
+          className="shrink-0 rounded-lg border border-ink-600/60 bg-ink-900/60 px-4 py-2 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:text-white active:scale-[0.97]"
+        >
+          ← End session
+        </button>
+      </div>
+
       {/* ── Reset all ─────────────────────────────────────────────────────── */}
       <div className="border-t border-brand-700/30 pt-8">
         <div className="rounded-xl border border-red-800/30 bg-red-950/20 p-5">
