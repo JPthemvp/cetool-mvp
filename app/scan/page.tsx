@@ -305,21 +305,31 @@ export default function ScanPage() {
                 generated: new Date().toISOString(),
                 tool: "CE Readiness Tool — Sample",
                 findings: [
-                  { id: "defender", title: "Windows Defender / antivirus active", clauses: ["A.4.4(a)", "A.4.4(b)", "A.4.4(c)"], measure: "A.4", result: "pass", detail: "Windows Defender active, real-time protection on, definitions current" },
-                  { id: "firewall", title: "Host firewall enabled", clauses: ["A.4.4(e)"], measure: "A.4", result: "pass", detail: "Windows Firewall enabled on all network profiles" },
-                  { id: "autorun", title: "AutoRun disabled", clauses: ["A.6.4(c)", "A.4.4(a)"], measure: "A.6", result: "pass", detail: "AutoRun and AutoPlay disabled via Group Policy" },
-                  { id: "screen-lock", title: "Screen lock / idle timeout", clauses: ["A.6.4(i)"], measure: "A.6", result: "pass", detail: "Screen locks after 5 minutes of inactivity" },
-                  { id: "audit-logging", title: "Audit logging enabled", clauses: ["A.6.4(g)"], measure: "A.6", result: "pass", detail: "Security event audit logging is enabled" },
-                  { id: "tls-legacy", title: "Legacy TLS disabled", clauses: ["A.6.4(b)", "A.3.4(c)"], measure: "A.6", result: "pass", detail: "TLS 1.0 and 1.1 are disabled; TLS 1.2/1.3 in use" },
-                  { id: "smbv1", title: "SMBv1 disabled", clauses: ["A.6.4(b)"], measure: "A.6", result: "pass", detail: "SMBv1 protocol is disabled" },
-                  { id: "local-admins", title: "Local administrator accounts", clauses: ["A.5.4(d)", "A.5.4(f)"], measure: "A.5", result: "pass", detail: "Only 1 named administrator account; default Administrator disabled" },
-                  { id: "guest-account", title: "Guest account disabled", clauses: ["A.5.4(e)", "A.5.4(l)"], measure: "A.5", result: "pass", detail: "Guest account is disabled" },
-                  { id: "rdp-nla", title: "RDP with NLA required", clauses: ["A.5.4(o)", "A.6.4(a)"], measure: "A.5", result: "pass", detail: "Remote Desktop requires Network Level Authentication" },
-                  { id: "bitlocker", title: "Full-disk encryption (BitLocker)", clauses: ["A.3.4(c)"], measure: "A.3", result: "pass", detail: "BitLocker enabled on system drive with TPM" },
-                  { id: "patch-age", title: "OS patches current", clauses: ["A.7.4(a)"], measure: "A.7", result: "pass", detail: "All critical patches applied within 14 days" },
-                  { id: "os-support", title: "OS within support lifecycle", clauses: ["A.2.4(f)", "A.7.4(a)"], measure: "A.2", result: "pass", detail: "Windows 11 23H2 — supported until Nov 2025" },
-                  { id: "software-inventory", title: "Software inventory maintained", clauses: ["A.2.4(a)", "A.2.4(d)"], measure: "A.2", result: "pass", detail: "Installed software list available via registry" },
-                  { id: "backup-task", title: "Backup scheduled and recent", clauses: ["A.8.4(a)", "A.8.4(d)"], measure: "A.8", result: "pass", detail: "Windows Backup task ran within last 7 days" },
+                  { id: "defender",           title: "Windows Defender / antivirus active",              clauses: ["A.4.4(a)", "A.4.4(b)", "A.4.4(c)"],   measure: "A.4", result: "pass", detail: "Windows Defender active, real-time protection on, definitions current (0 days old)" },
+                  { id: "firewall",           title: "Host firewall enabled on all profiles",            clauses: ["A.4.4(e)"],                            measure: "A.4", result: "pass", detail: "Windows Firewall enabled on Domain, Private and Public profiles" },
+                  { id: "software-source",    title: "Software installation source control",             clauses: ["A.4.4(h)"],                            measure: "A.4", result: "pass", detail: "SmartScreen enabled; UAC set to always notify; AppLocker policy active" },
+                  { id: "software-supported", title: "Installed software within vendor support",         clauses: ["A.4.4(i)"],                            measure: "A.4", result: "pass", detail: "All major installed software within supported version ranges" },
+                  { id: "unique-accounts",    title: "User accounts are unique and named",               clauses: ["A.5.4(a)", "A.5.4(b)"],               measure: "A.5", result: "pass", detail: "3 local accounts, all individually named; no shared or generic accounts detected" },
+                  { id: "local-admins",       title: "Local administrator count",                        clauses: ["A.5.4(d)", "A.5.4(f)"],               measure: "A.5", result: "pass", detail: "1 named administrator account; Built-in Administrator is disabled" },
+                  { id: "guest-account",      title: "Guest account disabled",                           clauses: ["A.5.4(e)", "A.5.4(l)"],               measure: "A.5", result: "pass", detail: "Guest account: disabled" },
+                  { id: "password-policy",    title: "Password minimum length and complexity",           clauses: ["A.5.4(i)"],                            measure: "A.5", result: "pass", detail: "Minimum length: 14 characters; complexity: enabled; max age: 90 days" },
+                  { id: "account-lockout",    title: "Account lockout after failed attempts",            clauses: ["A.5.4(m)"],                            measure: "A.5", result: "pass", detail: "Account locks after 5 failed attempts; lockout duration: 30 minutes" },
+                  { id: "rdp-nla",            title: "Remote Desktop requires Network Level Auth",       clauses: ["A.5.4(o)", "A.6.4(a)"],               measure: "A.5", result: "pass", detail: "NLA enforced; RDP not internet-exposed (firewall checked)" },
+                  { id: "smbv1",              title: "SMBv1 disabled",                                   clauses: ["A.6.4(b)"],                            measure: "A.6", result: "pass", detail: "SMB1Protocol feature state: Disabled" },
+                  { id: "tls-legacy",         title: "TLS 1.0 and 1.1 disabled",                        clauses: ["A.6.4(b)", "A.3.4(c)"],               measure: "A.6", result: "pass", detail: "TLS 1.0/1.1 disabled for both client and server roles" },
+                  { id: "autorun",            title: "AutoRun and AutoPlay disabled",                    clauses: ["A.6.4(c)", "A.4.4(a)"],               measure: "A.6", result: "pass", detail: "NoDriveTypeAutoRun = 255 (all drives disabled)" },
+                  { id: "unnecessary-features", title: "Unnecessary Windows features removed",           clauses: ["A.6.4(f)"],                            measure: "A.6", result: "pass", detail: "No high-risk optional features (Telnet, TFTP, IIS) installed" },
+                  { id: "audit-logging",      title: "Audit logging enabled",                            clauses: ["A.6.4(g)"],                            measure: "A.6", result: "pass", detail: "Security event audit: Logon Success and Failure enabled" },
+                  { id: "screen-lock",        title: "Screen lock on idle",                              clauses: ["A.6.4(i)"],                            measure: "A.6", result: "pass", detail: "InactivityTimeoutSecs = 300 (5 minutes)" },
+                  { id: "patch-age",          title: "OS patches applied within 14 days",                clauses: ["A.7.4(a)"],                            measure: "A.7", result: "pass", detail: "Last update KB5034122 installed 6 days ago" },
+                  { id: "app-patches",        title: "Application patches current",                      clauses: ["A.7.4(c)"],                            measure: "A.7", result: "pass", detail: "Chrome, Office, Acrobat — all within latest supported versions" },
+                  { id: "auto-update",        title: "Automatic updates enabled",                        clauses: ["A.7.4(d)"],                            measure: "A.7", result: "pass", detail: "Windows Update: automatic download and install enabled" },
+                  { id: "hardware-inventory", title: "Hardware device class (this device)",              clauses: ["A.2.4(b)"],                            measure: "A.2", result: "pass", detail: "Device: Laptop — Dell Latitude 5540, Serial: ABCD1234" },
+                  { id: "os-support",         title: "OS within vendor support lifecycle",               clauses: ["A.2.4(f)", "A.7.4(a)"],               measure: "A.2", result: "pass", detail: "Windows 11 23H2 (build 22631) — supported through Nov 2025" },
+                  { id: "software-inventory", title: "Installed software inventory",                     clauses: ["A.2.4(a)", "A.2.4(d)", "A.2.4(j)"],  measure: "A.2", result: "pass", detail: "47 applications found; cross-referenced against approved list — 0 unauthorised" },
+                  { id: "bitlocker",          title: "Full-disk encryption (BitLocker)",                 clauses: ["A.3.4(c)"],                            measure: "A.3", result: "pass", detail: "BitLocker on C: — Protection: On, Volume: FullyEncrypted, TPM key protector active" },
+                  { id: "backup-task",        title: "Scheduled backup task present",                    clauses: ["A.8.4(a)", "A.8.4(d)"],               measure: "A.8", result: "pass", detail: "Task 'DailyBackup' last ran 18 Aug 2026 02:00 — status: Success" },
+                  { id: "backup-access",      title: "Backup destination access restricted",             clauses: ["A.8.4(f)"],                            measure: "A.8", result: "pass", detail: "Backup share ACL: only SYSTEM and BackupSvc account have write access" },
                 ],
               }, null, 2);
               navigator.clipboard.writeText(sample).catch(() => {});
@@ -331,7 +341,8 @@ export default function ScanPage() {
           </button>
         </div>
         <p className="text-[11px] text-brand-300/50">
-          Paste this above to test the import flow without running the scanner.
+          Covers all 25 scanner checks — auto-fills up to 34 clauses (~45%). The remaining clauses
+          (governance, training, policies) are answered in the next step via the review wizard.
         </p>
       </div>
 

@@ -21,10 +21,11 @@ import { buildReport, reportFilename, reportToJson, reportToXlsx } from "@/lib/r
 // Source: https://www.csa.gov.sg/our-programmes/support-for-enterprises/sg-cyber-safe-programme/cybersecurity-certification-for-organisations/how-to-get-certified/
 // Contact details sourced from each CB's public website. Verify on CSA website before contacting.
 const CERT_BODIES = [
-  { name: "Cybertrust Asia", email: "certbody@cybertrust-asia.com.sg",  website: "https://www.cybertrust-asia.com" },
-  { name: "SAIQA",           email: "ce-assessment@saiqa.com.sg",       website: "https://www.saiqa.com" },
-  { name: "Wizlynx",         email: "cemarks@wizlynx.com.sg",           website: "https://www.wizlynx.com" },
-  { name: "NCS",             email: "cyberessentials@ncs.com.sg",       website: "https://www.ncs.co" },
+  { name: "ISOCert Pte Ltd",                                             email: "sales@isocert.com.sg", website: "https://www.isocert.sg" },
+  { name: "exida Asia Pacific Pte Ltd",                                  email: "",                     website: "https://www.exida.com.sg/csa-cyber-essentials-certification/" },
+  { name: "SOCOTEC Certification International Singapore",               email: "",                     website: "https://www.socotec-certification-international.sg" },
+  { name: "Bureau Veritas Consumer Products Services Singapore Pte Ltd", email: "",                     website: "https://south-east-asia.bureauveritas.com" },
+  { name: "TÜV SÜD PSB Pte Ltd",                                        email: "",                     website: "https://www.tuvsud.com/en-sg" },
 ];
 
 function EmailToCertBody({

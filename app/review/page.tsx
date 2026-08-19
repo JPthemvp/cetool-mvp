@@ -550,8 +550,8 @@ export default function ReviewPage() {
           <div className="rounded-lg border border-emerald-700/30 bg-emerald-900/15 p-4 space-y-1.5">
             <p className="text-[13px] font-semibold text-emerald-300">✓ Report exported</p>
             <p className="text-[12px] text-brand-100/60">
-              Send the JSON or CSV to your chosen certification body. Certification bodies
-              in Singapore: Cybertrust Asia, SAIQA, Wizlynx, NCS.
+              Send the JSON or CSV to your chosen certification body. CSA-appointed CBs
+              in Singapore: ISOCert, exida Asia Pacific, SOCOTEC, Bureau Veritas, TÜV SÜD PSB.
             </p>
           </div>
         )}
@@ -561,14 +561,17 @@ export default function ReviewPage() {
           <p className="font-semibold text-brand-200 mb-2">Appointed certification bodies (Singapore)</p>
           <div className="space-y-1 text-brand-100/60">
             {[
-              ["Cybertrust Asia", "certbody@cybertrust-asia.com.sg"],
-              ["SAIQA", "ce-assessment@saiqa.com.sg"],
-              ["Wizlynx", "cemarks@wizlynx.com.sg"],
-              ["NCS", "cyberessentials@ncs.com.sg"],
+              ["ISOCert Pte Ltd", "sales@isocert.com.sg"],
+              ["exida Asia Pacific Pte Ltd", ""],
+              ["SOCOTEC Certification International Singapore", ""],
+              ["Bureau Veritas Consumer Products Services Singapore Pte Ltd", ""],
+              ["TÜV SÜD PSB Pte Ltd", ""],
             ].map(([name, email]) => (
-              <div key={name} className="flex justify-between">
-                <span>{name}</span>
-                <a href={`mailto:${email}`} className="text-brand-300 hover:underline">{email}</a>
+              <div key={name} className="flex justify-between gap-4">
+                <span className="shrink-0">{name}</span>
+                {email
+                  ? <a href={`mailto:${email}`} className="text-brand-300 hover:underline">{email}</a>
+                  : <span className="text-brand-300/40 italic">contact via website</span>}
               </div>
             ))}
           </div>
