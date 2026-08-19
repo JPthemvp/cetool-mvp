@@ -38,15 +38,20 @@ export default function StartPage() {
 
   function handleCorppass() {
     setCorppassBusy(true);
-    // In production: redirect to Corppass OIDC endpoint → MyInfo Business API
-    // returns ACRA-registered name, UEN, industry, and size automatically.
-    // For demo: marks the session as Corppass-authenticated; user still enters
-    // their own org details — nothing is pre-filled with dummy data.
+    // Simulates the Corppass OIDC → MyInfo Business → ACRA flow.
+    // In production this redirect returns the registered name, UEN, and
+    // SSIC-mapped sector automatically. Here we pre-fill realistic demo
+    // values so the experience matches what a real login would produce.
     setTimeout(() => {
-      setOrg({ onboardedVia: "corppass" });
+      setOrg({
+        onboardedVia: "corppass",
+        name: "Demo Enterprise Pte Ltd",
+        uen: "202312345A",
+        sector: "Information and Communications",
+      });
       setLoggedIn(true);
       setCorppassBusy(false);
-    }, 1200);
+    }, 1400);
   }
 
   // ── Domain scan ──────────────────────────────────────────────────────────
@@ -128,22 +133,26 @@ export default function StartPage() {
           <div className="space-y-3">
             <div className="flex items-center gap-2 rounded-lg border border-emerald-700/30 bg-emerald-900/15 px-4 py-3 text-[13px] text-emerald-300">
               <span className="text-base">✓</span>
-              Corppass session verified — enter your organisation details below.
+              Corppass session verified — ACRA details pre-filled below. Update if needed.
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">Registered Name</label>
+                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">
+                  Registered Name <span className="normal-case text-brand-200/40">(from ACRA)</span>
+                </label>
                 <input
-                  className="w-full rounded-lg border border-ink-700/60 bg-ink-900/60 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
+                  className="w-full rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
                   value={org.name}
                   placeholder="e.g. Tan Brothers Pte Ltd"
                   onChange={(e) => setOrg({ name: e.target.value })}
                 />
               </div>
               <div>
-                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">UEN</label>
+                <label className="block text-[10px] uppercase tracking-wide text-brand-300 mb-1">
+                  UEN <span className="normal-case text-brand-200/40">(from ACRA)</span>
+                </label>
                 <input
-                  className="w-full rounded-lg border border-ink-700/60 bg-ink-900/60 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
+                  className="w-full rounded-lg border border-emerald-700/40 bg-emerald-950/20 px-3 py-2 text-[13px] text-white placeholder-brand-300/30 focus:border-brand-500/60 focus:outline-none"
                   value={org.uen}
                   placeholder="e.g. 202312345A"
                   onChange={(e) => setOrg({ uen: e.target.value })}
@@ -151,7 +160,7 @@ export default function StartPage() {
               </div>
             </div>
             <p className="text-[11px] text-brand-200/50">
-              In production, ACRA fills these automatically from MyInfo Business. Enter your registered details above.
+              ⓘ Demo simulation — in production, Corppass retrieves these from ACRA via MyInfo Business automatically. You can edit before proceeding.
             </p>
           </div>
         )}
