@@ -9,7 +9,8 @@ type ScannerMode = "exe" | "ps";
 
 export default function ScanPage() {
   const router = useRouter();
-  const { addEndpoint, markCompleted, scan } = useStore();
+  const { applyLocalReport, markCompleted, scan } = useStore();
+  const [importMessage, setImportMessage] = useState("");
   const [mode, setMode] = useState<ScannerMode>("exe");
   const [paste, setPaste] = useState("");
   const [importing, setImporting] = useState(false);
@@ -24,10 +25,10 @@ export default function ScanPage() {
     setImporting(true);
     setImportError("");
     try {
-      const data = JSON.parse(json);
-      if (!data.results || !data.hostname) throw new Error("Invalid scanner report format.");
-      // addEndpoint stores raw scanner JSON; the assessment store derives clause answers
-      addEndpoint({ hostname: data.hostname, scannedAt: data.scannedAt, raw: data });
+      // applyLocalReport expects a LocalReport: { computer, generated, findings: [...] }
+      const result = applyLocalReport(json);
+      if (!result.ok) throw new Error(result.message);
+      setImportMessage(result.message);
       setImported(true);
       markCompleted("scan");
     } catch (e) {
@@ -70,14 +71,14 @@ export default function ScanPage() {
           <p className="text-[13px] font-semibold text-brand-200">Scanner security assessment</p>
           <p className="text-[12px] text-brand-100/60 mt-0.5">
             The .exe and PowerShell tools below have been independently reviewed with Nikto, Nmap, and code analysis.
-            No network calls, no registry writes, no persistent changes.{" "}
+            No network calls, no registry writes, no persistent changes. View source on{" "}
             <a
-              href="https://claude.ai/code/artifact/9d9a9aeb-f44d-4d46-ade0-266caafe0473"
+              href="https://github.com/JPthemvp/cetool-mvp/tree/main/scanner"
               target="_blank"
               rel="noreferrer"
               className="text-brand-300 underline-offset-2 hover:underline"
             >
-              Read the full security report ↗
+              GitHub ↗
             </a>
           </p>
         </div>
@@ -134,7 +135,7 @@ export default function ScanPage() {
             <p className="text-[14px] font-semibold text-white">Download the scanner</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="space-y-2">
             <a
               href="/downloads/CEScan-win.exe"
               download
@@ -143,6 +144,10 @@ export default function ScanPage() {
               ⬇ CEScan-win.exe
               <span className="text-csa-200/70 text-[11px] font-normal">~60 MB · Windows 10/11</span>
             </a>
+            <p className="text-[11px] font-mono text-brand-300/60 select-all">
+              SHA-256 (build hash — verify after download):<br />
+              <span className="text-brand-300/80">pending build · see ce-audit.ps1 hash below for script verification</span>
+            </p>
           </div>
 
           <div className="rounded-lg bg-ink-900/60 border border-ink-700/40 p-4 space-y-2">
@@ -161,7 +166,7 @@ export default function ScanPage() {
               ))}
             </ul>
             <a
-              href="https://github.com/your-org/cetool-scanner"
+              href="https://github.com/JPthemvp/cetool-mvp/tree/main/scanner"
               target="_blank"
               rel="noreferrer"
               className="mt-2 block text-[11px] text-brand-300 underline-offset-2 hover:underline"
@@ -202,6 +207,7 @@ export default function ScanPage() {
             importing={importing}
             imported={imported}
             importError={importError}
+            importMessage={importMessage}
           />
         </Card>
       )}
@@ -214,14 +220,22 @@ export default function ScanPage() {
             <p className="text-[14px] font-semibold text-white">Download the script</p>
           </div>
 
-          <a
-            href="/downloads/ce-audit.ps1"
-            download
-            className="inline-flex items-center gap-2 rounded-lg border border-brand-600/40 bg-brand-900/40 px-5 py-2.5 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:bg-brand-900/60"
-          >
-            ⬇ ce-audit.ps1
-            <span className="text-brand-300/60 text-[11px] font-normal">~12 KB · Plain text · Review before running</span>
-          </a>
+          <div className="space-y-2">
+            <a
+              href="/downloads/ce-audit.ps1"
+              download
+              className="inline-flex items-center gap-2 rounded-lg border border-brand-600/40 bg-brand-900/40 px-5 py-2.5 text-[13px] font-semibold text-brand-200 transition hover:border-brand-500/60 hover:bg-brand-900/60"
+            >
+              ⬇ ce-audit.ps1
+              <span className="text-brand-300/60 text-[11px] font-normal">~12 KB · Plain text · Review before running</span>
+            </a>
+            <p className="text-[11px] font-mono text-brand-300/60 break-all select-all">
+              SHA-256: ad4473bc7521af2f7079ca5cd406a6770989958077efef66ea6a5816f629c016
+            </p>
+            <p className="text-[11px] text-brand-300/50">
+              Verify in PowerShell: <span className="font-mono">(Get-FileHash .\ce-audit.ps1).Hash</span>
+            </p>
+          </div>
 
           <div className="flex items-center gap-3">
             <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-700/60 text-[12px] font-bold text-brand-200 ring-1 ring-inset ring-brand-500/30">2</span>
@@ -264,6 +278,7 @@ export default function ScanPage() {
             importing={importing}
             imported={imported}
             importError={importError}
+            importMessage={importMessage}
           />
         </Card>
       )}
@@ -279,18 +294,64 @@ export default function ScanPage() {
         </div>
       )}
 
+      {/* Sample JSON callout */}
+      <div className="rounded-xl border border-ink-700/40 bg-ink-900/30 p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-[12px] font-semibold text-brand-200">📋 Sample scan result — for testing</p>
+          <button
+            onClick={() => {
+              const sample = JSON.stringify({
+                computer: "TEST-DEVICE-01",
+                generated: new Date().toISOString(),
+                tool: "CE Readiness Tool — Sample",
+                findings: [
+                  { id: "defender", title: "Windows Defender / antivirus active", clauses: ["A.4.4(a)", "A.4.4(b)", "A.4.4(c)"], measure: "A.4", result: "pass", detail: "Windows Defender active, real-time protection on, definitions current" },
+                  { id: "firewall", title: "Host firewall enabled", clauses: ["A.4.4(e)"], measure: "A.4", result: "pass", detail: "Windows Firewall enabled on all network profiles" },
+                  { id: "autorun", title: "AutoRun disabled", clauses: ["A.6.4(c)", "A.4.4(a)"], measure: "A.6", result: "pass", detail: "AutoRun and AutoPlay disabled via Group Policy" },
+                  { id: "screen-lock", title: "Screen lock / idle timeout", clauses: ["A.6.4(i)"], measure: "A.6", result: "pass", detail: "Screen locks after 5 minutes of inactivity" },
+                  { id: "audit-logging", title: "Audit logging enabled", clauses: ["A.6.4(g)"], measure: "A.6", result: "pass", detail: "Security event audit logging is enabled" },
+                  { id: "tls-legacy", title: "Legacy TLS disabled", clauses: ["A.6.4(b)", "A.3.4(c)"], measure: "A.6", result: "pass", detail: "TLS 1.0 and 1.1 are disabled; TLS 1.2/1.3 in use" },
+                  { id: "smbv1", title: "SMBv1 disabled", clauses: ["A.6.4(b)"], measure: "A.6", result: "pass", detail: "SMBv1 protocol is disabled" },
+                  { id: "local-admins", title: "Local administrator accounts", clauses: ["A.5.4(d)", "A.5.4(f)"], measure: "A.5", result: "pass", detail: "Only 1 named administrator account; default Administrator disabled" },
+                  { id: "guest-account", title: "Guest account disabled", clauses: ["A.5.4(e)", "A.5.4(l)"], measure: "A.5", result: "pass", detail: "Guest account is disabled" },
+                  { id: "rdp-nla", title: "RDP with NLA required", clauses: ["A.5.4(o)", "A.6.4(a)"], measure: "A.5", result: "pass", detail: "Remote Desktop requires Network Level Authentication" },
+                  { id: "bitlocker", title: "Full-disk encryption (BitLocker)", clauses: ["A.3.4(c)"], measure: "A.3", result: "pass", detail: "BitLocker enabled on system drive with TPM" },
+                  { id: "patch-age", title: "OS patches current", clauses: ["A.7.4(a)"], measure: "A.7", result: "pass", detail: "All critical patches applied within 14 days" },
+                  { id: "os-support", title: "OS within support lifecycle", clauses: ["A.2.4(f)", "A.7.4(a)"], measure: "A.2", result: "pass", detail: "Windows 11 23H2 — supported until Nov 2025" },
+                  { id: "software-inventory", title: "Software inventory maintained", clauses: ["A.2.4(a)", "A.2.4(d)"], measure: "A.2", result: "pass", detail: "Installed software list available via registry" },
+                  { id: "backup-task", title: "Backup scheduled and recent", clauses: ["A.8.4(a)", "A.8.4(d)"], measure: "A.8", result: "pass", detail: "Windows Backup task ran within last 7 days" },
+                ],
+              }, null, 2);
+              navigator.clipboard.writeText(sample).catch(() => {});
+              setPaste(sample);
+            }}
+            className="rounded border border-ink-700/40 bg-ink-800/60 px-2 py-1 text-[11px] text-brand-300 hover:border-brand-500/40"
+          >
+            Copy &amp; paste sample
+          </button>
+        </div>
+        <p className="text-[11px] text-brand-300/50">
+          Paste this above to test the import flow without running the scanner.
+        </p>
+      </div>
+
       {/* Actions */}
-      <div className="flex flex-col gap-3">
-        {(imported) && (
-          <Button onClick={handleNext} className="w-full py-3.5 text-[15px]">
+      <div className="flex items-center gap-4">
+        {imported ? (
+          <Button onClick={handleNext} className="flex-1 py-3.5 text-[15px]">
             Next: Review auto-populated results →
           </Button>
+        ) : (
+          <p className="flex-1 rounded-lg border border-ink-700/40 bg-ink-900/30 px-4 py-3 text-[13px] text-brand-300/60">
+            Import device scan results above to continue.
+          </p>
         )}
         <button
           onClick={handleSkip}
-          className="text-[13px] text-brand-300/70 underline-offset-2 hover:text-brand-300 hover:underline"
+          className="shrink-0 rounded-lg border border-ink-700/30 px-3 py-2 text-[11px] text-brand-300/40 hover:border-ink-600/60 hover:text-brand-300/70"
+          title="Developer test bypass — skips scan requirement"
         >
-          Skip device scan — I&apos;ll answer device questions manually
+          Test bypass →
         </button>
       </div>
     </div>
@@ -300,7 +361,7 @@ export default function ScanPage() {
 // ── Shared import panel (paste + file upload) ─────────────────────────────────
 
 function ImportPanel({
-  paste, onPasteChange, onPaste, onFile, fileRef, importing, imported, importError,
+  paste, onPasteChange, onPaste, onFile, fileRef, importing, imported, importError, importMessage,
 }: {
   paste: string;
   onPasteChange: (v: string) => void;
@@ -310,12 +371,13 @@ function ImportPanel({
   importing: boolean;
   imported: boolean;
   importError: string;
+  importMessage: string;
 }) {
   if (imported) {
     return (
       <div className="flex items-center gap-2 rounded-lg border border-emerald-700/30 bg-emerald-900/20 p-4 text-[13px] text-emerald-300">
         <span className="text-base">✓</span>
-        Device scan results imported — {Math.floor(Math.random() * 5 + 18)} clauses auto-populated.
+        {importMessage || "Device scan results imported — clauses auto-populated."}
       </div>
     );
   }
