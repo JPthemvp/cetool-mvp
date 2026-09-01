@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cyber Hunters — CSA Cyber Essentials</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#05080f;font-family:'Segoe UI',system-ui,sans-serif;color:#fff;touch-action:none}
+
+/* ── LANDING ── */
+#landing{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(58,127,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(58,127,255,.04) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.glow-orb{position:fixed;border-radius:50%;filter:blur(80px);pointer-events:none;animation:drift 8s ease-in-out infinite alternate}
+.glow-orb.a{width:400px;height:400px;background:rgba(58,127,255,.12);top:-100px;left:-100px;animation-duration:9s}
+.glow-orb.b{width:300px;height:300px;background:rgba(58,255,154,.08);bottom:-80px;right:-80px;animation-duration:11s}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(40px,30px)}}
+
+.brand{text-align:center;margin-bottom:32px}
+.brand-icon{font-size:clamp(40px,8vw,64px);margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(58,127,255,.6));animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.brand-title{font-size:clamp(32px,7vw,56px);font-weight:900;background:linear-gradient(135deg,#3a7fff 0%,#00d4ff 50%,#3aff9a 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1px;line-height:1}
+.brand-sub{font-size:13px;letter-spacing:3px;text-transform:uppercase;opacity:.5;margin-top:6px}
+.brand-desc{font-size:15px;opacity:.65;margin-top:12px;max-width:480px;line-height:1.6;text-align:center}
+
+/* ── MODE CARDS ── */
+.mode-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;max-width:720px}
+.mode-card{flex:1;min-width:260px;max-width:340px;background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);border-radius:20px;padding:28px 24px;cursor:pointer;transition:.25s;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;text-align:center}
+.mode-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s;border-radius:18px}
+.mode-card.solo::before{background:radial-gradient(ellipse at 50% 0%,rgba(58,127,255,.15),transparent 70%)}
+.mode-card.multi::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,204,0,.12),transparent 70%)}
+.mode-card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.25)}
+.mode-card.solo:hover{border-color:rgba(58,127,255,.5);box-shadow:0 16px 40px rgba(58,127,255,.2)}
+.mode-card.multi:hover{border-color:rgba(255,204,0,.4);box-shadow:0 16px 40px rgba(255,204,0,.15)}
+.mode-card:hover::before{opacity:1}
+.card-icon{font-size:48px;margin-bottom:12px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+.card-title{font-size:22px;font-weight:800;margin-bottom:6px}
+.card-tag{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:10px}
+.solo .card-tag{background:rgba(58,127,255,.15);color:#3a7fff}
+.multi .card-tag{background:rgba(255,204,0,.15);color:#ffcc00}
+.card-desc{font-size:13px;opacity:.65;line-height:1.6;margin-bottom:16px}
+.card-features{list-style:none;text-align:left;width:100%;margin-bottom:20px}
+.card-features li{font-size:12px;opacity:.7;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px}
+.card-features li:last-child{border:none}
+.card-btn{display:block;width:100%;padding:12px;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;transition:.2s;letter-spacing:.3px}
+.solo .card-btn{background:linear-gradient(135deg,#3a7fff,#00d4ff);color:#fff}
+.multi .card-btn{background:linear-gradient(135deg,#ffcc00,#ff8a00);color:#000}
+.card-btn:hover{transform:scale(1.02);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+
+.footer-note{margin-top:20px;font-size:11px;opacity:.35;text-align:center}
+
+/* ── GAME FRAMES ── */
+#hunters-frame,#racers-frame{position:fixed;inset:0;z-index:50;display:none}
+#back-btn{position:fixed;top:12px;left:12px;z-index:200;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:7px 14px;font-size:12px;font-weight:700;cursor:pointer;backdrop-filter:blur(8px);transition:.2s;color:#fff}
+#back-btn:hover{background:rgba(255,255,255,.1)}
+#back-btn{display:none}
+</style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landing">
+  <div class="grid-bg"></div>
+  <div class="glow-orb a"></div>
+  <div class="glow-orb b"></div>
+
+  <div class="brand">
+    <div class="brand-icon">⚔️</div>
+    <div class="brand-title">Cyber Hunters</div>
+    <div class="brand-sub">CSA Cyber Essentials — AI Edition</div>
+    <div class="brand-desc">Master Singapore's 5 Cyber Essentials pillars through immersive gameplay. Fight cyber threats, answer real security questions, and become a Cyber Master.</div>
+  </div>
+
+  <div class="mode-cards">
+    <!-- SOLO -->
+    <div class="mode-card solo" onclick="launchMode('hunters')">
+      <div class="card-icon">🗺️</div>
+      <div class="card-title">Story Mode</div>
+      <div class="card-tag">SINGLE PLAYER</div>
+      <div class="card-desc">Explore 5 cyber zones, battle virus monsters in Pokémon-style encounters, and defeat bosses to earn pillar badges.</div>
+      <ul class="card-features">
+        <li>🗂️ 5 CE pillar zones to explore</li>
+        <li>⚔️ Real-time monster battles</li>
+        <li>📈 Level up system + XP</li>
+        <li>🎁 Gacha loot rewards</li>
+        <li>📱 Mobile D-pad controls</li>
+      </ul>
+      <button class="card-btn">▶ Play Story Mode</button>
+    </div>
+
+    <!-- MULTIPLAYER -->
+    <div class="mode-card multi" onclick="launchMode('racers')">
+      <div class="card-icon">🏎️</div>
+      <div class="card-title">Tournament Mode</div>
+      <div class="card-tag">MULTIPLAYER</div>
+      <div class="card-desc">Race against colleagues in real time. Hit hazard blocks to answer Cyber Essentials questions — correct answers give speed boosts!</div>
+      <ul class="card-features">
+        <li>🔗 Live rooms — share a 4-letter code</li>
+        <li>❓ Quiz hazards mid-race</li>
+        <li>⚡ Correct = speed boost</li>
+        <li>🏆 Live leaderboard + podium</li>
+        <li>🤖 Solo practice with AI bots</li>
+      </ul>
+      <button class="card-btn">🏁 Play Tournament</button>
+    </div>
+  </div>
+
+  <div class="footer-note">Powered by CSA Cyber Essentials · Built for Singapore SMEs · Questions sourced from CE AI Edition Facilitator Guide</div>
+</div>
+
+<!-- BACK BUTTON (shown during game) -->
+<button id="back-btn" onclick="goBack()">← Menu</button>
+
+<!-- GAME CONTAINERS (iframed for clean isolation) -->
+<div id="hunters-frame"></div>
+<div id="racers-frame"></div>
+
+<script>
+function launchMode(mode){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('back-btn').style.display='block';
+  const frame=document.getElementById(mode+'-frame');
+  frame.style.display='block';
+  if(!frame.dataset.loaded){
+    frame.dataset.loaded='1';
+    const iframe=document.createElement('iframe');
+    iframe.src=mode==='hunters'?'cyber-hunters.html':'cyber-racers.html';
+    iframe.style.cssText='width:100%;height:100%;border:none;display:block';
+    iframe.allow='fullscreen';
+    frame.appendChild(iframe);
+  }
+}
+function goBack(){
+  ['hunters','racers'].forEach(m=>{
+    document.getElementById(m+'-frame').style.display='none';
+  });
+  document.getElementById('back-btn').style.display='none';
+  document.getElementById('landing').style.display='flex';
+}
+</script>
+</body>
+</html>
