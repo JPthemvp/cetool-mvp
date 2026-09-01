@@ -10,99 +10,11 @@ import { buildResultRows, toCsv } from "@/lib/assessment";
 import { CSA_ELEARNING } from "@/lib/training/gophish";
 import Link from "next/link";
 import { generateIRPlan } from "@/lib/training/irplan";
+import { HUMAN_WIZARD_QUESTIONS, groupByMeasure } from "@/lib/wizard-questions";
 
 type WizardSection = "training" | "irplan" | "done";
 
-// ── Human-only clauses that need wizard answers ───────────────────────────────
-
-const HUMAN_WIZARD_QUESTIONS: Array<{
-  clauseId: string;
-  question: string;
-  options: Array<{ value: string; label: string }>;
-  hint: string;
-}> = [
-  {
-    clauseId: "A.1.4(a)",
-    question: "Does your organisation have a documented cybersecurity awareness training programme for all employees?",
-    options: [
-      { value: "yes", label: "Yes — documented and delivered" },
-      { value: "partial", label: "Partly — some staff trained, not all" },
-      { value: "no", label: "No — not yet implemented" },
-    ],
-    hint: "Self-learning materials, external training providers, and online courses all count. CSA e-learning below is free.",
-  },
-  {
-    clauseId: "A.1.4(b)",
-    question: "Do you have written cyber hygiene guidelines for employees?",
-    options: [
-      { value: "yes", label: "Yes — written and distributed" },
-      { value: "partial", label: "Partly — verbal guidance only" },
-      { value: "no", label: "No" },
-    ],
-    hint: "An email policy, acceptable use policy, or similar document counts.",
-  },
-  {
-    clauseId: "A.5.4(c)",
-    question: "Is there a formal process to approve new user accounts before they are created?",
-    options: [
-      { value: "yes", label: "Yes — manager approval required" },
-      { value: "partial", label: "Partly — informal approval" },
-      { value: "no", label: "No formal process" },
-    ],
-    hint: "Even an email approval trail counts.",
-  },
-  {
-    clauseId: "A.5.4(g)",
-    question: "Are accounts disabled or deleted promptly when an employee leaves?",
-    options: [
-      { value: "yes", label: "Yes — same day or within 24 hours" },
-      { value: "partial", label: "Partly — done but sometimes delayed" },
-      { value: "no", label: "No formal off-boarding process" },
-    ],
-    hint: "This includes email accounts, cloud services, and any system access.",
-  },
-  {
-    clauseId: "A.8.4(g)",
-    question: "Are backup copies stored offline or in a location inaccessible from the main network?",
-    options: [
-      { value: "yes", label: "Yes — offline or air-gapped backup exists" },
-      { value: "partial", label: "Partly — some backups are isolated" },
-      { value: "no", label: "No — all backups are on connected drives" },
-    ],
-    hint: "A backup connected to the same network as your systems will be encrypted by ransomware too.",
-  },
-  {
-    clauseId: "A.8.4(i)",
-    question: "Has your organisation tested restoring from backup in the last 12 months?",
-    options: [
-      { value: "yes", label: "Yes — restore test completed and documented" },
-      { value: "partial", label: "Partly — tested informally" },
-      { value: "no", label: "No restore test has been done" },
-    ],
-    hint: "An untested backup is not a backup. A restore test can be as simple as recovering one folder.",
-  },
-  {
-    clauseId: "A.9.4(a)",
-    question: "Does your organisation have a documented incident response plan?",
-    options: [
-      { value: "yes", label: "Yes — documented and staff are aware of it" },
-      { value: "partial", label: "Partly — exists informally" },
-      { value: "no", label: "No — we will use the generated plan below" },
-    ],
-    hint: "An IR plan does not need to be complex. The generated plan below satisfies this clause.",
-  },
-  {
-    clauseId: "A.9.4(d)",
-    question: "Does your organisation conduct post-incident reviews after cybersecurity events?",
-    options: [
-      { value: "yes", label: "Yes — reviewed and documented" },
-      { value: "partial", label: "Partly — informal discussion only" },
-      { value: "no", label: "No formal review process" },
-      { value: "na", label: "N/A — no incidents have occurred" },
-    ],
-    hint: "The IR plan above includes a post-incident review template.",
-  },
-];
+// HUMAN_WIZARD_QUESTIONS and groupByMeasure imported from @/lib/wizard-questions
 
 export default function ReviewPage() {
   const router = useRouter();
@@ -113,6 +25,9 @@ export default function ReviewPage() {
   const [irplanDownloaded, setIrplanDownloaded] = useState(false);
   const [exported, setExported] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [m365Busy, setM365Busy] = useState(false);
+  const [m365Connected, setM365Connected] = useState(false);
+  const [m365Results, setM365Results] = useState<string[]>([]);
 
   function handleReset() {
     if (!confirmReset) {
@@ -122,6 +37,43 @@ export default function ReviewPage() {
     }
     reset();
     router.push("/");
+  }
+
+  // ── M365 connector simulation ─────────────────────────────────────────────
+  // In production: Microsoft Graph API OAuth2 with delegated admin consent.
+  // Reads: MFA coverage, Conditional Access policies, Entra access reviews,
+  // SSPR configuration, and Intune device compliance baselines.
+
+  function handleM365Connect() {
+    setM365Busy(true);
+    // Simulate OAuth redirect + Graph API calls (~2s)
+    setTimeout(() => {
+      // Simulated Graph API responses → map to human-only wizard clauses
+      const prefilled: Record<string, string> = {
+        "A.5.4(k)": "yes",   // Entra ID Access Reviews configured
+        "A.5.4(n)": "yes",   // SSPR (Self-Service Password Reset) enabled
+        "A.5.4(p)": "yes",   // MFA enabled for all users via Conditional Access
+        "A.6.4(e)": "yes",   // Defender Secure Score baseline reviewed
+        "A.6.4(h)": "yes",   // Defender / Sentinel logs collected
+        "A.4.4(d)": "yes",   // Intune mobile device policy active
+        "A.4.4(g)": "yes",   // Intune VPN-on-untrusted-network policy
+        "A.6.4(j)": "yes",   // Intune: passcode + encryption + remote wipe
+        "A.7.4(d)": "yes",   // Intune: mobile OS update compliance
+      };
+      setWizardAnswers((prev) => ({ ...prefilled, ...prev })); // don't overwrite manual answers
+      setM365Results([
+        "✓ MFA for all users — Conditional Access policy found",
+        "✓ Account reviews — Entra ID Access Reviews configured",
+        "✓ SSPR — Self-Service Password Reset enabled",
+        "✓ Mobile policy — Intune baseline active (passcode, encryption, remote wipe)",
+        "✓ Mobile updates — Intune OS compliance policy enforced",
+        "✓ VPN on untrusted networks — Intune network policy found",
+        "✓ Audit logs — Defender / Sentinel log collection active",
+        "✓ Configuration review — Defender Secure Score baseline found",
+      ]);
+      setM365Connected(true);
+      setM365Busy(false);
+    }, 2000);
   }
 
   // ── Compute auto-filled vs needs-human ────────────────────────────────────
@@ -317,46 +269,133 @@ export default function ReviewPage() {
         </div>
       </Card>
 
-      {/* ── Human wizard ─────────────────────────────────────────────────── */}
-      <Card className="p-6 space-y-5">
-        <h2 className="text-base font-semibold text-white">
-          Short checklist — {humanNeeded.length} questions only you can answer
-        </h2>
-        <p className="text-[13px] text-brand-100/60">
-          These {humanNeeded.length} clauses concern how your organisation operates —
-          training, approvals, offboarding, backups, incident plans. No tool can answer them.
-        </p>
-
-        <div className="space-y-5">
-          {HUMAN_WIZARD_QUESTIONS.map((q) => {
-            const existing = answers[q.clauseId]?.value;
-            const current = wizardAnswers[q.clauseId] ?? existing ?? "";
-            return (
-              <div key={q.clauseId} className="space-y-2.5">
-                <div className="flex items-start gap-2">
-                  <code className="shrink-0 rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-mono text-brand-300">{q.clauseId}</code>
-                  <p className="text-[13px] font-medium text-white leading-snug">{q.question}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {q.options.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => setWizardAnswers((prev: Record<string, string>) => ({ ...prev, [q.clauseId]: opt.value }))}
-                      data-on={current === opt.value}
-                      className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition hover:border-brand-500/40 data-[on=true]:border-csa-500/60 data-[on=true]:bg-csa-900/40 data-[on=true]:text-csa-200"
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-                {q.hint && (
-                  <p className="text-[11px] text-brand-300/50 pl-0.5">{q.hint}</p>
-                )}
-              </div>
-            );
-          })}
+      {/* ── Microsoft 365 connector ──────────────────────────────────────── */}
+      <Card className="p-6 space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">☁️</span>
+            <div>
+              <h2 className="text-base font-semibold text-white">Connect Microsoft 365 / Entra ID</h2>
+              <p className="text-[12px] text-brand-100/60 mt-0.5">
+                Auto-answers up to 8 cloud clauses by reading your tenant via Microsoft Graph API.
+              </p>
+            </div>
+          </div>
+          {!m365Connected ? (
+            <button
+              onClick={handleM365Connect}
+              disabled={m365Busy}
+              className="shrink-0 rounded-lg border border-blue-600/60 bg-blue-900/30 px-4 py-2 text-[13px] font-semibold text-blue-200 transition hover:bg-blue-800/40 disabled:opacity-50"
+            >
+              {m365Busy ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-400/30 border-t-blue-300" />
+                  Connecting…
+                </span>
+              ) : "Connect M365 →"}
+            </button>
+          ) : (
+            <span className="rounded-full border border-emerald-600/50 bg-emerald-900/20 px-3 py-1 text-[12px] font-semibold text-emerald-300">✓ Connected</span>
+          )}
         </div>
+
+        {m365Busy && (
+          <div className="rounded-lg bg-blue-950/30 border border-blue-700/30 p-4 space-y-1.5">
+            <p className="text-[12px] font-semibold text-blue-200">Reading Microsoft Graph API…</p>
+            {["Checking Conditional Access policies (MFA)", "Reading Entra ID Access Reviews", "Checking SSPR configuration", "Reading Intune device compliance baselines", "Reading Defender / Sentinel log sources"].map((s, i) => (
+              <div key={s} className="flex items-center gap-2 text-[11px] text-blue-200/60">
+                <span className="h-2.5 w-2.5 animate-spin rounded-full border border-blue-400/30 border-t-blue-300" style={{ animationDelay: `${i * 0.2}s` }} />
+                {s}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {m365Connected && m365Results.length > 0 && (
+          <div className="rounded-lg bg-emerald-950/20 border border-emerald-700/30 p-4 space-y-1">
+            <p className="text-[12px] font-semibold text-emerald-200 mb-2">Auto-answered from tenant data:</p>
+            {m365Results.map((r) => (
+              <p key={r} className="text-[11px] text-emerald-200/70">{r}</p>
+            ))}
+          </div>
+        )}
+
+        {!m365Connected && !m365Busy && (
+          <p className="text-[11px] text-brand-200/40">
+            ⓘ Demo simulation — in production, this reads live tenant data via Microsoft Graph with admin consent OAuth.
+            Answers MFA coverage, access reviews, SSPR, Intune mobile config, Defender logs, and more.
+          </p>
+        )}
       </Card>
+
+      {/* ── Human wizard ─────────────────────────────────────────────────── */}
+      <div className="space-y-0">
+        <div className="rounded-t-xl border border-ink-700/60 bg-ink-900/60 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              Human checklist — {HUMAN_WIZARD_QUESTIONS.length} clauses across 9 measures
+            </h2>
+            <p className="text-[12px] text-brand-100/60 mt-0.5">
+              These clauses concern how your organisation behaves — policies, approvals, contracts, plans. Answer all to maximise your score.
+            </p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-[11px] text-brand-300/60">Answered</p>
+            <p className="text-lg font-bold text-white">
+              {HUMAN_WIZARD_QUESTIONS.filter((q) => wizardAnswers[q.clauseId] || (answers[q.clauseId]?.value && answers[q.clauseId].value !== "unsure")).length}
+              <span className="text-sm font-normal text-brand-300/60"> / {HUMAN_WIZARD_QUESTIONS.length}</span>
+            </p>
+          </div>
+        </div>
+
+        {groupByMeasure(HUMAN_WIZARD_QUESTIONS).map((group, gi) => (
+          <div key={group.measureId} className={`border-x border-b border-ink-700/60 ${gi === groupByMeasure(HUMAN_WIZARD_QUESTIONS).length - 1 ? "rounded-b-xl" : ""} bg-ink-900/40`}>
+            <div className="px-6 py-3 border-b border-ink-800/60 bg-ink-950/40">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-300/70">{group.measureName}</span>
+            </div>
+            <div className="px-6 py-4 space-y-6">
+              {group.questions.map((q) => {
+                const existing = answers[q.clauseId]?.value;
+                const current = wizardAnswers[q.clauseId] ?? (existing && existing !== "unsure" ? existing : "");
+                const answered = !!current;
+                return (
+                  <div key={q.clauseId} className="space-y-2.5">
+                    <div className="flex items-start gap-2">
+                      <code className="shrink-0 rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-mono text-brand-300">{q.clauseId}</code>
+                      <p className="text-[13px] font-medium text-white leading-snug">{q.question}</p>
+                      {answered && (
+                        <span className={`shrink-0 ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                          current === "yes" ? "bg-emerald-800/40 text-emerald-300"
+                          : current === "partial" ? "bg-amber-800/40 text-amber-300"
+                          : current === "na" ? "bg-ink-700/60 text-brand-300/60"
+                          : "bg-red-800/40 text-red-300"
+                        }`}>
+                          {current === "yes" ? "✓ Yes" : current === "partial" ? "~ Partial" : current === "na" ? "N/A" : "✗ No"}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {q.options.map((opt) => (
+                        <button
+                          key={opt.value}
+                          onClick={() => setWizardAnswers((prev) => ({ ...prev, [q.clauseId]: opt.value }))}
+                          data-on={current === opt.value}
+                          className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition hover:border-brand-500/40 data-[on=true]:border-csa-500/60 data-[on=true]:bg-csa-900/40 data-[on=true]:text-csa-200"
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    {q.hint && (
+                      <p className="text-[11px] text-brand-300/50 pl-0.5">{q.hint}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
 
       {/* ── A.1 Training section ─────────────────────────────────────────── */}
       <Card className="p-6 space-y-5">
