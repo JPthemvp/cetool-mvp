@@ -21,6 +21,8 @@ export interface WizardQuestion {
   clauseId: string;
   measureId: string;
   measureName: string;
+  /** "shall" = required for certification; "should" = recommended, not a fail */
+  obligation: "shall" | "should";
   question: string;
   options: Array<{ value: string; label: string }>;
   hint: string;
@@ -45,6 +47,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.1.4(a)",
     measureId: "A.1",
     measureName: "A.1 · People",
+    obligation: "shall",
     question:
       "Does every employee receive cybersecurity awareness and data protection training?",
     options: [
@@ -58,6 +61,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.1.4(b)",
     measureId: "A.1",
     measureName: "A.1 · People",
+    obligation: "shall",
     question: "Do you have written cyber hygiene guidelines that staff follow day-to-day?",
     options: YES_PARTIAL_NO,
     hint: "An email policy, acceptable use policy, or similar document counts.",
@@ -66,6 +70,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.1.4(c)",
     measureId: "A.1",
     measureName: "A.1 · People",
+    obligation: "should",
     question:
       "Do your guidelines cover phishing/deepfakes, MFA, BYOD, data handling, remote work, and how to report an incident?",
     options: YES_PARTIAL_NO,
@@ -75,6 +80,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.1.4(d)",
     measureId: "A.1",
     measureName: "A.1 · People",
+    obligation: "should",
     question: "Is training tailored for leadership, general staff, and personal-data handlers separately?",
     options: [
       { value: "yes", label: "Yes — role-based training in place" },
@@ -87,6 +93,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.1.4(e)",
     measureId: "A.1",
     measureName: "A.1 · People",
+    obligation: "should",
     question: "Is cybersecurity awareness training refreshed at least once a year?",
     options: YES_PARTIAL_NO,
     hint: "A dated completion record covering two consecutive years is the evidence an assessor expects.",
@@ -97,6 +104,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(c)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "should",
     question: "Does each hardware record in your inventory show owner, location, and support/EOS status?",
     options: YES_PARTIAL_NO,
     hint: "Owner, location and end-of-support date are the three columns assessors look for.",
@@ -105,6 +113,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(e)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "should",
     question: "Is the asset inventory reviewed on a regular schedule?",
     options: YES_PARTIAL_NO,
     hint: "Quarterly is good practice. Show a review log with dates and the reviewer's name.",
@@ -113,6 +122,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(g)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "shall",
     question:
       "For any end-of-support asset you must keep, are compensating controls in place and the risk formally documented?",
     options: [
@@ -125,6 +135,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(h)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "shall",
     question: "Is there an approval step before new hardware or software enters the environment?",
     options: YES_PARTIAL_NO,
     hint: "An email approval trail or a simple request form both satisfy this.",
@@ -133,6 +144,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(i)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "should",
     question: "Does the inventory record the date each asset was approved?",
     options: YES_PARTIAL_NO,
     hint: "A single 'date approved' column in your spreadsheet is enough.",
@@ -141,6 +153,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(k)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "shall",
     question: "Is data securely wiped or destroyed from devices before they are disposed of?",
     options: YES_PARTIAL_NO,
     hint: "A documented wipe procedure or third-party destruction certificate is the evidence.",
@@ -149,6 +162,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.2.4(l)",
     measureId: "A.2",
     measureName: "A.2 · Hardware & Software",
+    obligation: "should",
     question: "Are all disposals logged and removed from the inventory?",
     options: YES_PARTIAL_NO,
     hint: "A disposal log tied to inventory entries satisfies this.",
@@ -159,6 +173,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.3.4(a)",
     measureId: "A.3",
     measureName: "A.3 · Data",
+    obligation: "shall",
     question: "Do you have an inventory of your business-critical data and where it lives?",
     options: YES_PARTIAL_NO,
     hint: "A spreadsheet listing data type, storage location, and data owner is the minimum.",
@@ -167,6 +182,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.3.4(b)",
     measureId: "A.3",
     measureName: "A.3 · Data",
+    obligation: "should",
     question: "Is the data inventory reviewed at least once a year?",
     options: YES_PARTIAL_NO,
     hint: "Show a dated review record. Annual is the minimum; quarterly when the data landscape changes frequently.",
@@ -175,6 +191,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.3.4(d)",
     measureId: "A.3",
     measureName: "A.3 · Data",
+    obligation: "shall",
     question: "Are there controls preventing staff from moving critical data to personal accounts or removable media?",
     options: YES_PARTIAL_NO,
     hint: "DLP policies, USB restrictions, or a documented policy enforced with technical controls all count.",
@@ -183,6 +200,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.3.4(e)",
     measureId: "A.3",
     measureName: "A.3 · Data",
+    obligation: "shall",
     question: "Is storage media securely destroyed or wiped before it is disposed of?",
     options: YES_PARTIAL_NO,
     hint: "Hard drives, USB sticks, and printed documents with sensitive data all fall under this clause.",
@@ -193,6 +211,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.4.4(d)",
     measureId: "A.4",
     measureName: "A.4 · Malware Protection",
+    obligation: "shall",
     question: "Are company-issued mobile devices protected against malware?",
     options: [
       ...YES_PARTIAL_NO,
@@ -204,6 +223,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.4.4(f)",
     measureId: "A.4",
     measureName: "A.4 · Malware Protection",
+    obligation: "should",
     question: "Are firewall rules reviewed on a schedule?",
     options: YES_PARTIAL_NO,
     hint: "A firewall review log with dates satisfies this. Annual is the minimum.",
@@ -212,6 +232,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.4.4(g)",
     measureId: "A.4",
     measureName: "A.4 · Malware Protection",
+    obligation: "shall",
     question: "Are mobile devices protected when on untrusted networks (e.g. public Wi-Fi)?",
     options: [
       ...YES_PARTIAL_NO,
@@ -223,6 +244,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.4.4(j)",
     measureId: "A.4",
     measureName: "A.4 · Malware Protection",
+    obligation: "shall",
     question: "Do all staff know how to report a suspected malware infection or suspicious file?",
     options: YES_PARTIAL_NO,
     hint: "A reporting procedure communicated to staff — even an email address and a one-liner in the guidelines — satisfies this.",
@@ -233,6 +255,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(c)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Is access approved by a manager or system owner before it is granted?",
     options: YES_PARTIAL_NO,
     hint: "An email approval trail counts. Joiner forms with a manager sign-off are the standard.",
@@ -241,6 +264,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(e)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Are accounts disabled or deleted promptly when someone leaves or changes role?",
     options: [
       { value: "yes", label: "Yes — same day or within 24 hours" },
@@ -253,6 +277,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(g)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Is vendor and contractor access limited to what is needed and time-bounded?",
     options: YES_PARTIAL_NO,
     hint: "A third-party access register with start and expiry dates is the evidence assessors look for.",
@@ -261,6 +286,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(h)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Do vendor contracts or agreements set out their security responsibilities?",
     options: YES_PARTIAL_NO,
     hint: "Contract clauses, vendor security agreements, or a supplier security schedule all satisfy this.",
@@ -269,6 +295,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(j)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Is physical access to server rooms and network equipment restricted?",
     options: [
       ...YES_PARTIAL_NO,
@@ -280,6 +307,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(k)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "should",
     question: "Are user accounts reviewed periodically to confirm access is still appropriate?",
     options: YES_PARTIAL_NO,
     hint: "Access review reports with dates and outcomes. Microsoft Entra ID Access Reviews automate this if you use M365.",
@@ -288,6 +316,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(l)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Have default passwords been changed on every device, including routers, switches and IoT?",
     options: YES_PARTIAL_NO,
     hint: "A build checklist requiring credential change, or spot-check records, are the evidence.",
@@ -296,6 +325,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(n)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "shall",
     question: "Is there a process to force password resets immediately after a suspected account compromise?",
     options: YES_PARTIAL_NO,
     hint: "The incident procedure should include credential reset as a step. SSPR in M365 automates this.",
@@ -304,6 +334,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.5.4(p)",
     measureId: "A.5",
     measureName: "A.5 · Access Control",
+    obligation: "should",
     question: "Is MFA enabled for all staff, not just admins?",
     options: YES_PARTIAL_NO,
     hint: "This is a 'should' (recommendation). M365 Conditional Access can enforce MFA for all users.",
@@ -314,6 +345,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.6.4(d)",
     measureId: "A.6",
     measureName: "A.6 · Secure Configuration",
+    obligation: "shall",
     question: "Does your IT vendor or managed service provider apply secure configuration on your behalf?",
     options: [
       ...YES_PARTIAL_NO,
@@ -325,6 +357,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.6.4(e)",
     measureId: "A.6",
     measureName: "A.6 · Secure Configuration",
+    obligation: "should",
     question: "Are system configurations reviewed periodically for drift from the secure baseline?",
     options: YES_PARTIAL_NO,
     hint: "A configuration review log with dates satisfies this. Tools like CIS-CAT or Defender Endpoint Secure Score can automate it.",
@@ -333,6 +366,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.6.4(h)",
     measureId: "A.6",
     measureName: "A.6 · Secure Configuration",
+    obligation: "should",
     question: "Are additional logs kept that would help investigate a security incident?",
     options: YES_PARTIAL_NO,
     hint: "Web proxy, email gateway, and VPN logs are examples. A list of log sources collected satisfies this.",
@@ -343,6 +377,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.7.4(b)",
     measureId: "A.7",
     measureName: "A.7 · Updates",
+    obligation: "should",
     question: "Are updates tested for compatibility before being deployed organisation-wide?",
     options: [
       ...YES_PARTIAL_NO,
@@ -356,6 +391,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(b)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "shall",
     question: "Are critical systems backed up often enough to match your recovery needs (RPO)?",
     options: [
       { value: "yes", label: "Yes — backup frequency matches our RPO" },
@@ -368,6 +404,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(c)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "shall",
     question: "Is there a defined backup approach for non-critical systems (not just critical data)?",
     options: YES_PARTIAL_NO,
     hint: "Even 'restore from scratch using the build runbook' is a valid approach if documented.",
@@ -376,6 +413,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(e)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "shall",
     question: "Are server configurations and system state backed up, not just data files?",
     options: [
       ...YES_PARTIAL_NO,
@@ -387,6 +425,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(g)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "shall",
     question: "Is at least one backup copy kept offline or otherwise isolated from your production network?",
     options: YES_PARTIAL_NO,
     hint: "A backup connected to the same network as your systems can be encrypted by ransomware too. Offline, immutable, or air-gapped copies are the standard.",
@@ -395,6 +434,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(h)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "should",
     question: "Are backups run at least weekly?",
     options: YES_PARTIAL_NO,
     hint: "Daily is strongly recommended. Backup logs showing frequency are the evidence.",
@@ -403,6 +443,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.8.4(i)",
     measureId: "A.8",
     measureName: "A.8 · Backup",
+    obligation: "should",
     question: "Have you tested restoring from backup in the last 12 months, and did it succeed?",
     options: [
       { value: "yes", label: "Yes — restore tested and documented" },
@@ -417,6 +458,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.9.4(a)",
     measureId: "A.9",
     measureName: "A.9 · Incident Response",
+    obligation: "shall",
     question: "Do you have a written incident response plan naming who does what?",
     options: [
       { value: "yes", label: "Yes — documented and staff are aware of it" },
@@ -429,6 +471,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.9.4(b)",
     measureId: "A.9",
     measureName: "A.9 · Incident Response",
+    obligation: "shall",
     question: "Do the relevant staff know the plan exists and what their role is in an incident?",
     options: YES_PARTIAL_NO,
     hint: "A distribution record, a briefing attendance list, or even an email confirming receipt satisfies this.",
@@ -437,6 +480,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.9.4(c)",
     measureId: "A.9",
     measureName: "A.9 · Incident Response",
+    obligation: "should",
     question: "When an incident occurs, do you review what happened and update the plan accordingly?",
     options: [
       { value: "yes", label: "Yes — reviewed and documented" },
@@ -450,6 +494,7 @@ export const HUMAN_WIZARD_QUESTIONS: WizardQuestion[] = [
     clauseId: "A.9.4(d)",
     measureId: "A.9",
     measureName: "A.9 · Incident Response",
+    obligation: "should",
     question: "Have you run a tabletop exercise or drill of the incident response plan?",
     options: [
       { value: "yes", label: "Yes — exercise completed and documented" },

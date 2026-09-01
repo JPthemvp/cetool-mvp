@@ -109,9 +109,17 @@ export default function ReviewPage() {
 
   const rows = useMemo(() => buildResultRows(allAnswers, scope), [allAnswers, scope]);
 
-  const blocking = rows.filter((r) => r.obligation === "shall" && r.answer === "no").length;
-  const completion = Math.round((rows.filter((r) => r.answer && r.answer !== "unsure" && r.answer !== "unanswered").length / rows.length) * 100);
-  const certifiable = blocking === 0 && completion >= 90;
+  // ── Certification is determined by "shall" clauses only ─────────────────
+  // "should" clauses are recommendations — an assessor notes them but
+  // cannot fail you on them. Score and certifiable state use shall rows only.
+  const shallRows = rows.filter((r) => r.obligation === "shall");
+  const shouldRows = rows.filter((r) => r.obligation === "should");
+
+  const blocking = shallRows.filter((r) => r.answer === "no").length;
+  const shallAnswered = shallRows.filter((r) => r.answer && r.answer !== "unsure" && r.answer !== "unanswered").length;
+  const completion = Math.round((shallAnswered / shallRows.length) * 100);
+  // Certifiable: every "shall" clause answered and none are "no"
+  const certifiable = blocking === 0 && shallAnswered === shallRows.length;
 
   // ── IR Plan download ──────────────────────────────────────────────────────
 
@@ -179,17 +187,23 @@ export default function ReviewPage() {
 
       {/* ── Score summary ────────────────────────────────────────────────── */}
       <Card className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-white">Assessment summary</h2>
+        <div className="flex items-center justify-between mb-1">
+          <div>
+            <h2 className="text-base font-semibold text-white">Required clauses (shall)</h2>
+            <p className="text-[11px] text-brand-100/50 mt-0.5">
+              Certification is decided by the {shallRows.length} required clauses only.
+              The {shouldRows.length} recommended clauses are shown separately below.
+            </p>
+          </div>
           <Pill tone={certifiable ? "good" : blocking > 0 ? "bad" : "warn"}>
-          {certifiable ? "Likely certifiable" : blocking > 0 ? `${blocking} blocking gap${blocking !== 1 ? "s" : ""}` : "In progress"}
-        </Pill>
+            {certifiable ? "✓ Likely certifiable" : blocking > 0 ? `${blocking} blocking gap${blocking !== 1 ? "s" : ""}` : "In progress"}
+          </Pill>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
-          <Stat label="Completion" value={`${completion}%`} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5 mt-4">
+          <Stat label="Required answered" value={`${shallAnswered} / ${shallRows.length}`} />
           <Stat label="Auto-filled" value={`${autoFilledCount} clauses`} />
           <Stat label="Blocking gaps" value={blocking} />
-          <Stat label="Clauses assessed" value={rows.length} />
+          <Stat label="Certification progress" value={`${completion}%`} />
         </div>
         <Meter value={completion} tone={certifiable ? "good" : "brand"} />
       </Card>
@@ -328,74 +342,101 @@ export default function ReviewPage() {
         )}
       </Card>
 
-      {/* ── Human wizard ─────────────────────────────────────────────────── */}
-      <div className="space-y-0">
-        <div className="rounded-t-xl border border-ink-700/60 bg-ink-900/60 px-6 py-4 flex items-center justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-white">
-              Human checklist — {HUMAN_WIZARD_QUESTIONS.length} clauses across 9 measures
-            </h2>
-            <p className="text-[12px] text-brand-100/60 mt-0.5">
-              These clauses concern how your organisation behaves — policies, approvals, contracts, plans. Answer all to maximise your score.
-            </p>
-          </div>
-          <div className="shrink-0 text-right">
-            <p className="text-[11px] text-brand-300/60">Answered</p>
-            <p className="text-lg font-bold text-white">
-              {HUMAN_WIZARD_QUESTIONS.filter((q) => wizardAnswers[q.clauseId] || (answers[q.clauseId]?.value && answers[q.clauseId].value !== "unsure")).length}
-              <span className="text-sm font-normal text-brand-300/60"> / {HUMAN_WIZARD_QUESTIONS.length}</span>
-            </p>
-          </div>
-        </div>
+      {/* ── Human wizard — Required (shall) clauses ──────────────────────── */}
+      {(() => {
+        const shallQs = HUMAN_WIZARD_QUESTIONS.filter((q) => q.obligation === "shall");
+        const shouldQs = HUMAN_WIZARD_QUESTIONS.filter((q) => q.obligation === "should");
+        const answeredCount = (qs: typeof HUMAN_WIZARD_QUESTIONS) =>
+          qs.filter((q) => wizardAnswers[q.clauseId] || (answers[q.clauseId]?.value && answers[q.clauseId].value !== "unsure")).length;
 
-        {groupByMeasure(HUMAN_WIZARD_QUESTIONS).map((group, gi) => (
-          <div key={group.measureId} className={`border-x border-b border-ink-700/60 ${gi === groupByMeasure(HUMAN_WIZARD_QUESTIONS).length - 1 ? "rounded-b-xl" : ""} bg-ink-900/40`}>
-            <div className="px-6 py-3 border-b border-ink-800/60 bg-ink-950/40">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-300/70">{group.measureName}</span>
-            </div>
-            <div className="px-6 py-4 space-y-6">
-              {group.questions.map((q) => {
-                const existing = answers[q.clauseId]?.value;
-                const current = wizardAnswers[q.clauseId] ?? (existing && existing !== "unsure" ? existing : "");
-                const answered = !!current;
-                return (
-                  <div key={q.clauseId} className="space-y-2.5">
-                    <div className="flex items-start gap-2">
-                      <code className="shrink-0 rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-mono text-brand-300">{q.clauseId}</code>
-                      <p className="text-[13px] font-medium text-white leading-snug">{q.question}</p>
-                      {answered && (
-                        <span className={`shrink-0 ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          current === "yes" ? "bg-emerald-800/40 text-emerald-300"
-                          : current === "partial" ? "bg-amber-800/40 text-amber-300"
-                          : current === "na" ? "bg-ink-700/60 text-brand-300/60"
-                          : "bg-red-800/40 text-red-300"
-                        }`}>
-                          {current === "yes" ? "✓ Yes" : current === "partial" ? "~ Partial" : current === "na" ? "N/A" : "✗ No"}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {q.options.map((opt) => (
-                        <button
-                          key={opt.value}
-                          onClick={() => setWizardAnswers((prev) => ({ ...prev, [q.clauseId]: opt.value }))}
-                          data-on={current === opt.value}
-                          className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition hover:border-brand-500/40 data-[on=true]:border-csa-500/60 data-[on=true]:bg-csa-900/40 data-[on=true]:text-csa-200"
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                    {q.hint && (
-                      <p className="text-[11px] text-brand-300/50 pl-0.5">{q.hint}</p>
-                    )}
+        function WizardGroup({ qs, label, sublabel, accent }: {
+          qs: typeof HUMAN_WIZARD_QUESTIONS;
+          label: string;
+          sublabel: string;
+          accent: string;
+        }) {
+          const groups = groupByMeasure(qs);
+          return (
+            <div className="space-y-0">
+              <div className={`rounded-t-xl border ${accent} px-6 py-4 flex items-center justify-between`}>
+                <div>
+                  <h2 className="text-base font-semibold text-white">{label}</h2>
+                  <p className="text-[12px] text-brand-100/60 mt-0.5">{sublabel}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-[11px] text-brand-300/60">Answered</p>
+                  <p className="text-lg font-bold text-white">
+                    {answeredCount(qs)}
+                    <span className="text-sm font-normal text-brand-300/60"> / {qs.length}</span>
+                  </p>
+                </div>
+              </div>
+              {groups.map((group, gi) => (
+                <div key={group.measureId} className={`border-x border-b border-ink-700/60 ${gi === groups.length - 1 ? "rounded-b-xl" : ""} bg-ink-900/40`}>
+                  <div className="px-6 py-3 border-b border-ink-800/60 bg-ink-950/40">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-brand-300/70">{group.measureName}</span>
                   </div>
-                );
-              })}
+                  <div className="px-6 py-4 space-y-6">
+                    {group.questions.map((q) => {
+                      const existing = answers[q.clauseId]?.value;
+                      const current = wizardAnswers[q.clauseId] ?? (existing && existing !== "unsure" ? existing : "");
+                      const answered = !!current;
+                      return (
+                        <div key={q.clauseId} className="space-y-2.5">
+                          <div className="flex items-start gap-2 flex-wrap">
+                            <code className="shrink-0 rounded bg-ink-800 px-1.5 py-0.5 text-[10px] font-mono text-brand-300">{q.clauseId}</code>
+                            <p className="text-[13px] font-medium text-white leading-snug flex-1">{q.question}</p>
+                            {answered && (
+                              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                current === "yes" ? "bg-emerald-800/40 text-emerald-300"
+                                : current === "partial" ? "bg-amber-800/40 text-amber-300"
+                                : current === "na" ? "bg-ink-700/60 text-brand-300/60"
+                                : "bg-red-800/40 text-red-300"
+                              }`}>
+                                {current === "yes" ? "✓ Yes" : current === "partial" ? "~ Partial" : current === "na" ? "N/A" : "✗ No"}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {q.options.map((opt) => (
+                              <button
+                                key={opt.value}
+                                onClick={() => setWizardAnswers((prev) => ({ ...prev, [q.clauseId]: opt.value }))}
+                                data-on={current === opt.value}
+                                className="rounded-lg border border-ink-700/60 px-3 py-1.5 text-[12px] font-medium text-brand-200 transition hover:border-brand-500/40 data-[on=true]:border-csa-500/60 data-[on=true]:bg-csa-900/40 data-[on=true]:text-csa-200"
+                              >
+                                {opt.label}
+                              </button>
+                            ))}
+                          </div>
+                          {q.hint && <p className="text-[11px] text-brand-300/50 pl-0.5">{q.hint}</p>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ))}
-      </div>
+          );
+        }
+
+        return (
+          <>
+            <WizardGroup
+              qs={shallQs}
+              label={`Required clauses — ${shallQs.length} questions`}
+              sublabel="These must all be answered 'Yes' or 'N/A' to pass certification. 'No' or 'Partial' on any shall clause is a blocking gap."
+              accent="border-csa-700/50 bg-csa-950/30"
+            />
+            <WizardGroup
+              qs={shouldQs}
+              label={`Recommended clauses — ${shouldQs.length} questions`}
+              sublabel="Assessors note these but cannot fail you on them. Answer them to strengthen your posture and evidence pack."
+              accent="border-ink-700/60 bg-ink-900/60"
+            />
+          </>
+        );
+      })()}
 
       {/* ── A.1 Training section ─────────────────────────────────────────── */}
       <Card className="p-6 space-y-5">
