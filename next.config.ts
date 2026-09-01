@@ -19,32 +19,12 @@ const nextConfig: NextConfig = {
   // A stray lockfile in the user profile makes Next infer the wrong workspace root.
   outputFileTracingRoot: import.meta.dirname,
 
-  async redirects() {
-    return [
-      // Clean URL: /games → /games/index.html
-      {
-        source: "/games",
-        destination: "/games/index.html",
-        permanent: false,
-      },
-    ];
-  },
-
   async headers() {
     return [
       {
-        // App routes: full security headers including iframe block
-        source: "/((?!games/).*)",
+        // Apply to all routes
+        source: "/(.*)",
         headers: securityHeaders,
-      },
-      {
-        // Game files in /games/*: allow same-origin iframes so the hub works
-        source: "/games/:path*",
-        headers: securityHeaders.map(h =>
-          h.key === "X-Frame-Options"
-            ? { key: "X-Frame-Options", value: "SAMEORIGIN" }
-            : h
-        ),
       },
     ];
   },
