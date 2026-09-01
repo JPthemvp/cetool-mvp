@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cyber Racers — CSA Cyber Essentials</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0e1a;font-family:'Segoe UI',system-ui,sans-serif;color:#fff;touch-action:none}
+canvas{display:block;position:fixed;inset:0}
+/* ─── HUD ─── */
+#hud{position:fixed;top:0;left:0;right:0;z-index:20;pointer-events:none;padding:10px 14px;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(180deg,rgba(0,0,0,.7)0%,transparent)}
+.hud-panel{background:rgba(0,0,0,.5);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:8px 14px}
+#pos-display{font-size:28px;font-weight:900;line-height:1}
+#pos-sub{font-size:11px;opacity:.6;letter-spacing:1px}
+#lap-display{font-size:22px;font-weight:700;text-align:center}
+#lap-sub{font-size:11px;opacity:.6}
+#speed-display{font-size:22px;font-weight:700;text-align:right;color:#3aff9a}
+#time-display{font-size:11px;opacity:.7}
+/* ─── MINIMAP ─── */
+#minimap{position:fixed;bottom:12px;right:12px;z-index:20}
+#minimap canvas{border-radius:8px;border:1.5px solid rgba(255,255,255,.15);box-shadow:0 4px 16px rgba(0,0,0,.5)}
+/* ─── OVERLAYS ─── */
+.overlay{position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,8,18,.95);padding:24px}
+.overlay h1{font-size:clamp(28px,6vw,48px);margin-bottom:10px;text-align:center}
+.overlay p{opacity:.7;text-align:center;max-width:420px;line-height:1.6;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#3a7fff,#00d4ff);border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;transition:.2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(58,127,255,.4)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.btn.red{background:linear-gradient(135deg,#ff5050,#ff8a00)}
+.btn.green{background:linear-gradient(135deg,#3aff9a,#00d4ff)}
+/* ─── LOBBY ─── */
+#lobby-form{display:flex;flex-direction:column;gap:12px;width:100%;max-width:360px;margin-top:12px}
+.field-label{font-size:12px;opacity:.6;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+input.text-in{width:100%;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.15);border-radius:10px;padding:12px 14px;font-size:15px;color:#fff;outline:none;transition:.2s;letter-spacing:.5px}
+input.text-in:focus{border-color:#3a7fff;background:rgba(58,127,255,.1)}
+.room-btns{display:flex;gap:10px}
+.room-btn{flex:1;padding:12px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:700;transition:.2s}
+.room-btn.create{background:linear-gradient(135deg,#3a7fff,#00d4ff);color:#fff}
+.room-btn.join{background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.15);color:#fff}
+.room-btn:hover{transform:translateY(-1px)}
+/* ─── WAITING ROOM ─── */
+#wait-screen{display:none}
+#room-code-display{font-size:36px;font-weight:900;letter-spacing:8px;color:#3a7fff;background:rgba(58,127,255,.08);border:2px dashed rgba(58,127,255,.3);border-radius:12px;padding:16px 24px;margin:12px 0;text-align:center}
+#player-list{display:flex;flex-direction:column;gap:8px;width:100%;max-width:360px;margin:8px 0}
+.player-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border-radius:10px;padding:10px 14px;border:1px solid rgba(255,255,255,.1)}
+.player-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.player-chip-name{font-weight:700;font-size:14px}
+.player-chip-tag{font-size:11px;opacity:.5;margin-left:auto}
+/* ─── COUNTDOWN ─── */
+#countdown-overlay{position:fixed;inset:0;z-index:70;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.5);pointer-events:none}
+#countdown-num{font-size:clamp(80px,20vw,140px);font-weight:900;color:#3a7fff;text-shadow:0 0 40px rgba(58,127,255,.8);animation:cdPulse .9s ease-out}
+@keyframes cdPulse{from{transform:scale(1.5);opacity:0}to{transform:scale(1);opacity:1}}
+/* ─── QUIZ MODAL ─── */
+#quiz-modal{position:fixed;inset:0;z-index:60;display:none;align-items:flex-end;justify-content:center;padding:0 10px 20px}
+#quiz-box{background:linear-gradient(135deg,#0f1528,#1a2040);border:2px solid rgba(58,127,255,.3);border-radius:20px;padding:20px 20px 16px;width:100%;max-width:540px;backdrop-filter:blur(12px)}
+#quiz-pillar{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:700;margin-bottom:6px;color:#3a7fff}
+#quiz-q{font-size:clamp(13px,3vw,16px);font-weight:500;line-height:1.5;margin-bottom:12px}
+.quiz-timer-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+#quiz-timer-bar{flex:1;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+#quiz-timer-fill{height:100%;background:#3aff9a;border-radius:3px;transition:width .25s linear}
+#quiz-timer-num{font-size:13px;font-weight:700;min-width:24px;text-align:right}
+.quiz-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quiz-opt{background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 12px;cursor:pointer;font-size:clamp(11px,2.5vw,13px);font-weight:500;text-align:left;transition:.2s;color:#fff;line-height:1.4}
+.quiz-opt:hover:not(:disabled){background:rgba(58,127,255,.2);border-color:#3a7fff}
+.quiz-opt.correct{background:rgba(58,255,154,.15)!important;border-color:#3aff9a!important;color:#3aff9a}
+.quiz-opt.wrong{background:rgba(255,80,80,.15)!important;border-color:#ff5050!important;color:#ff7070}
+.quiz-opt:disabled{cursor:default}
+#quiz-tip{font-size:12px;opacity:.7;margin-top:8px;line-height:1.5;display:none;padding:8px;background:rgba(255,255,255,.04);border-radius:8px}
+/* ─── TOAST ─── */
+#toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:65;padding:10px 20px;border-radius:20px;font-weight:700;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;text-align:center}
+#toast.show{opacity:1}
+#toast.correct{background:rgba(58,255,154,.25);border:1px solid rgba(58,255,154,.4);color:#3aff9a}
+#toast.wrong{background:rgba(255,80,80,.2);border:1px solid rgba(255,80,80,.3);color:#ff7070}
+#toast.info{background:rgba(58,127,255,.25);border:1px solid rgba(58,127,255,.4);color:#7ab0ff}
+/* ─── OTHERS IN QUIZ NOTICE ─── */
+#others-quiz{position:fixed;top:80px;right:14px;z-index:25;display:flex;flex-direction:column;gap:6px}
+.oq-chip{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:5px 12px;font-size:12px;opacity:0;transition:opacity .3s}
+.oq-chip.show{opacity:1}
+/* ─── RESULTS / PODIUM ─── */
+#results-screen{display:none}
+#podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin:16px 0;height:120px}
+.podium-col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px}
+.podium-block{border-radius:8px 8px 0 0;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;width:70px}
+.podium-block.p1{background:linear-gradient(180deg,#ffd700,#ff8c00);height:90px}
+.podium-block.p2{background:linear-gradient(180deg,#c0c0c0,#808080);height:70px}
+.podium-block.p3{background:linear-gradient(180deg,#cd7f32,#8b4513);height:50px}
+.podium-name{font-size:12px;text-align:center;max-width:70px;word-break:break-word}
+.podium-score{font-size:11px;opacity:.6}
+/* ─── GACHA ─── */
+#gacha-overlay{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;background:rgba(5,8,18,.9)}
+#gacha-box{background:linear-gradient(135deg,#0f1528,#1a2040);border:2px solid rgba(58,127,255,.3);border-radius:20px;padding:32px 40px;text-align:center;max-width:360px;width:90%;animation:popIn .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+/* ─── TOUCH CONTROLS ─── */
+#touch-controls{position:fixed;bottom:16px;z-index:25;width:100%;display:flex;justify-content:space-between;padding:0 16px;pointer-events:none}
+.touch-zone{pointer-events:all;width:90px;height:90px;background:rgba(255,255,255,.07);border:1.5px solid rgba(255,255,255,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:background .1s;opacity:.7}
+.touch-zone:active,.touch-zone.pressed{background:rgba(58,127,255,.3)}
+</style>
+</head>
+<body>
+<canvas id="main-canvas"></canvas>
+
+<!-- HUD (hidden until race) -->
+<div id="hud" style="display:none">
+  <div class="hud-panel">
+    <div id="pos-display">1st</div>
+    <div id="pos-sub">POSITION</div>
+  </div>
+  <div class="hud-panel">
+    <div id="lap-display">Lap 1/3</div>
+    <div id="lap-sub">LAPS</div>
+    <div id="time-display">00:00</div>
+  </div>
+  <div class="hud-panel">
+    <div id="speed-display">0 km/h</div>
+    <div style="font-size:11px;opacity:.6">SPEED</div>
+  </div>
+</div>
+
+<!-- Minimap -->
+<div id="minimap" style="display:none">
+  <canvas id="mini-canvas" width="110" height="110"></canvas>
+</div>
+
+<!-- Quiz modal (shown when hitting hazard) -->
+<div id="quiz-modal">
+  <div id="quiz-box">
+    <div id="quiz-pillar">🛡️ SECURE & PROTECT</div>
+    <div id="quiz-q">Loading question…</div>
+    <div class="quiz-timer-row">
+      <div id="quiz-timer-bar"><div id="quiz-timer-fill" style="width:100%"></div></div>
+      <div id="quiz-timer-num">20</div>
+    </div>
+    <div class="quiz-opts" id="quiz-opts"></div>
+    <div id="quiz-tip"></div>
+  </div>
+</div>
+
+<!-- Others in quiz notice -->
+<div id="others-quiz"></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Countdown -->
+<div id="countdown-overlay">
+  <div id="countdown-num">3</div>
+</div>
+
+<!-- TITLE SCREEN -->
+<div class="overlay" id="title-screen">
+  <div style="font-size:56px">🏎️</div>
+  <h1 style="background:linear-gradient(135deg,#3a7fff,#ffcc00);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Cyber Racers</h1>
+  <p>Race against others! Hit hazard blocks to answer CSA Cyber Essentials questions. Correct = speed boost. Wrong = spin out!</p>
+  <div id="lobby-form">
+    <div>
+      <div class="field-label">Your Name</div>
+      <input class="text-in" id="player-name-in" placeholder="Enter your name" maxlength="16" value="">
+    </div>
+    <div>
+      <div class="field-label">Room Code (leave blank to create new)</div>
+      <input class="text-in" id="room-code-in" placeholder="e.g. ABCD" maxlength="4" style="text-transform:uppercase;letter-spacing:4px">
+    </div>
+    <div class="room-btns">
+      <button class="room-btn create" onclick="joinOrCreate('create')">⚡ New Room</button>
+      <button class="room-btn join" onclick="joinOrCreate('join')">🔗 Join Room</button>
+    </div>
+    <button class="btn green" style="width:100%;margin-top:4px" onclick="startSolo()">🤖 Solo Practice</button>
+  </div>
+  <div style="margin-top:12px;font-size:12px;opacity:.4">WASD/Arrow keys to steer · Touch controls on mobile</div>
+</div>
+
+<!-- WAITING ROOM -->
+<div class="overlay" id="wait-screen">
+  <div style="font-size:40px">🏁</div>
+  <h1>Race Lobby</h1>
+  <p>Share the room code with teammates:</p>
+  <div id="room-code-display">XXXX</div>
+  <div id="player-list"></div>
+  <div id="host-controls" style="margin-top:12px;display:none">
+    <button class="btn green" id="start-btn" onclick="hostStartRace()" disabled>Start Race (2+ players)</button>
+  </div>
+  <div id="guest-wait" style="opacity:.6;font-size:14px;display:none">Waiting for host to start…</div>
+  <button class="btn" style="background:rgba(255,255,255,.1);margin-top:16px" onclick="leaveRoom()">← Leave</button>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div class="overlay" id="results-screen">
+  <div style="font-size:40px">🏆</div>
+  <h1>Race Complete!</h1>
+  <div id="podium"></div>
+  <div id="results-list" style="width:100%;max-width:360px"></div>
+  <button class="btn" style="margin-top:16px" onclick="openGacha()">🎁 Collect Reward</button>
+</div>
+
+<!-- GACHA -->
+<div id="gacha-overlay">
+  <div id="gacha-box">
+    <div style="font-size:13px;opacity:.6;margin-bottom:8px">✨ RACE REWARD</div>
+    <div id="gacha-rarity" style="font-size:11px;letter-spacing:2px;font-weight:700">RARE</div>
+    <div id="gacha-icon" style="font-size:64px;margin:8px 0">🛡️</div>
+    <div id="gacha-name" style="font-size:20px;font-weight:700;margin-bottom:6px">Shield Pack</div>
+    <div id="gacha-effect" style="opacity:.7;font-size:14px;margin-bottom:20px">Effect: Speed boost on next Q</div>
+    <button class="btn" onclick="closeGacha()">Collect! 🎉</button>
+  </div>
+</div>
+
+<!-- Touch Controls -->
+<div id="touch-controls" style="display:none">
+  <div class="touch-zone" id="tc-left" data-key="left">◀</div>
+  <div class="touch-zone" id="tc-right" data-key="right">▶</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+'use strict';
+// ── INLINE QUESTION BANK ─────────────────────────────────────────
+const QUESTION_BANK={
+  assets:{name:'Assets',icon:'🗂️',color:'#3a7fff',questions:[
+    {id:'A1',pillar:'🗂️ Assets',q:'What are the most common social engineering tactics used by threat actors?',opts:['Creating urgent scenarios and impersonating trusted parties','Sending large file attachments','Calling the IT helpdesk directly','Exploiting software vulnerabilities remotely'],ans:0,tip:'Threat actors create urgency and impersonate trusted parties to trick you into acting without thinking.',difficulty:1},
+    {id:'A2',pillar:'🗂️ Assets',q:'Your CFO asks urgently in an online meeting to transfer funds. What should you do FIRST?',opts:['Transfer the funds immediately','Contact the CFO separately via a known trusted channel to verify','Reply in the same meeting','Ask a colleague first'],ans:1,tip:'Deepfake impersonation can replicate faces and voices. Always verify high-value requests through a separate trusted channel.',difficulty:2},
+    {id:'A3',pillar:'🗂️ Assets',q:'How are deepfakes used in corporate attacks?',opts:['Impersonating executives in video calls to authorise fraudulent payments','Automatically patching software','Encrypting backup data','Blocking malicious emails'],ans:0,tip:'In 2024, a finance employee paid US$25.6M after a deepfake CFO video call. Verify through separate trusted channels.',difficulty:2},
+    {id:'A4',pillar:'🗂️ Assets',q:'Your vendor wants to connect their laptop to your corporate network. Why is this risky?',opts:['Uses too much bandwidth','The device may contain malware that could spread across your network','May slow the demo','Requires extra IT config'],ans:1,tip:'External devices may carry malware. Always check with IT before allowing external devices to connect.',difficulty:1},
+    {id:'A5',pillar:'🗂️ Assets',q:'Why install only authorised software from trusted sources on corporate devices?',opts:['Authorised software runs faster','Unauthorised software may contain malicious code','Only authorised software has a UI','Unauthorised software is always expensive'],ans:1,tip:'Apps from outside official stores are 50x more likely to contain malware. Only install IT-approved software.',difficulty:1},
+    {id:'A6',pillar:'🗂️ Assets',q:'Why should IT be informed when staff sign up for new SaaS or AI services?',opts:['To ensure it\'s cheaper','IT can only protect assets they know about — unapproved tools create "shadow IT"','To get longer trials','So IT can use it too'],ans:1,tip:'Shadow IT/AI bypasses security controls. IBM found 20% of organisations suffered breaches due to shadow AI.',difficulty:2},
+    {id:'A7',pillar:'🗂️ Assets',q:'How do you best protect sensitive corporate data from leakage?',opts:['Share only via email','Encrypt files at rest and in transit, disable USB ports','Store all data on local unencrypted drives','Allow all employees full access to all data'],ans:1,tip:'Encrypt files at rest and in transit, and disable USB ports to prevent unauthorised copying.',difficulty:1},
+    {id:'A8',pillar:'🗂️ Assets',q:'What must you consider when storing corporate data in the cloud?',opts:['Only the cost','Security of data transfer AND data sovereignty/geolocation requirements','Whether the provider has a good website','Their marketing materials'],ans:1,tip:'Consider security in transit/at rest AND geolocation — some customers have data sovereignty requirements.',difficulty:2},
+  ]},
+  secure:{name:'Secure & Protect',icon:'🛡️',color:'#3aff9a',questions:[
+    {id:'S1',pillar:'🛡️ Secure',q:'How should laptops be protected from malicious internet traffic when using cloud services?',opts:['No protection needed','Install virus/malware protection and a host-based firewall on each device','Only use trusted websites','Use VPN for all websites'],ans:1,tip:'Install virus/malware protection AND a host-based firewall on each device. Nearly half of Singapore web traffic is malicious bots.',difficulty:1},
+    {id:'S2',pillar:'🛡️ Secure',q:'You need to work from a café. How do you securely access your corporate network?',opts:['Connect to café WiFi — it\'s convenient','Avoid public WiFi; use your mobile hotspot or a VPN','Use public WiFi but avoid email','Ask café staff if their WiFi is safe'],ans:1,tip:'"Evil twin" attacks use fake WiFi. An Australian man was charged for doing exactly this at airports. Use mobile hotspot or VPN.',difficulty:1},
+    {id:'S3',pillar:'🛡️ Secure',q:'Which of the following is a STRONG passphrase?',opts:['Password123','IhadKAYAtoast@8am','Company2024','admin1234'],ans:1,tip:'A strong passphrase uses random words (12+ chars), mixed case, numbers, and special characters — unique per account.',difficulty:1},
+    {id:'S4',pillar:'🛡️ Secure',q:'What does Multi-Factor Authentication (MFA) add beyond your password?',opts:['A second different password','Something you HAVE (authenticator/token) or ARE (fingerprint/face)','A security question about your past','Requirement to change password every 30 days'],ans:1,tip:'MFA = something you KNOW + HAVE or ARE. MFA makes you 99% less likely to be hacked (CISA).',difficulty:1},
+    {id:'S5',pillar:'🛡️ Secure',q:'You manage multiple cloud accounts and struggle to remember passwords. What should you do?',opts:['Use the same password for all','Use unique strong passphrases and manage with a trusted password manager','Write passwords in a notebook','Use simple passwords'],ans:1,tip:'Unique passphrases + trusted password manager. Weak credentials are behind 47% of cloud attacks.',difficulty:2},
+    {id:'S6',pillar:'🛡️ Secure',q:'How should your organisation manage vendor access to sensitive systems?',opts:['Give vendors full access to ease their work','Require NDAs, limit access to only what\'s needed, remove access when done','Share one admin account with all vendors','Let vendors set their own permissions'],ans:1,tip:'Least privilege access. 128,000 records stolen when moneylenders\' shared IT vendor was hacked (CNA 2024).',difficulty:2},
+    {id:'S7',pillar:'🛡️ Secure',q:'Why should you disable features and services not in use?',opts:['Improves performance only','Reduces risk of attacks exploiting vulnerabilities in unused services','Saves storage space','Makes device easier to use'],ans:1,tip:'Every unused service is a potential attack vector. RDP has been widely used to deploy ransomware — disable what you don\'t need.',difficulty:1},
+    {id:'S8',pillar:'🛡️ Secure',q:'Why review and change default cloud configuration settings?',opts:['Default settings are most secure','Default settings prioritise usability, not security — they may leave systems exposed','Only advanced users need to change settings','Cloud providers handle all security'],ans:1,tip:'Cloud misconfiguration is a top threat (Cloud Security Alliance). Always harden settings before going live.',difficulty:2},
+    {id:'S9',pillar:'🛡️ Secure',q:'Before using a third-party AI transcription tool for a sensitive meeting, what should you check?',opts:['Reviews on the app store','Your data governance policies and whether this tool is approved for corporate use','Whether it is free','If colleagues have used it before'],ans:1,tip:'Samsung employees leaked trade secrets via ChatGPT. Check data policies BEFORE using any AI tool.',difficulty:2},
+    {id:'S10',pillar:'🛡️ Secure',q:'An employee submits a client contract into an unapproved AI tool. What is the risk?',opts:['The AI might give inaccurate summaries','The provider\'s terms may allow use of submitted data for training, exposing confidential info','The tool might be slow','The format may not be supported'],ans:1,tip:'Unapproved AI tools may use your data for model training. Always use IT-approved tools for sensitive data.',difficulty:2},
+  ]},
+  update:{name:'Update',icon:'🔄',color:'#ffcc00',questions:[
+    {id:'U1',pillar:'🔄 Update',q:'Why must you apply software updates promptly even when busy?',opts:['To get new features','Vulnerabilities may be exploited — patches close these gaps quickly','Updates are only needed on new devices','Software updates are optional'],ans:1,tip:'AI-driven automation lets attackers scan and exploit vulnerabilities rapidly. Prompt patching is essential.',difficulty:1},
+    {id:'U2',pillar:'🔄 Update',q:'What is the recommended timeframe for critical security patches per CSA Cyber Essentials?',opts:['Within 1 year','Within 14 days of patch release','Only during annual maintenance','Whenever convenient for IT'],ans:1,tip:'CSA Cyber Essentials: apply critical patches within 14 days. Every day unpatched is an attack window.',difficulty:1},
+    {id:'U3',pillar:'🔄 Update',q:'Why is end-of-life software especially dangerous for organisations?',opts:['It runs too slowly','It receives no security patches — vulnerabilities remain permanently unaddressed','It is too expensive','It cannot connect to internet'],ans:1,tip:'End-of-life software gets no security fixes. Every vulnerability discovered after support ends is permanently exploitable.',difficulty:2},
+    {id:'U4',pillar:'🔄 Update',q:'Which control BEST prevents ransomware from exploiting unpatched software?',opts:['Backing up data regularly','Applying security patches promptly — critical ones within 14 days','Installing more antivirus tools after attack','Training employees to avoid all links'],ans:1,tip:'Employees often delay updates due to deadlines. Prompt patching closes the exploitation window.',difficulty:2},
+  ]},
+  backup:{name:'Backup',icon:'💾',color:'#ff7a3c',questions:[
+    {id:'B1',pillar:'💾 Backup',q:'Why must backups be stored separately from your operating environment?',opts:['Not necessary — cloud is always safe','If the environment is compromised, a separate backup prevents it from being affected too','Only large organisations need this','Separate storage makes restores slower'],ans:1,tip:'A Canadian clinic had backups deleted in ransomware and had to close temporarily. Keep at least one offline copy.',difficulty:1},
+    {id:'B2',pillar:'💾 Backup',q:'Your org uses a SaaS CRM. Who is responsible for backing up customer data?',opts:['The cloud/SaaS provider','Your organisation — under the Shared Responsibility Model, data backup is your responsibility','No one needs to back up cloud data','The CRM auto-creates secure backups'],ans:1,tip:'Under the cloud Shared Responsibility Model, backing up SaaS data is YOUR organisation\'s responsibility.',difficulty:2},
+    {id:'B3',pillar:'💾 Backup',q:'What ensures your backups are usable in a real incident?',opts:['Create backups and never touch them','Regularly TEST restoring data from backups to confirm they work','Trust backups are correct without testing','Only test when an incident occurs'],ans:1,tip:'Untested backups are unreliable. Regularly test restoring from backups — an untested backup may fail when most needed.',difficulty:2},
+    {id:'B4',pillar:'💾 Backup',q:'Ransomware encrypted your files and you have a recent tested offline backup. What is CORRECT?',opts:['Pay the ransom to decrypt quickly','Do NOT pay; isolate infected systems, restore from offline backups, report to authorities','Delete all files and start fresh','Wait for attackers to contact you'],ans:1,tip:'Never pay ransom — data may not be decrypted and you may be targeted again. Isolate → restore → report to SingCERT.',difficulty:2},
+  ]},
+  respond:{name:'Respond',icon:'🚨',color:'#ff5a5a',questions:[
+    {id:'R1',pillar:'🚨 Respond',q:'Why should an incident response plan involve multiple divisions and stakeholders?',opts:['To have more meetings','So all divisions know their roles BEFORE an incident and can respond effectively','Only IT needs to be involved','To spread blame across departments'],ans:1,tip:'IT isolates systems, HR manages staff comms, Communications handles reputation, Legal/DPO handles PDPA reporting.',difficulty:1},
+    {id:'R2',pillar:'🚨 Respond',q:'An employee clicked phishing and credentials were stolen. What is the IMMEDIATE first step?',opts:['Inform all staff via company email','Reset the compromised password immediately and check accounts using the same password','Wait to see if any access occurs','File a police report first'],ans:1,tip:'Reset compromised password and all accounts sharing it. Check for data tampering. Assess PDPA obligations.',difficulty:2},
+    {id:'R3',pillar:'🚨 Respond',q:'Your CRM vendor confirms your customer data was hacked. As DPO, what must you do?',opts:['Send a press release first','Notify PDPC within 3 calendar days of confirming the breach','Wait 30 days','Only report if customers complain'],ans:1,tip:'Under PDPA, notify PDPC no later than 3 calendar days from determining it\'s a notifiable data breach.',difficulty:2},
+    {id:'R4',pillar:'🚨 Respond',q:'After a ransomware incident, what should IT do FIRST to contain the attack?',opts:['Keep all systems running for business continuity','Isolate affected systems: disconnect ethernet, disable WiFi/Bluetooth, check nomoreransom.org','Pay ransom immediately','Delete affected files and notify staff'],ans:1,tip:'Isolate first to stop lateral spread. Visit nomoreransom.org for free decryptors. Never pay ransom.',difficulty:2},
+    {id:'R5',pillar:'🚨 Respond',q:'Staff accidentally submitted a confidential contract into an unapproved AI tool. What FIRST?',opts:['Delete the conversation history in the AI tool','Report the incident to IT/cybersecurity and data team immediately','Not tell anyone','Change password and hope for the best'],ans:1,tip:'Report immediately to IT/cyber and data team. They assess whether it\'s a notifiable data breach under PDPA.',difficulty:2},
+  ]}
+};
+const ALL_QUESTIONS=Object.values(QUESTION_BANK).flatMap(p=>p.questions);
+const GACHA_POOL=[
+  {icon:'💎',name:'Cyber Diamond',rarity:'EPIC',rc:'#cc55ff',effect:'Next question shown with hint'},
+  {icon:'🛡️',name:'Shield Pack',rarity:'RARE',rc:'#ffcc00',effect:'Immune to next spin-out'},
+  {icon:'⚡',name:'Speed Surge',rarity:'COMMON',rc:'#7a9fff',effect:'+50 bonus points'},
+  {icon:'🔑',name:'Master Key',rarity:'EPIC',rc:'#cc55ff',effect:'+100 bonus points'},
+  {icon:'🎖️',name:'Honor Medal',rarity:'RARE',rc:'#ffcc00',effect:'+75 bonus points'},
+  {icon:'🌟',name:'Star Fragment',rarity:'COMMON',rc:'#7a9fff',effect:'+30 bonus points'},
+];
+window.CyberQB={
+  QUESTION_BANK,ALL_QUESTIONS,GACHA_POOL,
+  getRandomGacha(){const roll=Math.random(),pool=roll<.15?GACHA_POOL.filter(g=>g.rarity==='EPIC'):roll<.45?GACHA_POOL.filter(g=>g.rarity==='RARE'):GACHA_POOL.filter(g=>g.rarity==='COMMON');return pool[Math.floor(Math.random()*pool.length)]||GACHA_POOL[0]},
+  getQuestionsByPillar(pid,count=4){const pool=QUESTION_BANK[pid]?.questions||ALL_QUESTIONS;return [...pool].sort(()=>Math.random()-.5).slice(0,count)},
+  getRandomQuestion(excl=[]){const pool=ALL_QUESTIONS.filter(q=>!excl.includes(q.id));return pool[Math.floor(Math.random()*pool.length)]||ALL_QUESTIONS[Math.floor(Math.random()*ALL_QUESTIONS.length)]},
+};
+// ─── SUPABASE ────────────────────────────────────────────────────
+const SUPA_URL='https://iiaxvkcebqyrpqyaurcq.supabase.co';
+const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlpYXh2a2NlYnF5cnBxeWF1cmNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU5MzAwMjksImV4cCI6MjEwMTUwNjAyOX0.hg-GvNXNFPmVyNR8co88Pj4rCClbeZLkm_x1zLAuBEs';
+let sbClient,channel;
+try{ sbClient=window.supabase?.createClient(SUPA_URL,SUPA_KEY); }catch(e){}
+
+// ─── CANVAS SETUP ────────────────────────────────────────────────
+const C=document.getElementById('main-canvas');
+const ctx=C.getContext('2d');
+const MC=document.getElementById('mini-canvas');
+const mctx=MC.getContext('2d');
+let W,H;
+function resize(){ W=C.width=window.innerWidth; H=C.height=window.innerHeight; }
+resize(); window.addEventListener('resize',resize);
+
+// ─── KART COLORS ─────────────────────────────────────────────────
+const KART_COLORS=['#3a7fff','#ff5a5a','#3aff9a','#ffcc00','#cc55ff'];
+const KART_EMOJIS=['🏎️','🚗','🚕','🚙','🚓'];
+
+// ─── TRACK GENERATION ────────────────────────────────────────────
+const RAW=[
+  [400,600],[600,200],[1000,150],[1400,200],[1700,400],
+  [1750,700],[1600,950],[1300,1050],[1000,1000],[800,1100],
+  [600,1050],[350,900],[250,700],[300,500],[400,600]
+];
+function catmull(pts,alpha=.5,segs=20){
+  const out=[];
+  for(let i=0;i<pts.length-1;i++){
+    const p0=pts[Math.max(0,i-1)],p1=pts[i],p2=pts[i+1],p3=pts[Math.min(pts.length-1,i+2)];
+    for(let t=0;t<segs;t++){
+      const u=t/segs,u2=u*u,u3=u2*u;
+      const b0=-u3+2*u2-u,b1=3*u3-5*u2+2,b2=-3*u3+4*u2+u,b3=u3-u2;
+      out.push([.5*(b0*p0[0]+b1*p1[0]+b2*p2[0]+b3*p3[0]),.5*(b0*p0[1]+b1*p1[1]+b2*p2[1]+b3*p3[1])]);
+    }
+  }
+  out.push(pts[pts.length-1]);
+  return out;
+}
+const TK=catmull(RAW,0.5,25);
+const N=TK.length;
+// Arc lengths
+const ARC=[0];
+for(let i=1;i<N;i++){
+  const dx=TK[i][0]-TK[i-1][0],dy=TK[i][1]-TK[i-1][1];
+  ARC.push(ARC[i-1]+Math.sqrt(dx*dx+dy*dy));
+}
+const TOTAL_ARC=ARC[N-1];
+// Tangents + normals
+const TG=[],NRM=[];
+for(let i=0;i<N;i++){
+  const n=(i+1)%N,p=(i-1+N)%N;
+  const dx=TK[n][0]-TK[p][0],dy=TK[n][1]-TK[p][1];
+  const len=Math.sqrt(dx*dx+dy*dy)||1;
+  TG.push([dx/len,dy/len]);
+  NRM.push([-dy/len,dx/len]);
+}
+const TRACK_W=64;
+function progress(x,y){
+  let best=0,bestD=Infinity;
+  for(let i=0;i<N;i+=2){
+    const dx=x-TK[i][0],dy=y-TK[i][1],d=dx*dx+dy*dy;
+    if(d<bestD){bestD=d;best=i;}
+  }
+  return ARC[best]/TOTAL_ARC;
+}
+function nearestIdx(x,y){
+  let best=0,bestD=Infinity;
+  for(let i=0;i<N;i+=3){
+    const dx=x-TK[i][0],dy=y-TK[i][1],d=dx*dx+dy*dy;
+    if(d<bestD){bestD=d;best=i;}
+  }
+  return best;
+}
+// Hazards (question blocks)
+const HZ_SLOTS=[30,60,90,120,150,180,210,240,270,300];
+const HAZARDS=HZ_SLOTS.map((s,i)=>{
+  const idx=s%N;
+  const side=(i%2?1:-1)*(TRACK_W*.4);
+  return {x:TK[idx][0]+NRM[idx][0]*side,y:TK[idx][1]+NRM[idx][1]*side,hit:false,respawnT:0};
+});
+// Power-ups
+const PU_SLOTS=[15,45,75,105,135,165,195,225,255];
+const PUPS=PU_SLOTS.map((s,i)=>{
+  const idx=s%N;
+  const side=(i%2?1:-1)*(TRACK_W*.3);
+  const types=['boost','shield','slow'];
+  return {x:TK[idx][0]+NRM[idx][0]*side,y:TK[idx][1]+NRM[idx][1]*side,type:types[i%3],hit:false,respawnT:0};
+});
+const PU_ICONS={boost:'⚡',shield:'🛡️',slow:'🐌'};
+
+// ─── PLAYER / KART STATE ─────────────────────────────────────────
+const MY_ID=Math.random().toString(36).slice(2,8);
+let myName='Player',myColor=KART_COLORS[0],myColorIdx=0;
+let isHost=false,roomCode='',soloMode=false;
+let raceActive=false,raceStartT=0;
+const LAPS_TOTAL=3;
+
+const player={
+  x:TK[0][0],y:TK[0][1],angle:Math.atan2(TK[1][1]-TK[0][1],TK[1][0]-TK[0][0]),
+  speed:0,maxSpeed:5,accel:.18,friction:.92,turnRate:.055,
+  boosting:0,spinning:0,shielded:false,slow:0,
+  progress:0,prevProgress:0,laps:0,finished:false,
+  score:0,correctAnswers:0,wrongAnswers:0,
+};
+const others={}; // keyed by player id
+const allPlayers={}; // lobby list
+
+// ─── INPUT ──────────────────────────────────────────────────────
+const keys={};
+window.addEventListener('keydown',e=>{keys[e.key]=true;if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault()});
+window.addEventListener('keyup',e=>delete keys[e.key]);
+// Touch
+['tc-left','tc-right'].forEach(id=>{
+  const el=document.getElementById(id);
+  const k=el.dataset.key;
+  el.addEventListener('touchstart',e=>{e.preventDefault();keys['touch_'+k]=true;el.classList.add('pressed')},{passive:false});
+  el.addEventListener('touchend',e=>{e.preventDefault();delete keys['touch_'+k];el.classList.remove('pressed')},{passive:false});
+});
+
+// ─── CAMERA ──────────────────────────────────────────────────────
+let camX=TK[0][0]-W/2,camY=TK[0][1]-H/2;
+
+// ─── SUPABASE REALTIME ────────────────────────────────────────────
+function makeRoomCode(){ return Array.from({length:4},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random()*23)]).join(''); }
+
+function joinOrCreate(mode){
+  const nameIn=document.getElementById('player-name-in').value.trim();
+  if(!nameIn){ showToast('Enter your name first!','info'); return; }
+  myName=nameIn;
+  myColorIdx=Object.keys(allPlayers).length%KART_COLORS.length;
+  myColor=KART_COLORS[myColorIdx];
+  if(mode==='create'){
+    roomCode=makeRoomCode();
+    isHost=true;
+  } else {
+    const rc=document.getElementById('room-code-in').value.trim().toUpperCase();
+    if(!rc||rc.length!==4){ showToast('Enter a 4-letter room code','info'); return; }
+    roomCode=rc;
+    isHost=false;
+  }
+  connectRoom();
+}
+
+function connectRoom(){
+  if(!sbClient){ showToast('Multiplayer unavailable — try Solo mode','info'); return; }
+  document.getElementById('title-screen').style.display='none';
+  document.getElementById('wait-screen').style.display='flex';
+  document.getElementById('room-code-display').textContent=roomCode;
+  channel=sbClient.channel('race:'+roomCode,{config:{broadcast:{self:true}}});
+  channel
+    .on('broadcast',{event:'player_join'},({payload})=>handlePlayerJoin(payload))
+    .on('broadcast',{event:'player_leave'},({payload})=>handlePlayerLeave(payload))
+    .on('broadcast',{event:'race_start'},()=>beginCountdown())
+    .on('broadcast',{event:'player_move'},({payload})=>handlePlayerMove(payload))
+    .on('broadcast',{event:'player_quiz'},({payload})=>handlePlayerQuiz(payload))
+    .on('broadcast',{event:'player_finish'},({payload})=>handlePlayerFinish(payload))
+    .subscribe(status=>{
+      if(status==='SUBSCRIBED'){
+        channel.send({type:'broadcast',event:'player_join',payload:{id:MY_ID,name:myName,color:myColor,colorIdx:myColorIdx}});
+        if(isHost){ document.getElementById('host-controls').style.display='block'; }
+        else { document.getElementById('guest-wait').style.display='block'; }
+      }
+    });
+}
+
+function handlePlayerJoin(p){
+  allPlayers[p.id]=p;
+  if(p.id!==MY_ID)others[p.id]={...p,x:TK[0][0],y:TK[0][1],angle:0,laps:0,progress:0,finished:false,quizActive:false};
+  renderLobby();
+}
+function handlePlayerLeave(p){
+  delete allPlayers[p.id]; delete others[p.id]; renderLobby();
+}
+function handlePlayerMove(p){
+  if(p.id===MY_ID)return;
+  if(!others[p.id])others[p.id]={};
+  Object.assign(others[p.id],p);
+}
+function handlePlayerQuiz(p){
+  if(p.id===MY_ID)return;
+  const el=document.getElementById('others-quiz');
+  const chip=document.createElement('div');
+  chip.className='oq-chip'; chip.id='oqc_'+p.id;
+  chip.textContent=(allPlayers[p.id]?.name||'Player')+' is answering…';
+  el.appendChild(chip);
+  setTimeout(()=>chip.classList.add('show'),10);
+  setTimeout(()=>{ chip.classList.remove('show'); setTimeout(()=>chip.remove(),300); }, 8000);
+}
+function handlePlayerFinish(p){
+  if(p.id!==MY_ID&&others[p.id])others[p.id].finished=true;
+}
+
+function renderLobby(){
+  const list=document.getElementById('player-list'); list.innerHTML='';
+  // Add myself
+  const meRow=makePlayerRow({id:MY_ID,name:myName+'(you)',color:myColor});
+  list.appendChild(meRow);
+  Object.values(allPlayers).forEach(p=>{
+    if(p.id===MY_ID)return;
+    list.appendChild(makePlayerRow(p));
+  });
+  const total=Object.keys(allPlayers).length;
+  const startBtn=document.getElementById('start-btn');
+  if(startBtn){ startBtn.disabled=total<2; startBtn.textContent=total<2?'Start Race (2+ players)':'Start Race ('+total+' players)'; }
+}
+function makePlayerRow(p){
+  const row=document.createElement('div'); row.className='player-row';
+  row.innerHTML=`<div class="player-dot" style="background:${p.color||'#3a7fff'}"></div><span class="player-chip-name">${p.name||'Player'}</span><span class="player-chip-tag">🏎️</span>`;
+  return row;
+}
+function leaveRoom(){
+  if(channel)channel.send({type:'broadcast',event:'player_leave',payload:{id:MY_ID}}).then(()=>channel.unsubscribe());
+  document.getElementById('wait-screen').style.display='none';
+  document.getElementById('title-screen').style.display='flex';
+}
+function hostStartRace(){
+  if(!isHost)return;
+  channel.send({type:'broadcast',event:'race_start',payload:{}});
+}
+
+// ─── SOLO MODE ───────────────────────────────────────────────────
+function startSolo(){
+  const nameIn=document.getElementById('player-name-in').value.trim();
+  myName=nameIn||'Hunter';
+  soloMode=true;
+  document.getElementById('title-screen').style.display='none';
+  beginCountdown();
+}
+
+// ─── COUNTDOWN ───────────────────────────────────────────────────
+function beginCountdown(){
+  document.getElementById('wait-screen').style.display='none';
+  const co=document.getElementById('countdown-overlay');
+  const cn=document.getElementById('countdown-num');
+  co.style.display='flex';
+  const nums=['3','2','1','GO!'];
+  let i=0;
+  const tick=()=>{
+    cn.textContent=nums[i]; cn.style.animation='none'; void cn.offsetWidth; cn.style.animation='cdPulse .9s ease-out';
+    cn.style.color=i===3?'#3aff9a':'#3a7fff';
+    i++;
+    if(i<nums.length)setTimeout(tick,1000);
+    else setTimeout(()=>{ co.style.display='none'; startRace(); },500);
+  };
+  tick();
+}
+
+// ─── RACE START ──────────────────────────────────────────────────
+function startRace(){
+  raceActive=true; raceStartT=Date.now();
+  player.x=TK[0][0]; player.y=TK[0][1];
+  player.angle=Math.atan2(TK[1][1]-TK[0][1],TK[1][0]-TK[0][0]);
+  player.speed=0; player.laps=0; player.progress=0; player.prevProgress=0;
+  player.finished=false; player.score=0;
+  document.getElementById('hud').style.display='flex';
+  document.getElementById('minimap').style.display='block';
+  if('ontouchstart' in window)document.getElementById('touch-controls').style.display='flex';
+  // Spawn AI cars in solo mode
+  if(soloMode){
+    const aiNames=['Bot Alpha','Bot Beta','Bot Gamma'];
+    aiNames.forEach((n,i)=>{
+      others['ai_'+i]={x:TK[0][0]+NRM[0][0]*TRACK_W*.3*(i+1)*(-1),y:TK[0][1]+NRM[0][1]*TRACK_W*.3*(i+1)*(-1),
+        angle:player.angle,laps:0,progress:0,speed:2.5+Math.random()*.8,
+        name:n,color:KART_COLORS[i+1],colorIdx:i+1,finished:false,isAI:true,aiTimer:0,aiLook:0};
+    });
+  }
+  loop();
+}
+
+// ─── QUIZ SYSTEM ─────────────────────────────────────────────────
+let quizActive=false,quizTimer,quizCountdown=20;
+const usedQIds=new Set();
+function triggerQuiz(hz){
+  if(quizActive||!raceActive)return;
+  quizActive=true;
+  hz.hit=true; hz.respawnT=Date.now()+15000;
+  const q=window.CyberQB.getRandomQuestion([...usedQIds]);
+  usedQIds.add(q.id);
+  if(!soloMode&&channel)channel.send({type:'broadcast',event:'player_quiz',payload:{id:MY_ID}});
+  showQuiz(q);
+}
+function showQuiz(q){
+  const pillarMap={'A':'assets','S':'secure','U':'update','B':'backup','R':'respond'};
+  const pillar=window.CyberQB.QUESTION_BANK[pillarMap[q.id[0]]||'secure'];
+  const modal=document.getElementById('quiz-modal');
+  modal.style.display='flex';
+  document.getElementById('quiz-pillar').textContent=(pillar?.icon||'🛡️')+' '+(pillar?.name||'Cyber Essentials').toUpperCase();
+  document.getElementById('quiz-q').textContent=q.q;
+  document.getElementById('quiz-tip').style.display='none';
+  const opts=document.getElementById('quiz-opts'); opts.innerHTML='';
+  const labels=['A','B','C','D'];
+  q.opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.className='quiz-opt';
+    b.textContent=labels[i]+'. '+o;
+    b.onclick=()=>answerQuiz(i,b,q);
+    opts.appendChild(b);
+  });
+  quizCountdown=20;
+  const fill=document.getElementById('quiz-timer-fill');
+  const num=document.getElementById('quiz-timer-num');
+  fill.style.width='100%'; num.textContent=20; fill.style.background='#3aff9a';
+  clearInterval(quizTimer);
+  quizTimer=setInterval(()=>{
+    quizCountdown--;
+    num.textContent=quizCountdown;
+    fill.style.width=(quizCountdown/20*100)+'%';
+    if(quizCountdown<=5)fill.style.background='#ff5050';
+    if(quizCountdown<=0){ clearInterval(quizTimer); timeoutQuiz(q); }
+  },1000);
+}
+function answerQuiz(idx,btn,q){
+  clearInterval(quizTimer);
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  const correct=idx===q.ans;
+  document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+  if(!correct)btn.classList.add('wrong');
+  document.getElementById('quiz-tip').style.display='block';
+  document.getElementById('quiz-tip').textContent='💡 '+q.tip;
+  if(correct){ player.boosting=120; player.score+=100; player.correctAnswers++; showToast('✅ Correct! Speed boost!','correct'); }
+  else { player.spinning=80; player.score=Math.max(0,player.score-20); player.wrongAnswers++; showToast('❌ Wrong! Spinning out!','wrong'); }
+  setTimeout(closeQuiz, 2800);
+}
+function timeoutQuiz(q){
+  document.querySelectorAll('.quiz-opt').forEach(b=>b.disabled=true);
+  document.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct');
+  document.getElementById('quiz-tip').style.display='block';
+  document.getElementById('quiz-tip').textContent='⏱️ Time\'s up! '+q.tip;
+  player.spinning=80; showToast('⏱️ Timed out!','wrong');
+  setTimeout(closeQuiz, 2800);
+}
+function closeQuiz(){ document.getElementById('quiz-modal').style.display='none'; quizActive=false; }
+
+// ─── PLAYER PHYSICS ──────────────────────────────────────────────
+function updatePlayer(){
+  if(!raceActive||player.finished)return;
+  if(player.spinning>0){ player.spinning--; player.angle+=.12; player.speed*=.88; }
+  const turn=(keys['ArrowLeft']||keys['a']||keys['touch_left'])?-1:(keys['ArrowRight']||keys['d']||keys['touch_right'])?1:0;
+  const accel=(keys['ArrowUp']||keys['w'])?1:(keys['ArrowDown']||keys['s'])?-0.5:0;
+  if(player.spinning<=0)player.angle+=turn*player.turnRate*(player.speed/player.maxSpeed+.1);
+  const spd=player.boosting>0?player.maxSpeed*1.7:player.slow>0?player.maxSpeed*.4:player.maxSpeed;
+  player.speed+=accel*player.accel;
+  player.speed*=player.friction;
+  player.speed=Math.max(-1,Math.min(spd,player.speed));
+  player.x+=Math.cos(player.angle)*player.speed;
+  player.y+=Math.sin(player.angle)*player.speed;
+  if(player.boosting>0)player.boosting--;
+  if(player.slow>0)player.slow--;
+  // Track bounds (push back)
+  const ni=nearestIdx(player.x,player.y);
+  const dx=player.x-TK[ni][0],dy=player.y-TK[ni][1];
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  if(dist>TRACK_W*.6){ player.x=TK[ni][0]+dx/dist*TRACK_W*.58; player.y=TK[ni][1]+dy/dist*TRACK_W*.58; player.speed*=.7; }
+  // Progress / laps
+  const prog=progress(player.x,player.y);
+  if(player.prevProgress>0.9&&prog<0.1)player.laps++;
+  player.prevProgress=prog; player.progress=prog;
+  if(player.laps>=LAPS_TOTAL&&!player.finished){ player.finished=true; finishRace(); }
+  // Hazard collision
+  HAZARDS.forEach(hz=>{
+    if(hz.hit){
+      if(Date.now()>hz.respawnT)hz.hit=false;
+      return;
+    }
+    const dx=player.x-hz.x,dy=player.y-hz.y;
+    if(dx*dx+dy*dy<900&&!quizActive)triggerQuiz(hz);
+  });
+  // Power-up collision
+  PUPS.forEach(pu=>{
+    if(pu.hit){ if(Date.now()>pu.respawnT)pu.hit=false; return; }
+    const dx=player.x-pu.x,dy=player.y-pu.y;
+    if(dx*dx+dy*dy<900){ applyPowerup(pu); pu.hit=true; pu.respawnT=Date.now()+12000; }
+  });
+}
+function applyPowerup(pu){
+  if(pu.type==='boost'){ player.boosting=100; showToast('⚡ Speed Boost!','correct'); }
+  else if(pu.type==='shield'){ player.shielded=true; showToast('🛡️ Shield active!','correct'); }
+  else if(pu.type==='slow'){ player.slow=120; showToast('🐌 Slowed!','wrong'); }
+}
+
+// ─── AI KARTS ───────────────────────────────────────────────────
+function updateAI(k){
+  if(k.finished)return;
+  k.aiTimer=(k.aiTimer||0)+1;
+  const look=Math.min(N-1,(nearestIdx(k.x,k.y)+15)%N);
+  const tx=TK[look][0],ty=TK[look][1];
+  const wantAng=Math.atan2(ty-k.y,tx-k.x);
+  let diff=wantAng-k.angle;
+  while(diff>Math.PI)diff-=2*Math.PI; while(diff<-Math.PI)diff+=2*Math.PI;
+  k.angle+=diff*.08;
+  k.speed=(k.speed||2.5)+.05;
+  k.speed=Math.min(k.speed||5,3.2+Math.random()*.3);
+  k.x+=Math.cos(k.angle)*k.speed;
+  k.y+=Math.sin(k.angle)*k.speed;
+  const prog=progress(k.x,k.y);
+  if((k.prevProgress||0)>0.9&&prog<0.1)k.laps=(k.laps||0)+1;
+  k.prevProgress=prog; k.progress=prog;
+  if(k.laps>=LAPS_TOTAL&&!k.finished)k.finished=true;
+}
+
+// ─── RACE FINISH ─────────────────────────────────────────────────
+let raceEndShown=false;
+function finishRace(){
+  if(!soloMode&&channel)channel.send({type:'broadcast',event:'player_finish',payload:{id:MY_ID,name:myName,score:player.score,laps:player.laps}});
+  showToast('🏁 You finished!','correct');
+  setTimeout(()=>{
+    raceActive=false;
+    showResults();
+  },3000);
+}
+function showResults(){
+  if(raceEndShown)return; raceEndShown=true;
+  document.getElementById('hud').style.display='none';
+  document.getElementById('minimap').style.display='none';
+  document.getElementById('touch-controls').style.display='none';
+  const allKarts=[
+    {name:myName+'(you)',score:player.score,laps:player.laps,color:myColor},
+    ...Object.values(others).map(o=>({name:o.name||'Bot',score:o.score||0,laps:o.laps||0,color:o.color||'#aaa'}))
+  ].sort((a,b)=>b.laps-a.laps||b.score-a.score);
+  const podium=document.getElementById('podium');
+  podium.innerHTML='';
+  const heights=['p2','p1','p3'];
+  const order=[1,0,2];
+  order.forEach((pi)=>{
+    if(!allKarts[pi])return;
+    const col=document.createElement('div'); col.className='podium-col';
+    const blk=document.createElement('div'); blk.className='podium-block '+(pi===0?'p1':pi===1?'p2':'p3');
+    blk.textContent=pi===0?'🥇':pi===1?'🥈':'🥉';
+    blk.style.background=allKarts[pi].color||'#aaa';
+    const nm=document.createElement('div'); nm.className='podium-name'; nm.textContent=allKarts[pi].name;
+    const sc=document.createElement('div'); sc.className='podium-score'; sc.textContent=allKarts[pi].score+' pts';
+    col.append(blk,nm,sc); podium.appendChild(col);
+  });
+  const list=document.getElementById('results-list'); list.innerHTML='';
+  allKarts.forEach((k,i)=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;justify-content:space-between;padding:8px 12px;background:rgba(255,255,255,.05);border-radius:8px;margin:4px 0;font-size:13px';
+    row.innerHTML=`<span>${i+1}. ${k.name}</span><span style="color:#ffcc00">${k.score} pts</span>`;
+    list.appendChild(row);
+  });
+  document.getElementById('results-screen').style.display='flex';
+}
+
+// ─── GACHA ───────────────────────────────────────────────────────
+function openGacha(){
+  document.getElementById('results-screen').style.display='none';
+  const r=window.CyberQB.getRandomGacha();
+  document.getElementById('gacha-rarity').textContent=r.rarity;
+  document.getElementById('gacha-rarity').style.color=r.rc||'#7a9fff';
+  document.getElementById('gacha-icon').textContent=r.icon;
+  document.getElementById('gacha-name').textContent=r.name;
+  document.getElementById('gacha-effect').textContent='Effect: '+r.effect;
+  document.getElementById('gacha-overlay').style.display='flex';
+}
+function closeGacha(){ document.getElementById('gacha-overlay').style.display='none'; location.reload(); }
+
+// ─── TOAST ──────────────────────────────────────────────────────
+let toastT;
+function showToast(msg,cls){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+cls;
+  clearTimeout(toastT); toastT=setTimeout(()=>t.className='',2000);
+}
+
+// ─── BROADCAST POSITION ──────────────────────────────────────────
+let lastBroadcast=0;
+function broadcastPosition(){
+  if(soloMode||!channel||!raceActive)return;
+  const now=Date.now();
+  if(now-lastBroadcast<500)return; // throttled: ~2 updates/sec saves ~80% Supabase message quota
+  lastBroadcast=now;
+  channel.send({type:'broadcast',event:'player_move',payload:{
+    id:MY_ID,name:myName,color:myColor,colorIdx:myColorIdx,
+    x:player.x,y:player.y,angle:player.angle,laps:player.laps,progress:player.progress,finished:player.finished
+  }});
+}
+
+// ─── RENDER ──────────────────────────────────────────────────────
+let lastLapText='',raceTime=0;
+function render(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  // Camera smooth follow
+  const tx=player.x-W/2,ty=player.y-H/2;
+  camX+=(tx-camX)*.1; camY+=(ty-camY)*.1;
+  ctx.translate(-camX,-camY);
+  // Sky / ground
+  ctx.fillStyle='#0d1a0d'; ctx.fillRect(camX-100,camY-100,W+200,H+200);
+  // Track base (wide)
+  ctx.beginPath();
+  TK.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+  ctx.closePath();
+  ctx.strokeStyle='#2a2a40'; ctx.lineWidth=TRACK_W*2+8; ctx.stroke();
+  ctx.strokeStyle='#3a3a5a'; ctx.lineWidth=TRACK_W*2; ctx.stroke();
+  // Track surface
+  ctx.strokeStyle='#4a4a6a'; ctx.lineWidth=TRACK_W*2-8; ctx.stroke();
+  // Lane dashes
+  ctx.setLineDash([24,24]); ctx.strokeStyle='rgba(255,255,255,.12)'; ctx.lineWidth=2;
+  ctx.beginPath(); TK.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.stroke();
+  ctx.setLineDash([]);
+  // Start/finish line
+  ctx.fillStyle='rgba(255,255,255,.8)'; ctx.fillRect(TK[0][0]-4,TK[0][1]-TRACK_W,8,TRACK_W*2);
+  ctx.fillStyle='#3a7fff'; ctx.fillRect(TK[0][0]-4,TK[0][1]-TRACK_W,8,TRACK_W);
+  // Hazard blocks
+  HAZARDS.forEach(hz=>{
+    if(hz.hit)return;
+    ctx.save();
+    ctx.shadowColor='#ff5050'; ctx.shadowBlur=12;
+    ctx.font='22px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('❓',hz.x,hz.y);
+    ctx.restore();
+  });
+  // Power-ups
+  PUPS.forEach(pu=>{
+    if(pu.hit)return;
+    ctx.save(); ctx.font='20px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(PU_ICONS[pu.type],pu.x,pu.y); ctx.restore();
+  });
+  // Decorative grass/trees
+  for(let g=0;g<80;g++){
+    const gx=((g*317+g*g*7)%2200)-100,gy=((g*211+g*g*13)%1400)-100;
+    // Only draw if far from track
+    const ni=nearestIdx(gx,gy);
+    const ddx=gx-TK[ni][0],ddy=gy-TK[ni][1];
+    if(ddx*ddx+ddy*ddy>TRACK_W*TRACK_W*1.8){
+      ctx.font='20px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(g%4===0?'🌲':g%3===0?'🌳':'🌿',gx,gy);
+    }
+  }
+  // Other players
+  Object.values(others).forEach(o=>{
+    drawKart(o.x||TK[0][0],o.y||TK[0][1],o.angle||0,o.color||'#aaa',o.name||'?',false);
+  });
+  // My player
+  drawKart(player.x,player.y,player.angle,myColor,myName,true,player.boosting>0,player.spinning>0,player.shielded);
+  ctx.restore();
+  // Minimap
+  renderMinimap();
+  // HUD update
+  if(raceActive){
+    raceTime=Math.floor((Date.now()-raceStartT)/1000);
+    const mins=Math.floor(raceTime/60).toString().padStart(2,'0');
+    const secs=(raceTime%60).toString().padStart(2,'0');
+    document.getElementById('time-display').textContent=mins+':'+secs;
+    document.getElementById('lap-display').textContent='Lap '+(Math.min(player.laps+1,LAPS_TOTAL))+'/'+LAPS_TOTAL;
+    const kmh=Math.abs(Math.round(player.speed*18));
+    document.getElementById('speed-display').textContent=kmh+' km/h';
+    // Ranking
+    const allK=[{p:player.progress+(player.laps*1.1)},
+      ...Object.values(others).map(o=>({p:(o.progress||0)+((o.laps||0)*1.1)}))];
+    allK.sort((a,b)=>b.p-a.p);
+    const myIdx=allK.findIndex(k=>k.p===player.progress+(player.laps*1.1));
+    const pos=myIdx+1;
+    const suffix=pos===1?'st':pos===2?'nd':pos===3?'rd':'th';
+    document.getElementById('pos-display').textContent=pos+suffix;
+  }
+}
+
+function drawKart(x,y,angle,color,name,isMe,boosting,spinning,shielded){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  if(shielded){ ctx.shadowColor='#3aff9a'; ctx.shadowBlur=16; }
+  if(boosting){ ctx.shadowColor='#ffcc00'; ctx.shadowBlur=16; }
+  // Body (manual rounded rect for cross-browser compat)
+  function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+  ctx.fillStyle=color; rr(-14,-9,28,18,4); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.3)'; rr(-6,-7,12,8,2); ctx.fill();
+  // Wheels
+  ctx.fillStyle='#222';
+  [[-11,-11],[-11,3],[9,-11],[9,3]].forEach(([wx,wy])=>{ ctx.beginPath();ctx.rect(wx,wy,6,8);ctx.fill(); });
+  // Boost trail
+  if(boosting){
+    ctx.fillStyle='rgba(255,200,0,.4)';
+    for(let i=0;i<3;i++) ctx.fillRect(-20-i*8,-3,6,6);
+  }
+  ctx.restore();
+  // Name tag
+  ctx.save(); ctx.font='bold 11px Segoe UI'; ctx.textAlign='center'; ctx.textBaseline='bottom';
+  ctx.fillStyle='rgba(0,0,0,.6)'; ctx.fillRect(x-28,y-36,56,14);
+  ctx.fillStyle='#fff'; ctx.fillText((name||'?').slice(0,10),x,y-23); ctx.restore();
+}
+
+function renderMinimap(){
+  const S=110, scale=S/2200;
+  mctx.clearRect(0,0,S,S);
+  mctx.fillStyle='rgba(10,14,26,.9)'; mctx.fillRect(0,0,S,S);
+  // Track
+  mctx.beginPath(); TK.forEach((p,i)=>i?mctx.lineTo(p[0]*scale,p[1]*scale):mctx.moveTo(p[0]*scale,p[1]*scale));
+  mctx.closePath(); mctx.strokeStyle='#3a3a5a'; mctx.lineWidth=10; mctx.stroke();
+  mctx.strokeStyle='#5a5a8a'; mctx.lineWidth=7; mctx.stroke();
+  // Others
+  Object.values(others).forEach(o=>{
+    mctx.fillStyle=o.color||'#aaa';
+    mctx.beginPath(); mctx.arc((o.x||0)*scale,(o.y||0)*scale,4,0,Math.PI*2); mctx.fill();
+  });
+  // Me
+  mctx.fillStyle=myColor; mctx.strokeStyle='#fff'; mctx.lineWidth=1.5;
+  mctx.beginPath(); mctx.arc(player.x*scale,player.y*scale,5,0,Math.PI*2); mctx.fill(); mctx.stroke();
+}
+
+// ─── GAME LOOP ───────────────────────────────────────────────────
+let running=false;
+function loop(){
+  if(!running)running=true;
+  requestAnimationFrame(loop);
+  updatePlayer();
+  Object.values(others).forEach(o=>{if(o.isAI)updateAI(o);});
+  HAZARDS.forEach(hz=>{if(hz.hit&&Date.now()>hz.respawnT)hz.hit=false;});
+  PUPS.forEach(pu=>{if(pu.hit&&Date.now()>pu.respawnT)pu.hit=false;});
+  broadcastPosition();
+  render();
+}
+// Start render loop for title screen (static track preview)
+(function titleRender(){
+  if(running)return;
+  requestAnimationFrame(titleRender);
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0d1a0d'; ctx.fillRect(0,0,W,H);
+  ctx.save();
+  const cx=W/2-900,cy=H/2-500;
+  ctx.translate(cx,cy);
+  ctx.beginPath(); TK.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+  ctx.closePath(); ctx.strokeStyle='#2a2a40'; ctx.lineWidth=TRACK_W*2+8; ctx.stroke();
+  ctx.strokeStyle='#4a4a6a'; ctx.lineWidth=TRACK_W*2-8; ctx.stroke();
+  ctx.restore();
+})();
+</script>
+</body>
+</html>
